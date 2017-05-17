@@ -3,7 +3,6 @@ package raster;
 import java.util.stream.IntStream;
 
 
-
 public final class BooleanEncodingTestData {
 
 
@@ -38,8 +37,26 @@ public final class BooleanEncodingTestData {
 
     public static boolean[][] getTestRaster4() {
         boolean raster[][] = new boolean[5][20];
-        for(int i = 5; i < 15; ++i) {
+        for (int i = 5; i < 15; ++i) {
             raster[1][i] = true;
+        }
+        return raster;
+    }
+
+
+    /**
+     * An open square
+     */
+    public static boolean[][] getTestRaster5() {
+        boolean raster[][] = new boolean[10][10];
+
+        for (int row = 0; row < 10; ++row) {
+            for (int column = 0; column < 10; ++column) {
+                if ((row == 3 || row == 7 || column == 3 || column == 7)
+                        && !(row < 3 || row > 7 || column < 3 || column > 7)) {
+                    raster[row][column] = true;
+                }
+            }
         }
         return raster;
     }

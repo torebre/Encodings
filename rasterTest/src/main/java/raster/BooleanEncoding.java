@@ -10,7 +10,7 @@ import java.util.List;
  * Data holder for a boolean encoding of a kanji.
  *
  */
-public final class BooleanEncoding {
+public final class BooleanEncoding implements FlowEncodedRaster {
     final List<Source> sources = new ArrayList<>();
     final boolean raster[][];
     Complex flowRaster[][];
