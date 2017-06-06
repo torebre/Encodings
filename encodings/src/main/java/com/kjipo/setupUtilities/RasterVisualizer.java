@@ -1,4 +1,4 @@
-package com.kjipotech.setupUtilities;/**
+package com.kjipo.setupUtilities;/**
  * Created by student on 7/10/14.
  */
 

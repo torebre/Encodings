@@ -1,7 +1,7 @@
-package com.kjipotech.representation;
+package com.kjipo.representation;
 
 
-import com.kjipotech.utilities.Parsers;
+import com.kjipo.utilities.Parsers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;

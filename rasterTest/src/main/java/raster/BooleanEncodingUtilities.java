@@ -42,10 +42,6 @@ public final class BooleanEncodingUtilities {
         return matrix;
     }
 
-    public static BooleanEncoding createBooleanEncodingFromRaster(boolean raster[][]) {
-        return new BooleanEncoding(raster, BooleanEncodingUtilities.setupFlowRaster(raster));
-    }
-
     public static double getMaxLength(Collection<BooleanEncoding> encodings) {
         double max = Double.MIN_VALUE;
         for (BooleanEncoding booleanEncoding : encodings) {

@@ -1,10 +1,10 @@
-package com.kjipotech.utilities;
+package com.kjipo.utilities;
 
 
-import com.kjipotech.representation.EncodedKanji;
+import com.kjipo.representation.EncodedKanji;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.kjipotech.setupUtilities.RasterUtilities;
+import com.kjipo.setupUtilities.RasterUtilities;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;

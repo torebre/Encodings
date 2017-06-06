@@ -1,7 +1,5 @@
-package com.kjipotech.representation;
+package com.kjipo.representation;
 
-
-import java.util.stream.Stream;
 
 public interface TransformKanji {
 

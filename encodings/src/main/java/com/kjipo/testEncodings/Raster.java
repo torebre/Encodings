@@ -1,4 +1,4 @@
-package com.kjipotech.testEncodings;
+package com.kjipo.testEncodings;
 
 
 import javafx.application.Application;

@@ -1,4 +1,4 @@
-package com.kjipotech.representation;
+package com.kjipo.representation;
 
 
 import java.io.*;

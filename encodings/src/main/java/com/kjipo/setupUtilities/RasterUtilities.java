@@ -1,4 +1,4 @@
-package com.kjipotech.setupUtilities;
+package com.kjipo.setupUtilities;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

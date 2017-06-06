@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import com.kjipotech.setupUtilities.RasterUtilities;
+import com.kjipo.setupUtilities.RasterUtilities;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
