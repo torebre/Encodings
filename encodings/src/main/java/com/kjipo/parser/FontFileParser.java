@@ -1,0 +1,165 @@
+package com.kjipo.parser;
+
+import com.kjipo.representation.EncodedKanji;
+import com.kjipo.setupUtilities.RasterUtilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
+import java.awt.geom.AffineTransform;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+public class FontFileParser {
+    private static final int NUMBER_OF_ROWS = 100;
+    private static final int NUMBER_OF_COLUMNS = 100;
+
+    private static final Logger logger = LoggerFactory.getLogger(FontFileParser.class);
+
+//    private GlyphVector getGlyphForCharacter(String pTestCharacter) {
+//        FontRenderContext renderContext = new FontRenderContext(null, false, false);
+//        return testFont.createGlyphVector(renderContext, pTestCharacter);
+//    }
+
+//    private boolean[][] createRasterForCharacter(String pTestCharacter) {
+//        return setupRaster(getGlyphForCharacter(pTestCharacter), 100, 100);
+//    }
+
+
+    public static Collection<EncodedKanji> parseFontFile(Collection<Character> characters, InputStream trueTypeFontData) throws IOException, FontFormatException {
+        Font font = Font.createFont(Font.TRUETYPE_FONT, trueTypeFontData);
+        FontRenderContext renderContext = new FontRenderContext(null, false, false);
+
+        return characters.stream()
+                .map(character -> {
+                    GlyphVector glyphVector = font.createGlyphVector(renderContext, new char[]{character});
+                    if (glyphVector.getNumGlyphs() > 1) {
+                        logger.warn("Skipping character: " + character);
+                        return null;
+                    }
+                    return glyphVector;
+                })
+                .filter(Objects::nonNull)
+                .map(glyphVector -> new EncodedKanji(paintOnRaster(glyphVector, NUMBER_OF_ROWS, NUMBER_OF_COLUMNS)))
+                .collect(Collectors.toList());
+    }
+
+
+    public static boolean[][] setupRaster(GlyphVector glyphVector, int height, int width) throws IllegalArgumentException {
+        assertOnlyOneGlyphInGlyphVector(glyphVector);
+        return paintOnRaster(glyphVector, height, width);
+    }
+
+    private static boolean[][] paintOnRaster(GlyphVector glyphVector, int pRows, int pColumns) {
+        assertOnlyOneGlyphInGlyphVector(glyphVector);
+        for (int i = 0; i < glyphVector.getNumGlyphs(); ++i) {
+            Shape shape = glyphVector.getGlyphOutline(i);
+            logger.debug("Bounds {}, {}, {}, {}",
+                    shape.getBounds().getMinX(), shape.getBounds().getMaxX(),
+                    shape.getBounds().getMinY(), shape.getBounds().getMaxY());
+        }
+        return paintOnRaster(glyphVector.getGlyphOutline(0), pRows, pColumns);
+    }
+
+    private static void assertOnlyOneGlyphInGlyphVector(GlyphVector glyphVector) throws IllegalArgumentException {
+        if (glyphVector.getNumGlyphs() > 1) {
+            throw new IllegalArgumentException("Only one glyph supported for now");
+        }
+    }
+
+    public static boolean[][] paintOnRaster(Shape shape, int rows, int columns) {
+        Rectangle bounds = shape.getBounds();
+        AffineTransform transform = new AffineTransform();
+        transform.translate(-bounds.getMinX(), -bounds.getMinY());
+        Shape transformedShape = transform.createTransformedShape(shape);
+        bounds = transformedShape.getBounds();
+        double scale = (bounds.getMaxX() > bounds.getMaxY()) ? columns / bounds.getMaxX() : rows / bounds.getMaxY();
+        transform.setToIdentity();
+        transform.scale(scale, scale);
+        Shape finalShape = transform.createTransformedShape(transformedShape);
+        boolean raster[][] = new boolean[rows][columns];
+        IntStream.range(0, rows).forEach(i -> IntStream.range(0, columns).forEach(j -> raster[i][j] = finalShape.contains(j, i)));
+        return trimRaster(raster);
+    }
+
+    private static boolean[][] trimRaster(boolean raster[][]) {
+        int minRow = raster.length;
+        int maxRow = 0;
+        int minColumn = raster[0].length;
+        int maxColumn = 0;
+
+        for (int row = 0; row < raster.length; ++row) {
+            for (int column = 0; column < raster[0].length; ++column) {
+                if (raster[row][column]) {
+                    if (minRow > row) {
+                        minRow = row;
+                    }
+                    if (maxRow < row) {
+                        maxRow = row;
+                    }
+                    if (minColumn > column) {
+                        minColumn = column;
+                    }
+                    if (maxColumn < column) {
+                        maxColumn = column;
+                    }
+                }
+            }
+        }
+        final int minCol2 = minColumn;
+        final int maxCol2 = maxColumn;
+        final int minRow2 = minRow;
+
+        if (maxRow < minRow || maxColumn < minColumn) {
+            logger.error("maxRow: " + maxRow
+                    + ", minRow: " + minRow
+                    + ", maxColumn: " + maxColumn
+                    + ", minColumn: " + minColumn);
+            return new boolean[0][0];
+        }
+
+        boolean result[][] = new boolean[maxRow - minRow + 1][maxColumn - minColumn + 1];
+        IntStream.range(minRow, maxRow + 1)
+                .forEach(row -> IntStream.range(minCol2, maxCol2 + 1)
+                        .forEach(column -> result[row - minRow2][column - minCol2] = raster[row][column]));
+        return result;
+    }
+
+
+    public static void main(String args[]) throws IOException, FontFormatException {
+        java.util.List<KanjiDicParser.KanjiDicEntry> entries = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).collect(Collectors.toList());
+
+        Set<Character> charactersFoundInFile = new HashSet<>();
+        for (KanjiDicParser.KanjiDicEntry entry : entries) {
+            char[] chars = entry.getKanji().toCharArray();
+            for (char character : chars) {
+                charactersFoundInFile.add(character);
+            }
+        }
+
+        System.out.println("Number of characters found: " + charactersFoundInFile.size());
+
+//        for (Character character : charactersFoundInFile) {
+//            System.out.println(character);
+//        }
+
+        try (InputStream fontStream = new FileInputStream(Parsers.FONT_FILE_LOCATION.toFile())) {
+            Collection<EncodedKanji> encodedKanjis = parseFontFile(charactersFoundInFile, fontStream);
+            for (EncodedKanji encodedKanji : encodedKanjis) {
+                encodedKanji.printKanji();
+            }
+        }
+
+    }
+
+
+}

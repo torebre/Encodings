@@ -13,13 +13,12 @@ import javafx.scene.transform.Affine;
 import org.apache.commons.math3.complex.Complex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import raster.BooleanEncoding;
-import raster.BooleanEncodingUtilities;
+import com.kjipo.raster.flow.BooleanEncoding;
+import com.kjipo.raster.flow.BooleanEncodingUtilities;
 
 import javax.swing.*;
 import java.awt.*;
 import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.List;
 
@@ -58,8 +57,8 @@ public class RasterVisualizer {
 
         double maxLengthForRun = BooleanEncodingUtilities.getMaxLength(flowRun);
 
-//        frame.setSize(new Dimension(raster.length * initialSquareSize,
-//                raster[0].length * initialSquareSize));
+//        frame.setSize(new Dimension(com.kjipo.raster.length * initialSquareSize,
+//                com.kjipo.raster[0].length * initialSquareSize));
 
         frame.pack();
         frame.setVisible(true);
@@ -80,8 +79,8 @@ public class RasterVisualizer {
 //        frame.addComponentListener(new ComponentAdapter() {
 //            @Override
 //            public void componentResized(ComponentEvent e) {
-//                int width = frame.getWidth() / raster[0].length;
-//                int height = frame.getHeight() / raster.length;
+//                int width = frame.getWidth() / com.kjipo.raster[0].length;
+//                int height = frame.getHeight() / com.kjipo.raster.length;
 //                initialSquareSize.set(Math.min(height, width));
 //            }
 //        });

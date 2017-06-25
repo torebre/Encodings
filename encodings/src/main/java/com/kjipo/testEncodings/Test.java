@@ -1,21 +1,17 @@
 package com.kjipo.testEncodings;
 
 
+import com.kjipo.parser.FontFileParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
 import java.awt.geom.PathIterator;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
-
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JTextPane;
-import javax.swing.SwingUtilities;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.kjipo.setupUtilities.RasterUtilities;
 
 
 public class Test {
@@ -41,7 +37,7 @@ public class Test {
             frame.pack();
 
 
-            textPane.setContentType("text/html; charset=EUC-JP");
+            textPane.setContentType("text/html; JAPANESE_CHARSET=EUC-JP");
 
             textPane.setText(pTextToDisplay);
 
@@ -110,7 +106,7 @@ public class Test {
 //
 //		}
 
-		return RasterUtilities.setupRaster(glyphVector, 100, 100);
+		return FontFileParser.setupRaster(glyphVector, 100, 100);
 		
 		
 	}
