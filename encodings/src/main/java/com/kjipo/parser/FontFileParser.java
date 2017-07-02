@@ -1,7 +1,6 @@
 package com.kjipo.parser;
 
 import com.kjipo.representation.EncodedKanji;
-import com.kjipo.setupUtilities.RasterUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,29 +9,20 @@ import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
 import java.awt.geom.AffineTransform;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class FontFileParser {
     private static final int NUMBER_OF_ROWS = 100;
     private static final int NUMBER_OF_COLUMNS = 100;
 
     private static final Logger logger = LoggerFactory.getLogger(FontFileParser.class);
-
-//    private GlyphVector getGlyphForCharacter(String pTestCharacter) {
-//        FontRenderContext renderContext = new FontRenderContext(null, false, false);
-//        return testFont.createGlyphVector(renderContext, pTestCharacter);
-//    }
-
-//    private boolean[][] createRasterForCharacter(String pTestCharacter) {
-//        return setupRaster(getGlyphForCharacter(pTestCharacter), 100, 100);
-//    }
 
 
     public static Collection<EncodedKanji> parseFontFile(Collection<Character> characters, InputStream trueTypeFontData) throws IOException, FontFormatException {
@@ -146,7 +136,7 @@ public class FontFileParser {
             }
         }
 
-        System.out.println("Number of characters found: " + charactersFoundInFile.size());
+        logger.info("Number of characters found: {}", charactersFoundInFile.size());
 
 //        for (Character character : charactersFoundInFile) {
 //            System.out.println(character);

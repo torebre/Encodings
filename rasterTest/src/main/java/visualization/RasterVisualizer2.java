@@ -8,7 +8,6 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.shape.Line;
-import org.apache.commons.math3.complex.Complex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,23 +17,24 @@ import java.util.Collection;
 
 public class RasterVisualizer2 {
     private static final int SLEEP_TIME_MS = 200;
-    private static final int INITIAL_SQUARE_SIZE = 75;
+    private static final int INITIAL_SQUARE_SIZE = 20;
 
-    private static final Logger LOG = LoggerFactory.getLogger(visualization.RasterVisualizer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RasterVisualizer2.class);
 
 
-    public static <T extends CellType> void showRasterFlow(RasterRun<T> rasterRun, Collection<RasterElementProcessor<T>> rasterElementProcessors)
+    public static <T extends CellType> void showRasterFlow(RasterRun<T> rasterRun,
+                                                           Collection<RasterElementProcessor<T>> rasterElementProcessors)
             throws InterruptedException {
         JFXPanel panel = new JFXPanel();
-        panel.setPreferredSize(new Dimension(rasterRun.getWidth() * INITIAL_SQUARE_SIZE,
-                rasterRun.getHeight() * INITIAL_SQUARE_SIZE));
+        panel.setPreferredSize(new Dimension(rasterRun.getColumns() * INITIAL_SQUARE_SIZE,
+                rasterRun.getRows() * INITIAL_SQUARE_SIZE));
         JFrame frame = new JFrame();
         frame.add(panel);
         Group root = new Group();
 
         Platform.runLater(() -> {
-            Scene scene = new Scene(root, rasterRun.getWidth() * INITIAL_SQUARE_SIZE,
-                    rasterRun.getHeight() * INITIAL_SQUARE_SIZE, javafx.scene.paint.Color.BLACK);
+            Scene scene = new Scene(root, rasterRun.getColumns() * INITIAL_SQUARE_SIZE,
+                    rasterRun.getRows() * INITIAL_SQUARE_SIZE, javafx.scene.paint.Color.BLACK);
 
             panel.setScene(scene);
         });
@@ -47,6 +47,8 @@ public class RasterVisualizer2 {
 
         while (rasterRun.hasNext()) {
             paintRaster(root, INITIAL_SQUARE_SIZE, rasterRun, border, rasterElementProcessors);
+            rasterRun.next();
+
             Thread.sleep(SLEEP_TIME_MS);
         }
     }
@@ -67,20 +69,20 @@ public class RasterVisualizer2 {
             Group rectangles = new Group();
             ObservableList<Node> children = rectangles.getChildren();
 
-            for (int row = 0; row < rasterRun.getHeight(); ++row) {
-                for (int column = 0; column < rasterRun.getWidth(); ++column) {
+            for (int row = 0; row < rasterRun.getRows(); ++row) {
+                for (int column = 0; column < rasterRun.getColumns(); ++column) {
                     javafx.scene.shape.Rectangle rectangle = new javafx.scene.shape.Rectangle(
                             column * squareSize,
                             row * squareSize,
                             squareSize,
                             squareSize);
 
+                    children.add(rectangle);
+
                     for (RasterElementProcessor rasterElementProcessor : rasterElementProcessors) {
                         rasterElementProcessor.processCell(rasterRun.getCell(row, column), squareSize, children);
                     }
 
-
-//                    javafx.scene.paint.Color color;
 
 //                    if (flowRaster[row][column].abs() < 0.01) {
 //                        // No flow at this point
@@ -95,7 +97,7 @@ public class RasterVisualizer2 {
 //                    rectangle.setStroke(color);
 //                    rectangle.setFill(color);
 
-                    rectangles.getChildren().add(rectangle);
+
 //                    rectangles.getChildren().add(text);
 
 //                    // Paint arrow
@@ -165,24 +167,6 @@ public class RasterVisualizer2 {
 
     }
 
-
-    private static javafx.scene.paint.Color getColor(Complex pComplex, double maxLength) {
-//        double argument = pComplex.getArgument();
-//        if(argument < 0) {
-//            argument += 2 * Math.PI;
-//        }
-
-//        double brightness = Math.min(1.0, pComplex.abs());
-//        return Color.hsb(360 * argument / (2 * Math.PI), 1, pComplex.abs() / maxLength);
-
-        return javafx.scene.paint.Color.hsb(360 * (1 - (pComplex.abs() / maxLength)), 1, 1);
-    }
-
-
-    public static void main(String args[]) {
-
-
-    }
 
 
 }

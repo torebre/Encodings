@@ -79,8 +79,8 @@ public class RasterVisualizer {
 //        frame.addComponentListener(new ComponentAdapter() {
 //            @Override
 //            public void componentResized(ComponentEvent e) {
-//                int width = frame.getWidth() / com.kjipo.raster[0].length;
-//                int height = frame.getHeight() / com.kjipo.raster.length;
+//                int width = frame.getColumns() / com.kjipo.raster[0].length;
+//                int height = frame.getRows() / com.kjipo.raster.length;
 //                initialSquareSize.set(Math.min(height, width));
 //            }
 //        });

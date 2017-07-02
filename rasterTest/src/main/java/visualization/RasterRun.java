@@ -6,11 +6,13 @@ public interface RasterRun<T extends CellType> {
 
     boolean hasNext();
 
-    int getWidth();
+    int getColumns();
 
-    int getHeight();
+    int getRows();
 
     T getCell(int row, int column);
+
+    void next();
 
 
 

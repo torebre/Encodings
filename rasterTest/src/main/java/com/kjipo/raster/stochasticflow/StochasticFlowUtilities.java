@@ -11,7 +11,7 @@ import java.util.Map;
 
 public final class StochasticFlowUtilities {
 
-    private static final Map<FlowDirection, FlowDirection> OPPOSITE_DISTRIBUTION_MAP = ImmutableMap.<FlowDirection, FlowDirection>builder()
+    public static final Map<FlowDirection, FlowDirection> OPPOSITE_DISTRIBUTION_MAP = ImmutableMap.<FlowDirection, FlowDirection>builder()
             .put(FlowDirection.EAST, FlowDirection.WEST)
             .put(FlowDirection.NORTH_EAST, FlowDirection.SOUTH_WEST)
             .put(FlowDirection.NORTH, FlowDirection.SOUTH)
@@ -28,7 +28,7 @@ public final class StochasticFlowUtilities {
     }
 
 
-    static void determineOutput(int x, int y, StochasticFlowRaster stochasticFlowRaster) {
+    static void determineOutput(int x, int y, StochasticFlowRaster stochasticFlowRaster, boolean rawRaster[][]) {
         Fraction outputFlow[] = new Fraction[FlowDirection.values().length];
         for (Fraction fraction : outputFlow) {
             fraction = new Fraction(0);
@@ -41,7 +41,7 @@ public final class StochasticFlowUtilities {
             oppositeFlow = oppositeFlow.add(flowIntoCell);
         }
 
-        TileType[] tileTypes = EncodingUtilities.determineNeighbourTypes(x, y, stochasticFlowRaster.getRawRaster());
+        TileType[] tileTypes = EncodingUtilities.determineNeighbourTypes(x, y, rawRaster);
 
         for(FlowDirection flowDirection : FlowDirection.values()) {
             switch(tileTypes[flowDirection.ordinal()]) {

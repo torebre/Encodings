@@ -1,13 +1,7 @@
 package com.kjipo.raster;
 
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
-
 public final class EncodingUtilities {
-    private static final Logger LOG = LoggerFactory.getLogger(EncodingUtilities.class);
 
 
     private EncodingUtilities() {
@@ -99,6 +93,21 @@ public final class EncodingUtilities {
         }
 
         return result;
+    }
+
+
+    public static boolean validCell(int row, int column, FlowDirection flowDirection, int rows, int columns) {
+        int shiftedRow = row + flowDirection.getRowShift();
+        if(shiftedRow < 0 || shiftedRow >= rows) {
+            return false;
+        }
+
+        int shiftedColumn = column + flowDirection.getColumnShift();
+        if(shiftedColumn < 0 || shiftedColumn >= columns) {
+            return false;
+        }
+
+        return true;
     }
 
 

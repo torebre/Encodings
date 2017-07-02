@@ -12,7 +12,7 @@ import java.nio.file.Paths;
 
 
 public class Parsers {
-    public static final Path FONT_FILE_LOCATION = Paths.get("/home/student/workspace/testEncodings/encodings/src/main/resources", "font/kochi-mincho-subst.ttf");
+    public static final Path FONT_FILE_LOCATION = Paths.get("/home/student/font/kochi-mincho-subst.ttf");
     public static final Path EDICT_FILE_LOCATION = Paths.get("/home/student/edict/edict2");
     public static final Charset JAPANESE_CHARSET = Charset.forName("EUC_JP");
 
