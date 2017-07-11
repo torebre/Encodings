@@ -5,6 +5,9 @@ import com.google.common.util.concurrent.AtomicDouble;
 import com.kjipo.raster.EncodingUtilities;
 import com.kjipo.raster.FlowDirection;
 import com.kjipo.raster.TileType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import visualization.RasterVisualizer2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +15,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class RunStochasticFlow {
+
+    private static final Logger LOG = LoggerFactory.getLogger(RunStochasticFlow.class);
 
 
     public List<StochasticFlowRasterImpl> createRun(boolean raster[][]) {
@@ -23,6 +28,7 @@ public class RunStochasticFlow {
                 if (raster[row][column]) {
                     sourceRow = row;
                     sourceColumn = column;
+                    break;
                 }
             }
         }
@@ -30,6 +36,8 @@ public class RunStochasticFlow {
         StochasticFlowRasterBuilder builder = StochasticFlowRasterBuilder.builder(raster.length, raster[0].length);
 
         TileType[] tileTypes = EncodingUtilities.determineNeighbourTypes(sourceRow, sourceColumn, raster);
+
+        LOG.info("Setting source at {}, {}", sourceRow, sourceColumn);
 
         FlowDirection[] values = FlowDirection.values();
 
@@ -46,11 +54,27 @@ public class RunStochasticFlow {
 
         for (int i = 0; i < 10; ++i) {
             StochasticFlowRasterImpl nextRaster = iterate(firstRaster, raster);
+
+            printNumberOfCellsWithFlow(nextRaster);
+
             rasterRun.add(nextRaster);
             firstRaster = nextRaster;
         }
 
         return rasterRun;
+    }
+
+    private static void printNumberOfCellsWithFlow(StochasticFlowRaster stochasticFlowRaster) {
+        int cellsWithFlow = 0;
+        for (int row = 0; row < stochasticFlowRaster.getRows(); ++row) {
+            for (int column = 0; column < stochasticFlowRaster.getColumns(); ++column) {
+                if (stochasticFlowRaster.getFlowInCell(row, column) > 0) {
+                    ++cellsWithFlow;
+                }
+            }
+        }
+
+        LOG.info("Cells with flow: {}", cellsWithFlow);
     }
 
 
@@ -61,9 +85,26 @@ public class RunStochasticFlow {
             for (int column = 0; column < stochasticFlowRaster.getColumns(); ++column) {
                 int outputDistribution[] = new int[FlowDirection.values().length];
 
+                int totalFlow = 0;
                 for (FlowDirection flowDirection : FlowDirection.values()) {
                     int flowIntoCell = stochasticFlowRaster.getFlowIntoCell(row, column, flowDirection);
+
+                    if(flowIntoCell == 0) {
+                        continue;
+                    }
+
+                    totalFlow += flowIntoCell;
+
+                    if(flowIntoCell > 0) {
+                        LOG.info("Found flow into cell {}, {}. Flow: {}", row, column, flowIntoCell);
+                    }
+
                     outputDistribution[StochasticFlowUtilities.OPPOSITE_DISTRIBUTION_MAP.get(flowDirection).ordinal()] = flowIntoCell;
+                }
+
+                if(totalFlow == 0) {
+                    // No flow into this cell
+                    continue;
                 }
 
                 TileType[] tileTypes = EncodingUtilities.determineNeighbourTypes(row, column, rawData);
@@ -83,6 +124,10 @@ public class RunStochasticFlow {
                 }
 
                 FlowDirection flowDirection = determineOutputDirection(outputDistribution);
+
+
+                LOG.info("Setting flow {} at {}, {}", flowDirection, row, column);
+
                 builder.setValue(row, column, 1, flowDirection);
 
             }

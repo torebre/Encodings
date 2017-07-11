@@ -16,14 +16,15 @@ import java.awt.*;
 import java.util.Collection;
 
 public class RasterVisualizer2 {
-    private static final int SLEEP_TIME_MS = 200;
+    private static final int SLEEP_TIME_MS = 500;
     private static final int INITIAL_SQUARE_SIZE = 20;
 
     private static final Logger LOG = LoggerFactory.getLogger(RasterVisualizer2.class);
 
 
-    public static <T extends CellType> void showRasterFlow(RasterRun<T> rasterRun,
-                                                           Collection<RasterElementProcessor<T>> rasterElementProcessors)
+    public static <T extends CellType> void showRasterFlow(
+            RasterRun<T> rasterRun,
+            Collection<RasterElementProcessor<T>> rasterElementProcessors)
             throws InterruptedException {
         JFXPanel panel = new JFXPanel();
         panel.setPreferredSize(new Dimension(rasterRun.getColumns() * INITIAL_SQUARE_SIZE,
@@ -39,13 +40,16 @@ public class RasterVisualizer2 {
             panel.setScene(scene);
         });
 
-
         frame.pack();
         frame.setVisible(true);
 
         int border[][] = BooleanEncodingUtilities.getBorder(rasterRun.getRawInput());
 
+        int counter = 0;
         while (rasterRun.hasNext()) {
+
+            LOG.info("Painting element: " + (counter++));
+
             paintRaster(root, INITIAL_SQUARE_SIZE, rasterRun, border, rasterElementProcessors);
             rasterRun.next();
 
@@ -54,15 +58,15 @@ public class RasterVisualizer2 {
     }
 
 
-    private static <T extends CellType> void paintRaster(Group pRoot,
-                                                         int squareSize,
-                                                         RasterRun<T> rasterRun,
-                                                         int border[][],
-                                                         Collection<RasterElementProcessor<T>> rasterElementProcessors) {
+    private static <T extends CellType> void paintRaster(
+            Group pRoot,
+            int squareSize,
+            RasterRun<T> rasterRun,
+            int border[][],
+            Collection<RasterElementProcessor<T>> rasterElementProcessors) {
         if (squareSize < 1) {
             return;
         }
-
 
         Platform.runLater(() -> {
             pRoot.getChildren().clear();
@@ -80,7 +84,7 @@ public class RasterVisualizer2 {
                     children.add(rectangle);
 
                     for (RasterElementProcessor rasterElementProcessor : rasterElementProcessors) {
-                        rasterElementProcessor.processCell(rasterRun.getCell(row, column), squareSize, children);
+                        rasterElementProcessor.processCell(rasterRun.getCell(row, column), squareSize, children, rectangle);
                     }
 
 
@@ -166,7 +170,6 @@ public class RasterVisualizer2 {
         }
 
     }
-
 
 
 }

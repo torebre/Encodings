@@ -110,5 +110,19 @@ public final class EncodingUtilities {
         return true;
     }
 
+    public static boolean validCellOppositeDirection(int row, int column, FlowDirection flowDirection, int rows, int columns) {
+        int shiftedRow = row - flowDirection.getRowShift();
+        if(shiftedRow < 0 || shiftedRow >= rows) {
+            return false;
+        }
+
+        int shiftedColumn = column - flowDirection.getColumnShift();
+        if(shiftedColumn < 0 || shiftedColumn >= columns) {
+            return false;
+        }
+
+        return true;
+    }
+
 
 }

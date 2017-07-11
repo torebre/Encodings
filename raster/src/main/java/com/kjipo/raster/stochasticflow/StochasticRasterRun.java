@@ -1,5 +1,7 @@
 package com.kjipo.raster.stochasticflow;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import visualization.RasterRun;
 
 import java.util.List;
@@ -11,6 +13,8 @@ public class StochasticRasterRun implements RasterRun<StochasticCell> {
     private final int columns;
 
     private int current = 0;
+
+    private static final Logger LOG = LoggerFactory.getLogger(StochasticRasterRun.class);
 
 
     public StochasticRasterRun(List<StochasticFlowRasterImpl> rasters, int rows, int columns, boolean rawRaster[][]) {

@@ -6,6 +6,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polyline;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Affine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +17,12 @@ public class FlowPainter implements RasterElementProcessor<StochasticCell> {
     private static final Logger LOG = LoggerFactory.getLogger(FlowPainter.class);
 
     @Override
-    public void processCell(StochasticCell cell, int squareSize, ObservableList<Node> nodes) {
+    public void processCell(StochasticCell cell, int squareSize, ObservableList<Node> nodes, Rectangle rectangle) {
         FlowDirection flowDirection = cell.getFlowDirectionInCell();
+
+        if(flowDirection == null) {
+            return;
+        }
 
         Polyline arrow = paintArrow(cell.getRow(), cell.getColumn(), squareSize, flowDirection.getAngleInRadians());
         arrow.setStroke(Color.BLUE);
