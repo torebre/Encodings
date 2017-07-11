@@ -64,7 +64,7 @@ public class SegmentMergeTest {
 
             @Override
             public AttractionCell getCell(int row, int column) {
-                return new AttractionCell(row, column, rasters.get(counter));
+                return new AttractionCell(row, column, rasters.get(counter), prototype);
             }
 
             @Override

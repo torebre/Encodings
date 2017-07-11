@@ -176,7 +176,6 @@ public class SegmentMerge {
 
         return detached;
 
-
     }
 
 

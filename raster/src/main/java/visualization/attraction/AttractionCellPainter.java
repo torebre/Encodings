@@ -13,6 +13,9 @@ public class AttractionCellPainter implements RasterElementProcessor<AttractionC
         if(cell.isFilled()) {
             rectangle.setFill(Color.GREEN);
         }
+        else if(cell.containsPrototypeCell()) {
+            rectangle.setFill(Color.WHITE);
+        }
 
     }
 }
