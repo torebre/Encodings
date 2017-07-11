@@ -87,30 +87,6 @@ public class RasterVisualizer2 {
                         rasterElementProcessor.processCell(rasterRun.getCell(row, column), squareSize, children, rectangle);
                     }
 
-
-//                    if (flowRaster[row][column].abs() < 0.01) {
-//                        // No flow at this point
-//                        color = javafx.scene.paint.Color.gray(0.5, 0.5);
-//                    } else {
-//                        color = getColor(flowRaster[row][column], maxLength);
-//                    }
-
-//                    Text text = new Text(column * squareSize, (row + 1) * squareSize,
-//                            decimalFormat.format(flowRaster[row][column].abs()));
-
-//                    rectangle.setStroke(color);
-//                    rectangle.setFill(color);
-
-
-//                    rectangles.getChildren().add(text);
-
-//                    // Paint arrow
-//                    if (flowRaster[row][column].abs() > 0) {
-//                        Polyline arrow = paintArrow(row, column, squareSize,
-//                                flowRaster[row][column].getArgument());
-//                        arrow.setStroke(javafx.scene.paint.Color.BLUE);
-//                        rectangles.getChildren().add(arrow);
-//                    }
                 }
             }
 
