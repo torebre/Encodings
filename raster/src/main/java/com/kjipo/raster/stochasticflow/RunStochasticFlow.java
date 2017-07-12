@@ -7,10 +7,8 @@ import com.kjipo.raster.FlowDirection;
 import com.kjipo.raster.TileType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import visualization.RasterVisualizer2;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -89,55 +87,85 @@ public class RunStochasticFlow {
                 for (FlowDirection flowDirection : FlowDirection.values()) {
                     int flowIntoCell = stochasticFlowRaster.getFlowIntoCell(row, column, flowDirection);
 
-                    if(flowIntoCell == 0) {
+                    if (flowIntoCell == 0) {
                         continue;
                     }
 
                     totalFlow += flowIntoCell;
 
-                    if(flowIntoCell > 0) {
+                    if (flowIntoCell > 0) {
                         LOG.info("Found flow into cell {}, {}. Flow: {}", row, column, flowIntoCell);
                     }
 
-                    outputDistribution[StochasticFlowUtilities.OPPOSITE_DISTRIBUTION_MAP.get(flowDirection).ordinal()] = flowIntoCell;
+//                    outputDistribution[StochasticFlowUtilities.OPPOSITE_DISTRIBUTION_MAP.get(flowDirection).ordinal()] = flowIntoCell;
+                    outputDistribution[flowDirection.ordinal()] = flowIntoCell;
                 }
 
-                if(totalFlow == 0) {
+                if (totalFlow == 0) {
                     // No flow into this cell
                     continue;
                 }
 
                 TileType[] tileTypes = EncodingUtilities.determineNeighbourTypes(row, column, rawData);
+                Map<FlowDirection, Integer> outputFlows = new HashMap<>();
 
                 for (int i = 0; i < outputDistribution.length; ++i) {
+                    if (outputDistribution[i] == 0) {
+                        continue;
+                    }
+
                     switch (tileTypes[i]) {
                         case OUTSIDE_SCREEN:
                         case OUTSIDE_CHARACTER:
-                            outputDistribution[i] = 0;
+                            for (int j = 0; j < outputDistribution[i]; ++j) {
+                                outputFlows.merge(determineSingleFlow(FlowDirection.values()[i], tileTypes),
+                                        1, (v1, v2) -> v1 == null ? v2 : v1 + v2);
+                            }
                             break;
 
                         case OPEN:
+                            outputFlows.merge(FlowDirection.values()[i], outputDistribution[i], (v1, v2) -> v1 == null ? v2 : v1 + v2);
+                            break;
+
                         default:
                             // No change in probability
 
                     }
                 }
 
-                FlowDirection flowDirection = determineOutputDirection(outputDistribution);
+
+                System.out.println("Output flows: " + outputFlows);
+
+                List<FlowDirection> probabilityHelper = outputFlows.entrySet().stream().map(entry -> {
+                    List<FlowDirection> result = new ArrayList<>(entry.getValue());
+                    for (int i = 0; i < entry.getValue(); ++i) {
+                        result.add(entry.getKey());
+                    }
+                    return result;
+                })
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toList());
+
+                Random random = new Random();
+                builder.setValue(row, column, 1, probabilityHelper.get(random.nextInt(probabilityHelper.size())));
 
 
-                LOG.info("Setting flow {} at {}, {}", flowDirection, row, column);
+//                FlowDirection flowDirection = determineOutputDirection(outputDistribution);
+//                LOG.info("Setting flow {} at {}, {}", flowDirection, row, column);
+//                builder.setValue(row, column, 1, flowDirection);
 
-                builder.setValue(row, column, 1, flowDirection);
+
+//                for (Map.Entry<FlowDirection, Integer> entry : outputFlows.entrySet()) {
+//                    LOG.info("Setting flow {} at {}, {}. Strength: {}", entry.getKey(), row, column, entry.getValue());
+//
+//                    builder.setValue(row, column, entry.getValue(), entry.getKey());
+//                }
 
             }
 
         }
 
-
         return builder.build();
-
-
     }
 
 
@@ -164,8 +192,47 @@ public class RunStochasticFlow {
         }
 
         return FlowDirection.values()[FlowDirection.values().length - 1];
+    }
 
 
+    private static FlowDirection determineSingleFlow(FlowDirection flowDirection, TileType neighbours[]) {
+        if (neighbours[flowDirection.ordinal()] == TileType.OPEN) {
+            return flowDirection;
+        }
+
+        int clockwise = clockwiseTurn(flowDirection.ordinal(), FlowDirection.values().length);
+        int counterClockwise = counterClockwiseTurn(flowDirection.ordinal(), FlowDirection.values().length);
+
+        boolean clockwiseProbability = neighbours[clockwise] != TileType.OUTSIDE_CHARACTER
+                && neighbours[clockwise] != TileType.OUTSIDE_SCREEN;
+
+        boolean counterClockwiseProbability = neighbours[clockwise] != TileType.OUTSIDE_CHARACTER
+                && neighbours[clockwise] != TileType.OUTSIDE_SCREEN;
+
+
+        if (clockwiseProbability && counterClockwiseProbability || !clockwiseProbability && !counterClockwiseProbability) {
+            return determineSingleFlow(FlowDirection.values()[Math.random() > 0.5 ? clockwise : counterClockwise], neighbours);
+        } else if (counterClockwiseProbability) {
+            return FlowDirection.values()[counterClockwise];
+        } else {
+            return FlowDirection.values()[clockwise];
+        }
+    }
+
+    private static int clockwiseTurn(int position, int arrayLength) {
+        ++position;
+        if (position >= arrayLength) {
+            return 0;
+        }
+        return position;
+    }
+
+    private static int counterClockwiseTurn(int position, int arrayLength) {
+        --position;
+        if (position < 0) {
+            return arrayLength - 1;
+        }
+        return position;
     }
 
 
