@@ -4,19 +4,18 @@ import com.google.common.primitives.Chars;
 import com.kjipo.parser.FontFileParser;
 import com.kjipo.parser.KanjiDicParser;
 import com.kjipo.parser.Parsers;
+import com.kjipo.raster.filter.Filter;
+import com.kjipo.raster.filter.SkeletonFilter;
 import com.kjipo.representation.EncodedKanji;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
-import visualization.RasterVisualizer2;
 
 import java.awt.*;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class RunStochasticFlowTest {
@@ -40,14 +39,24 @@ public class RunStochasticFlowTest {
         }
 
         EncodedKanji kanji = encodedKanjis.iterator().next();
-        java.util.List<StochasticFlowRasterImpl> run = runStochasticFlow.createRun(kanji.getImage());
+        boolean[][] rawImage = kanji.getImage();
+
+        Filter skeletonFilter = new SkeletonFilter();
+        List<boolean[][]> results = skeletonFilter.applyFilter(rawImage);
+        boolean filteredImage[][] = results.get(results.size() - 1);
+
+
+//        Filter maskFilter = new MaskFilter();
+//        boolean filteredImage2[][] = maskFilter.applyFilter(filteredImage);
+
+        java.util.List<StochasticFlowRasterImpl> run = runStochasticFlow.createRun(rawImage);
 
 
         int counter = 0;
         for (StochasticFlowRasterImpl stochasticFlowRaster : run) {
             int cellsWithFlow = 0;
-            for(int row = 0; row < stochasticFlowRaster.getRows(); ++row) {
-                for(int column = 0; column < stochasticFlowRaster.getColumns(); ++column) {
+            for (int row = 0; row < stochasticFlowRaster.getRows(); ++row) {
+                for (int column = 0; column < stochasticFlowRaster.getColumns(); ++column) {
                     if (stochasticFlowRaster.getFlowInCell(row, column) > 0) {
 //                        LOG.info("Found cell with flow at {}, {}", row, column);
                         ++cellsWithFlow;

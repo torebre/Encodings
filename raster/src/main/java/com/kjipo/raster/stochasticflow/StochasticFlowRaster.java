@@ -3,6 +3,8 @@ package com.kjipo.raster.stochasticflow;
 
 import com.kjipo.raster.FlowDirection;
 
+import java.util.List;
+
 
 public interface StochasticFlowRaster {
 
@@ -15,6 +17,8 @@ public interface StochasticFlowRaster {
     int getFlowInCell(int row, int column);
 
     FlowDirection getFlowDirectionInCell(int row, int column);
+
+    List<Source> getSources();
 
 
 }

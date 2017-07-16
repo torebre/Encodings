@@ -30,11 +30,4 @@ public class EncodedKanji {
         printKanji(System.out);
     }
 
-    public String getKanjiString() {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        PrintStream printStream = new PrintStream(output, true);
-        printStream.flush();
-        return new String(output.toByteArray(), StandardCharsets.UTF_8);
-    }
-
 }

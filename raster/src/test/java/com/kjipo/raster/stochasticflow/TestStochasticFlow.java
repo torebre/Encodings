@@ -5,16 +5,21 @@ import com.google.common.primitives.Chars;
 import com.kjipo.parser.FontFileParser;
 import com.kjipo.parser.KanjiDicParser;
 import com.kjipo.parser.Parsers;
+import com.kjipo.raster.filter.Filter;
+import com.kjipo.raster.filter.MaskFilter;
 import com.kjipo.representation.EncodedKanji;
 import visualization.RasterVisualizer2;
 import visualization.stochasticflow.FlowPainter;
 import visualization.stochasticflow.FlowStrengthPainter;
+
 
 import java.awt.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class TestStochasticFlow {
@@ -36,9 +41,22 @@ public class TestStochasticFlow {
         }
 
         EncodedKanji kanji = encodedKanjis.iterator().next();
-        java.util.List<StochasticFlowRasterImpl> run = runStochasticFlow.createRun(kanji.getImage());
 
-        RasterVisualizer2.showRasterFlow(RasterRunCreator.createRasterRun(run, kanji.getImage().length, kanji.getImage()[0].length, kanji.getImage()),
+        boolean[][] rawImage = kanji.getImage();
+
+
+//        Filter skeletonFilter = new SkeletonFilter();
+//        boolean filteredImage[][] = skeletonFilter.applyFilter(rawImage);
+
+        Filter maskFilter = new MaskFilter();
+        List<boolean[][]> filteredImages = maskFilter.applyFilter(rawImage);
+
+//        List<boolean[][]> filteredImages = Collections.singletonList(rawImage);
+
+        java.util.List<StochasticFlowRasterImpl> run = runStochasticFlow.createRun(filteredImages.get(filteredImages.size() - 1));
+
+        RasterVisualizer2.showRasterFlow(RasterRunCreator.createRasterRun(run, kanji.getImage().length,
+                kanji.getImage()[0].length, filteredImages.get(filteredImages.size() - 1)),
                 ImmutableList.of(new FlowPainter(), new FlowStrengthPainter()));
     }
 

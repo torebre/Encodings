@@ -37,11 +37,16 @@ public class RunStochasticFlow {
 
         LOG.info("Setting source at {}, {}", sourceRow, sourceColumn);
 
+
+
         FlowDirection[] values = FlowDirection.values();
 
         for (int i = 0; i < values.length; ++i) {
             if (tileTypes[i] == TileType.OPEN) {
-                builder.setValue(sourceRow, sourceColumn, 1, values[i]);
+//                builder.setValue(sourceRow, sourceColumn, 1, values[i]);
+
+                builder.addSource(sourceRow, sourceColumn, values[i]);
+
             }
         }
 
@@ -50,7 +55,7 @@ public class RunStochasticFlow {
         StochasticFlowRasterImpl firstRaster = builder.build();
         rasterRun.add(firstRaster);
 
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < 100; ++i) {
             StochasticFlowRasterImpl nextRaster = iterate(firstRaster, raster);
 
             printNumberOfCellsWithFlow(nextRaster);
@@ -78,6 +83,11 @@ public class RunStochasticFlow {
 
     private StochasticFlowRasterImpl iterate(StochasticFlowRaster stochasticFlowRaster, boolean rawData[][]) {
         StochasticFlowRasterBuilder builder = StochasticFlowRasterBuilder.builder(rawData.length, rawData[0].length);
+        stochasticFlowRaster.getSources().forEach(builder::addSource);
+
+        for (Source source : stochasticFlowRaster.getSources()) {
+            builder.setValue(source.getRow(), source.getColumn(), 1, source.getFlowDirection());
+        }
 
         for (int row = 0; row < stochasticFlowRaster.getRows(); ++row) {
             for (int column = 0; column < stochasticFlowRaster.getColumns(); ++column) {
