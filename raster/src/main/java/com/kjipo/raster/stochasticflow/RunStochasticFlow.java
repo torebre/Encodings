@@ -38,7 +38,6 @@ public class RunStochasticFlow {
         LOG.info("Setting source at {}, {}", sourceRow, sourceColumn);
 
 
-
         FlowDirection[] values = FlowDirection.values();
 
         for (int i = 0; i < values.length; ++i) {
@@ -176,32 +175,6 @@ public class RunStochasticFlow {
         }
 
         return builder.build();
-    }
-
-
-    private static FlowDirection determineOutputDirection(int outputDistribution[]) {
-        List<Integer> outputs = Ints.asList(outputDistribution);
-
-        int sum = IntStream.of(outputDistribution).sum();
-
-        AtomicDouble accSum = new AtomicDouble();
-
-        List<Double> accumulatedValues = outputs.stream()
-                .map(Integer::doubleValue)
-                .map(value -> value / sum)
-                .map(accSum::addAndGet)
-                .collect(Collectors.toList());
-
-        double random = Math.random();
-
-        for (int i = 1; i < accumulatedValues.size(); ++i) {
-            if (accumulatedValues.get(i - 1) < random
-                    && accumulatedValues.get(i) > random) {
-                return FlowDirection.values()[i];
-            }
-        }
-
-        return FlowDirection.values()[FlowDirection.values().length - 1];
     }
 
 
