@@ -5,20 +5,29 @@ import com.kjipo.raster.FlowDirection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 public class StochasticFlowRasterImpl implements StochasticFlowRaster {
     private final int flows[][];
     private final FlowDirection flowDirections[][];
     private final List<Source> sources;
+    private final Collection<StochasticCell> processedCells;
+    private final Collection<StochasticCell> cellsToProcessNext;
+
 
     private static final Logger LOG = LoggerFactory.getLogger(StochasticFlowRasterImpl.class);
 
 
-    public StochasticFlowRasterImpl(int[][] flows, FlowDirection[][] flowDirections, List<Source> sources) {
+    public StochasticFlowRasterImpl(int[][] flows, FlowDirection[][] flowDirections,
+                                    List<Source> sources, Collection<StochasticCell> processedCells,
+                                    Collection<StochasticCell> cellsToProcessNext) {
         this.flows = flows;
         this.flowDirections = flowDirections;
         this.sources = sources;
+        this.processedCells = processedCells;
+        this.cellsToProcessNext = cellsToProcessNext;
     }
 
     @Override
@@ -59,5 +68,15 @@ public class StochasticFlowRasterImpl implements StochasticFlowRaster {
     @Override
     public List<Source> getSources() {
         return sources;
+    }
+
+    @Override
+    public Collection<StochasticCell> getProcessedCells() {
+        return processedCells;
+    }
+
+    @Override
+    public Collection<StochasticCell> getCellsToProcessNext() {
+        return cellsToProcessNext;
     }
 }

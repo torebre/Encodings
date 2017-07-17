@@ -3,6 +3,7 @@ package com.kjipo.raster.stochasticflow;
 
 import com.kjipo.raster.FlowDirection;
 
+import java.util.Collection;
 import java.util.List;
 
 
@@ -20,5 +21,8 @@ public interface StochasticFlowRaster {
 
     List<Source> getSources();
 
+    Collection<StochasticCell> getProcessedCells();
+
+    Collection<StochasticCell> getCellsToProcessNext();
 
 }

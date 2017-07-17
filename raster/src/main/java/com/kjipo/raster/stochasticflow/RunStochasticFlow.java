@@ -82,7 +82,9 @@ public class RunStochasticFlow {
 
     private StochasticFlowRasterImpl iterate(StochasticFlowRaster stochasticFlowRaster, boolean rawData[][]) {
         StochasticFlowRasterBuilder builder = StochasticFlowRasterBuilder.builder(rawData.length, rawData[0].length);
+        // Copy sources
         stochasticFlowRaster.getSources().forEach(builder::addSource);
+
 
         for (Source source : stochasticFlowRaster.getSources()) {
             builder.setValue(source.getRow(), source.getColumn(), 1, source.getFlowDirection());
