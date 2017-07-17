@@ -1,5 +1,6 @@
 package com.kjipo.raster.stochasticflow;
 
+import com.kjipo.raster.AbstractCell;
 import com.kjipo.raster.EncodingUtilities;
 import com.kjipo.raster.FlowDirection;
 import org.slf4j.Logger;
@@ -7,22 +8,21 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 public class StochasticFlowRasterImpl implements StochasticFlowRaster {
     private final int flows[][];
     private final FlowDirection flowDirections[][];
     private final List<Source> sources;
-    private final Collection<StochasticCell> processedCells;
-    private final Collection<StochasticCell> cellsToProcessNext;
+    private final Collection<? extends AbstractCell> processedCells;
+    private final Collection<? extends AbstractCell> cellsToProcessNext;
 
 
     private static final Logger LOG = LoggerFactory.getLogger(StochasticFlowRasterImpl.class);
 
 
     public StochasticFlowRasterImpl(int[][] flows, FlowDirection[][] flowDirections,
-                                    List<Source> sources, Collection<StochasticCell> processedCells,
-                                    Collection<StochasticCell> cellsToProcessNext) {
+                                    List<Source> sources, Collection<? extends AbstractCell> processedCells,
+                                    Collection<? extends AbstractCell> cellsToProcessNext) {
         this.flows = flows;
         this.flowDirections = flowDirections;
         this.sources = sources;
@@ -71,12 +71,12 @@ public class StochasticFlowRasterImpl implements StochasticFlowRaster {
     }
 
     @Override
-    public Collection<StochasticCell> getProcessedCells() {
+    public Collection<? extends AbstractCell> getProcessedCells() {
         return processedCells;
     }
 
     @Override
-    public Collection<StochasticCell> getCellsToProcessNext() {
+    public Collection<? extends AbstractCell> getCellsToProcessNext() {
         return cellsToProcessNext;
     }
 }

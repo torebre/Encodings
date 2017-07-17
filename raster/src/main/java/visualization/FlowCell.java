@@ -1,5 +1,6 @@
 package visualization;
 
+import com.kjipo.raster.AbstractCell;
 import com.kjipo.raster.flow.FlowEncodedRaster;
 
 public class FlowCell extends AbstractCell {

@@ -1,6 +1,6 @@
 package com.kjipo.raster.attraction;
 
-import visualization.AbstractCell;
+import com.kjipo.raster.AbstractCell;
 
 public class AttractionCell extends AbstractCell {
     private final boolean raster[][];

@@ -1,7 +1,6 @@
 package com.kjipo.raster.stochasticflow;
 
-import com.google.common.primitives.Ints;
-import com.google.common.util.concurrent.AtomicDouble;
+import com.kjipo.raster.AbstractCell;
 import com.kjipo.raster.EncodingUtilities;
 import com.kjipo.raster.FlowDirection;
 import com.kjipo.raster.TileType;
@@ -10,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class RunStochasticFlow {
 
@@ -45,7 +43,7 @@ public class RunStochasticFlow {
 //                builder.setValue(sourceRow, sourceColumn, 1, values[i]);
 
                 builder.addSource(sourceRow, sourceColumn, values[i]);
-
+                builder.addCellsToProcessNext(Collections.singleton(new BaseCell(sourceRow + values[i].getRowShift(), sourceColumn + values[i].getColumnShift())));
             }
         }
 
@@ -60,6 +58,11 @@ public class RunStochasticFlow {
             printNumberOfCellsWithFlow(nextRaster);
 
             rasterRun.add(nextRaster);
+
+            if (nextRaster.getCellsToProcessNext().isEmpty()) {
+                break;
+            }
+
             firstRaster = nextRaster;
         }
 
@@ -84,96 +87,82 @@ public class RunStochasticFlow {
         StochasticFlowRasterBuilder builder = StochasticFlowRasterBuilder.builder(rawData.length, rawData[0].length);
         // Copy sources
         stochasticFlowRaster.getSources().forEach(builder::addSource);
-
+        builder.addProcessedCells(stochasticFlowRaster.getProcessedCells());
+        builder.addProcessedCells(stochasticFlowRaster.getCellsToProcessNext());
 
         for (Source source : stochasticFlowRaster.getSources()) {
             builder.setValue(source.getRow(), source.getColumn(), 1, source.getFlowDirection());
         }
 
-        for (int row = 0; row < stochasticFlowRaster.getRows(); ++row) {
-            for (int column = 0; column < stochasticFlowRaster.getColumns(); ++column) {
-                int outputDistribution[] = new int[FlowDirection.values().length];
+        for (AbstractCell stochasticCell : stochasticFlowRaster.getCellsToProcessNext()) {
+            int outputDistribution[] = new int[FlowDirection.values().length];
+            int row = stochasticCell.getRow();
+            int column = stochasticCell.getColumn();
 
-                int totalFlow = 0;
-                for (FlowDirection flowDirection : FlowDirection.values()) {
-                    int flowIntoCell = stochasticFlowRaster.getFlowIntoCell(row, column, flowDirection);
+            if (stochasticFlowRaster.getFlowInCell(row, column) != 0) {
+                // Already a flow here
+                continue;
+            }
 
-                    if (flowIntoCell == 0) {
-                        continue;
-                    }
+            int totalFlow = 0;
+            for (FlowDirection flowDirection : FlowDirection.values()) {
+                int flowIntoCell = stochasticFlowRaster.getFlowIntoCell(row, column, flowDirection);
 
-                    totalFlow += flowIntoCell;
-
-                    if (flowIntoCell > 0) {
-                        LOG.info("Found flow into cell {}, {}. Flow: {}", row, column, flowIntoCell);
-                    }
-
-//                    outputDistribution[StochasticFlowUtilities.OPPOSITE_DISTRIBUTION_MAP.get(flowDirection).ordinal()] = flowIntoCell;
-                    outputDistribution[flowDirection.ordinal()] = flowIntoCell;
-                }
-
-                if (totalFlow == 0) {
-                    // No flow into this cell
+                if (flowIntoCell == 0) {
                     continue;
                 }
 
-                TileType[] tileTypes = EncodingUtilities.determineNeighbourTypes(row, column, rawData);
-                Map<FlowDirection, Integer> outputFlows = new HashMap<>();
+                totalFlow += flowIntoCell;
 
-                for (int i = 0; i < outputDistribution.length; ++i) {
-                    if (outputDistribution[i] == 0) {
-                        continue;
-                    }
-
-                    switch (tileTypes[i]) {
-                        case OUTSIDE_SCREEN:
-                        case OUTSIDE_CHARACTER:
-                            for (int j = 0; j < outputDistribution[i]; ++j) {
-                                outputFlows.merge(determineSingleFlow(FlowDirection.values()[i], tileTypes),
-                                        1, (v1, v2) -> v1 == null ? v2 : v1 + v2);
-                            }
-                            break;
-
-                        case OPEN:
-                            outputFlows.merge(FlowDirection.values()[i], outputDistribution[i], (v1, v2) -> v1 == null ? v2 : v1 + v2);
-                            break;
-
-                        default:
-                            // No change in probability
-
-                    }
+                if (flowIntoCell > 0) {
+                    LOG.info("Found flow into cell {}, {}. Flow: {}", row, column, flowIntoCell);
                 }
-
-
-                System.out.println("Output flows: " + outputFlows);
-
-                List<FlowDirection> probabilityHelper = outputFlows.entrySet().stream().map(entry -> {
-                    List<FlowDirection> result = new ArrayList<>(entry.getValue());
-                    for (int i = 0; i < entry.getValue(); ++i) {
-                        result.add(entry.getKey());
-                    }
-                    return result;
-                })
-                        .flatMap(Collection::stream)
-                        .collect(Collectors.toList());
-
-                Random random = new Random();
-                builder.setValue(row, column, 1, probabilityHelper.get(random.nextInt(probabilityHelper.size())));
-
-
-//                FlowDirection flowDirection = determineOutputDirection(outputDistribution);
-//                LOG.info("Setting flow {} at {}, {}", flowDirection, row, column);
-//                builder.setValue(row, column, 1, flowDirection);
-
-
-//                for (Map.Entry<FlowDirection, Integer> entry : outputFlows.entrySet()) {
-//                    LOG.info("Setting flow {} at {}, {}. Strength: {}", entry.getKey(), row, column, entry.getValue());
-//
-//                    builder.setValue(row, column, entry.getValue(), entry.getKey());
-//                }
-
+                outputDistribution[flowDirection.ordinal()] = flowIntoCell;
             }
 
+            if (totalFlow == 0) {
+                // No flow into this cell
+                continue;
+            }
+
+            TileType[] tileTypes = EncodingUtilities.determineNeighbourTypes(row, column, rawData);
+            Map<FlowDirection, Integer> outputFlows = new HashMap<>();
+
+            for (int i = 0; i < outputDistribution.length; ++i) {
+                if (outputDistribution[i] == 0) {
+                    continue;
+                }
+
+                switch (tileTypes[i]) {
+                    case OPEN:
+                        builder.addCellsToProcessNext(
+                                Collections.singleton(new BaseCell(row + FlowDirection.values()[i].getRowShift(),
+                                        column + FlowDirection.values()[i].getColumnShift())));
+                        break;
+
+                    case OUTSIDE_SCREEN:
+                    case OUTSIDE_CHARACTER:
+                    default:
+                        // Do nothing
+
+                }
+            }
+
+
+            System.out.println("Output flows: " + outputFlows);
+
+            List<FlowDirection> probabilityHelper = outputFlows.entrySet().stream().map(entry -> {
+                List<FlowDirection> result = new ArrayList<>(entry.getValue());
+                for (int i = 0; i < entry.getValue(); ++i) {
+                    result.add(entry.getKey());
+                }
+                return result;
+            })
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+
+            Random random = new Random();
+            builder.setValue(row, column, 1, probabilityHelper.get(random.nextInt(probabilityHelper.size())));
         }
 
         return builder.build();

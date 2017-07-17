@@ -1,14 +1,16 @@
 package com.kjipo.raster.stochasticflow;
 
+import com.kjipo.raster.AbstractCell;
 import com.kjipo.raster.FlowDirection;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public final class StochasticFlowRasterBuilder {
     private final int flows[][];
     private final FlowDirection flowDirections[][];
     private final List<Source> sources = new ArrayList<>();
+    private final Set<AbstractCell> cellsToProcessNext = new HashSet<>();
+    private final Set<AbstractCell> processedCells = new HashSet<>();
 
 
     private StochasticFlowRasterBuilder(int rows, int columns) {
@@ -40,13 +42,23 @@ public final class StochasticFlowRasterBuilder {
         return this;
     }
 
+    public StochasticFlowRasterBuilder addProcessedCells(Collection<? extends AbstractCell> processedCells) {
+        this.processedCells.addAll(processedCells);
+        return this;
+    }
+
+    public StochasticFlowRasterBuilder addCellsToProcessNext(Collection<? extends AbstractCell> cellsToProcessNext) {
+        this.cellsToProcessNext.addAll(cellsToProcessNext);
+        return this;
+    }
+
     public StochasticFlowRasterBuilder addSource(Source source) {
         sources.add(source);
         return this;
     }
 
     public StochasticFlowRasterImpl build() {
-        return new StochasticFlowRasterImpl(flows, flowDirections, sources);
+        return new StochasticFlowRasterImpl(flows, flowDirections, sources, processedCells, cellsToProcessNext);
     }
 
 
