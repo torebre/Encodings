@@ -13,10 +13,10 @@ import java.util.Collection;
 import java.util.List;
 
 
-public class MatchJoin {
+public class RotateSegment {
     private static final double angleIncrement = Math.PI / 4;
 
-    private static final Logger LOG = LoggerFactory.getLogger(MatchJoin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RotateSegment.class);
 
 
 

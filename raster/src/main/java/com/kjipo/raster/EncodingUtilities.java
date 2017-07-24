@@ -1,6 +1,10 @@
 package com.kjipo.raster;
 
 
+import com.kjipo.raster.segment.Pair;
+
+import java.util.Collection;
+
 public final class EncodingUtilities {
 
 
@@ -123,4 +127,9 @@ public final class EncodingUtilities {
     }
 
 
+    public static boolean[][] computeRasterBasedOnPairs(int rows, int columns, Collection<Pair> pairs) {
+        boolean result[][] = new boolean[rows][columns];
+        pairs.forEach(pair -> result[pair.getRow()][pair.getColumn()] = true);
+        return result;
+    }
 }

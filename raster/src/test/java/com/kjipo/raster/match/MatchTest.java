@@ -2,14 +2,17 @@ package com.kjipo.raster.match;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.kjipo.raster.EncodingUtilities;
+import com.kjipo.raster.FlowDirection;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
-import com.kjipo.raster.segment.SegmentImpl;
 import com.kjipo.raster.segment.SegmentWithOriginal;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import visualization.CellType;
 import visualization.RasterElementProcessor;
 import visualization.RasterRun;
@@ -22,6 +25,8 @@ public class MatchTest {
     private final int numberOfRows = 20;
     private final int numberOfColumns = 20;
 
+    private static final Logger LOG = LoggerFactory.getLogger(MatchTest.class);
+
 
     private void matchLineSegments() throws InterruptedException {
         List<Pair> prototypeData = Lists.newArrayList(new Pair(15, 8),
@@ -31,9 +36,9 @@ public class MatchTest {
 
         boolean inputData[][] = new boolean[numberOfRows][numberOfColumns];
 
-        inputData[15][4] = true;
-        inputData[15][5] = true;
-        inputData[15][6] = true;
+        inputData[3][4] = true;
+        inputData[3][5] = true;
+        inputData[3][6] = true;
 
         List<Pair> originalSegmentData = new ArrayList<>();
 
@@ -45,14 +50,48 @@ public class MatchTest {
             }
         }
 
-        List<SegmentWithOriginal> segments = new ArrayList<>();
+        List<Segment> segments = new ArrayList<>();
         segments.add(new SegmentWithOriginal(originalSegmentData, originalSegmentData, 0,
                 20, 20, 20));
 
-        for (int i = 1; i < 10; ++i) {
-            segments.add(MatchJoin.updateMatch(segments.get(i - 1)));
-        }
+        boolean prototypeRaster[][] = EncodingUtilities.computeRasterBasedOnPairs(numberOfRows, numberOfColumns, prototypeData);
+        int[][] distanceMap = MatchDistance.computeDistanceMap(prototypeRaster);
 
+        for (int i = 1; i < 20; ++i) {
+            Segment segment = segments.get(i - 1);
+
+            Segment nextSegment =
+                    RotateSegment.updateMatch(new SegmentWithOriginal(
+                            segment.getPairs(),
+                            segment.getPairs(),
+                            0,
+                            20,
+                            numberOfRows,
+                            numberOfColumns));
+
+            int minDistance = MatchDistance.computeDistanceBasedOnDistanceMap(
+                    EncodingUtilities.computeRasterBasedOnPairs(numberOfRows, numberOfColumns, nextSegment.getPairs()),
+                    distanceMap);
+
+            LOG.info("Min distance: {}", minDistance);
+
+            for (FlowDirection flowDirection : FlowDirection.values()) {
+                Segment segment1 = TranslateSegment.updateMatch(segment, flowDirection, numberOfRows, numberOfColumns);
+
+                int distance = MatchDistance.computeDistanceBasedOnDistanceMap(
+                        EncodingUtilities.computeRasterBasedOnPairs(numberOfRows, numberOfColumns, segment1.getPairs()),
+                        distanceMap);
+
+                LOG.info("Flow direction: {}. Distance: {}", flowDirection, distance);
+
+                if(distance < minDistance) {
+                    nextSegment = segment1;
+                    minDistance = distance;
+                }
+            }
+
+            segments.add(nextSegment);
+        }
 
         RasterVisualizer2.showRasterFlow(
                 new RasterRun<MatchCell>() {
@@ -66,7 +105,7 @@ public class MatchTest {
 
                     @Override
                     public boolean hasNext() {
-                        return current < 9;
+                        return current < segments.size() - 1;
                     }
 
                     @Override
