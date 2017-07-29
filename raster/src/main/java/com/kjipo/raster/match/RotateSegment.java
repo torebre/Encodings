@@ -19,25 +19,28 @@ public class RotateSegment {
     private static final Logger LOG = LoggerFactory.getLogger(RotateSegment.class);
 
 
-
     public static SegmentWithOriginal updateMatch(SegmentWithOriginal segment) {
         return new SegmentWithOriginal(segment.getOriginalData(),
                 rotateSegment(segment.getOriginalData(),
-                segment.getNumberOfRows(),
-                segment.getNumberOfColumns(),
-                segment.getSquareSide(),
-                segment.getRotationAngle() + angleIncrement),
+                        segment.getNumberOfRows(),
+                        segment.getNumberOfColumns(),
+                        segment.getSquareSide(),
+                        segment.getRotationAngle() + angleIncrement),
                 segment.getRotationAngle() + angleIncrement,
                 segment.getSquareSide(),
                 segment.getNumberOfRows(),
                 segment.getNumberOfColumns());
     }
 
-    private static List<Pair> rotateSegment(List<Pair> coordinates, int rows, int columns, int squareSide, double angle) {
+    public static List<Pair> rotateSegment(List<Pair> coordinates, int rows, int columns, int squareSide, double angle) {
         Pair midpointCell = findMidpointCell(coordinates);
         int pivotRow = midpointCell.getRow();
         int pivotColumn = midpointCell.getColumn();
 
+        return rotate(coordinates, pivotRow, pivotColumn, rows, columns, squareSide, angle);
+    }
+
+    public static List<Pair> rotate(List<Pair> coordinates, int pivotRow, int pivotColumn, int rows, int columns, int squareSide, double angle) {
         double cellCenter = (double) squareSide / 2;
         double xCenter = squareSide * pivotColumn + cellCenter;
         double yCenter = squareSide * pivotRow + cellCenter;
@@ -57,7 +60,7 @@ public class RotateSegment {
             Pair newCoordinates = determineCellFromCoordinates(rotatedCellCoordinates.getReal() + xCenter,
                     rotatedCellCoordinates.getImaginary() + yCenter, rows, columns, squareSide);
 
-            if(newCoordinates != null) {
+            if (newCoordinates != null) {
 
                 LOG.info("X center: {}. Y center: {}", xCenter, yCenter);
 

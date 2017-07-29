@@ -2,11 +2,10 @@ package com.kjipo.raster.match;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.kjipo.raster.EncodingUtilities;
-import com.kjipo.raster.FlowDirection;
+import com.kjipo.raster.attraction.SegmentMatcher;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
-import com.kjipo.raster.segment.SegmentWithOriginal;
+import com.kjipo.raster.segment.SegmentImpl;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
@@ -19,11 +18,12 @@ import visualization.RasterRun;
 import visualization.RasterVisualizer2;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class MatchTest {
-    private final int numberOfRows = 20;
-    private final int numberOfColumns = 20;
+    private final int numberOfRows = 30;
+    private final int numberOfColumns = 30;
 
     private static final Logger LOG = LoggerFactory.getLogger(MatchTest.class);
 
@@ -36,62 +36,48 @@ public class MatchTest {
 
         boolean inputData[][] = new boolean[numberOfRows][numberOfColumns];
 
-        inputData[3][4] = true;
-        inputData[3][5] = true;
-        inputData[3][6] = true;
+        Segment segment1 = new SegmentImpl(ImmutableList.<Pair>builder()
+                .add(Pair.of(3, 4))
+                .add(Pair.of(3, 5))
+                .add(Pair.of(3, 6))
+                .build());
 
-        List<Pair> originalSegmentData = new ArrayList<>();
+        Segment segment2 = new SegmentImpl(ImmutableList.<Pair>builder()
+                .add(Pair.of(3, 3))
+                .add(Pair.of(2, 3))
+                .add(Pair.of(1, 3))
+                .add(Pair.of(0, 3))
+                .build());
 
-        for(int row = 0; row < inputData.length; ++row) {
-            for(int column = 0; column < inputData[0].length; ++column) {
-                if(inputData[row][column]) {
-                    originalSegmentData.add(new Pair(row, column));
-                }
-            }
-        }
+        Segment segment3 = new SegmentImpl(ImmutableList.<Pair>builder()
+                .add(Pair.of(0, 4))
+                .add(Pair.of(0, 5))
+                .add(Pair.of(0, 6))
+                .build());
 
-        List<Segment> segments = new ArrayList<>();
-        segments.add(new SegmentWithOriginal(originalSegmentData, originalSegmentData, 0,
-                20, 20, 20));
+        Segment segment4 = new SegmentImpl(ImmutableList.<Pair>builder()
+                .add(Pair.of(3, 7))
+                .add(Pair.of(2, 7))
+                .add(Pair.of(1, 7))
+                .add(Pair.of(0, 7))
+                .build());
 
-        boolean prototypeRaster[][] = EncodingUtilities.computeRasterBasedOnPairs(numberOfRows, numberOfColumns, prototypeData);
-        int[][] distanceMap = MatchDistance.computeDistanceMap(prototypeRaster);
+        Segment segment5 = new SegmentImpl(ImmutableList.<Pair>builder()
+                .add(Pair.of(5, 8))
+                .add(Pair.of(6, 9))
+                .add(Pair.of(7, 10))
+                .add(Pair.of(8, 11))
+                .build());
 
-        for (int i = 1; i < 20; ++i) {
-            Segment segment = segments.get(i - 1);
+        List<Segment> inputSegments = Lists.newArrayList(segment1, segment2, segment3, segment4, segment5);
 
-            Segment nextSegment =
-                    RotateSegment.updateMatch(new SegmentWithOriginal(
-                            segment.getPairs(),
-                            segment.getPairs(),
-                            0,
-                            20,
-                            numberOfRows,
-                            numberOfColumns));
+        addSegmentsToRaster(inputSegments, inputData);
 
-            int minDistance = MatchDistance.computeDistanceBasedOnDistanceMap(
-                    EncodingUtilities.computeRasterBasedOnPairs(numberOfRows, numberOfColumns, nextSegment.getPairs()),
-                    distanceMap);
 
-            LOG.info("Min distance: {}", minDistance);
+        List<List<Segment>> segmentLines = SegmentMatcher.matchSegments(numberOfRows, numberOfColumns, inputSegments, prototypeData);
 
-            for (FlowDirection flowDirection : FlowDirection.values()) {
-                Segment segment1 = TranslateSegment.updateMatch(segment, flowDirection, numberOfRows, numberOfColumns);
+        List<Segment> segments = joinSegmentLines(segmentLines);
 
-                int distance = MatchDistance.computeDistanceBasedOnDistanceMap(
-                        EncodingUtilities.computeRasterBasedOnPairs(numberOfRows, numberOfColumns, segment1.getPairs()),
-                        distanceMap);
-
-                LOG.info("Flow direction: {}. Distance: {}", flowDirection, distance);
-
-                if(distance < minDistance) {
-                    nextSegment = segment1;
-                    minDistance = distance;
-                }
-            }
-
-            segments.add(nextSegment);
-        }
 
         RasterVisualizer2.showRasterFlow(
                 new RasterRun<MatchCell>() {
@@ -145,6 +131,46 @@ public class MatchTest {
                 rectangle.setFill(Color.RED);
             }
         }
+    }
+
+    private void addSegmentsToRaster(Collection<Segment> segments, boolean raster[][]) {
+        segments.stream()
+                .flatMap(segment -> segment.getPairs().stream())
+                .forEach(segment -> raster[segment.getRow()][segment.getColumn()] = true);
+    }
+
+    private List<Segment> joinSegmentLines(List<List<Segment>> segmentLines) {
+        List<Segment> result = new ArrayList<>();
+
+        List<Segment> previousSegmentInLine = new ArrayList<>();
+
+        segmentLines.forEach(segmentLine -> previousSegmentInLine.add(segmentLine.get(0)));
+
+        boolean foundNewElement = true;
+        int counter = 0;
+        while(foundNewElement) {
+            foundNewElement = false;
+
+            List<Segment> segmentsInStep = new ArrayList<>();
+            int lineCounter = 0;
+            for (List<Segment> segmentLine : segmentLines) {
+                if(counter < segmentLine.size()) {
+                    foundNewElement = true;
+                    segmentsInStep.add(segmentLine.get(counter));
+                    previousSegmentInLine.set(lineCounter, segmentLine.get(counter));
+                }
+                else {
+                    segmentsInStep.add(previousSegmentInLine.get(lineCounter));
+                }
+
+                ++lineCounter;
+            }
+
+            ++counter;
+            result.add(new UnionSegment(segmentsInStep));
+        }
+
+        return result;
     }
 
 

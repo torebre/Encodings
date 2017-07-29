@@ -4,6 +4,7 @@ package com.kjipo.raster;
 import com.kjipo.raster.segment.Pair;
 
 import java.util.Collection;
+import java.util.Optional;
 
 public final class EncodingUtilities {
 
@@ -132,4 +133,39 @@ public final class EncodingUtilities {
         pairs.forEach(pair -> result[pair.getRow()][pair.getColumn()] = true);
         return result;
     }
+
+    public static FlowDirection determineOffset(int rowOffset, int columnOffset) {
+        if (rowOffset == -1 && columnOffset == -1) {
+            return FlowDirection.NORTH_WEST;
+        }
+        if (rowOffset == -1 && columnOffset == 0) {
+            return FlowDirection.NORTH;
+        }
+        if (rowOffset == -1 && columnOffset == 1) {
+            return FlowDirection.NORTH_EAST;
+        }
+
+        if (rowOffset == 0 && columnOffset == -1) {
+            return FlowDirection.WEST;
+        }
+        if (rowOffset == 0 && columnOffset == 0) {
+            return null;
+        }
+        if (rowOffset == 0 && columnOffset == 1) {
+            return FlowDirection.EAST;
+        }
+
+        if (rowOffset == 1 && columnOffset == -1) {
+            return FlowDirection.SOUTH_WEST;
+        }
+        if (rowOffset == 1 && columnOffset == 0) {
+            return FlowDirection.SOUTH;
+        }
+        if (rowOffset == 1 && columnOffset == 1) {
+            return FlowDirection.SOUTH_EAST;
+        }
+
+        return null;
+    }
+
 }

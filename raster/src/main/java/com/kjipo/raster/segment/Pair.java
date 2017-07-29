@@ -9,6 +9,10 @@ public class Pair {
         this.column = column;
     }
 
+    public static Pair of(int row, int column) {
+        return new Pair(row, column);
+    }
+
     public int getRow() {
         return row;
     }

@@ -2,6 +2,7 @@ package com.kjipo.raster.attraction;
 
 import com.kjipo.raster.EncodingUtilities;
 import com.kjipo.raster.FlowDirection;
+import com.kjipo.raster.segment.Segment;
 import com.kjipo.raster.stochasticflow.StochasticFlowRasterImpl;
 
 import java.util.Collection;
