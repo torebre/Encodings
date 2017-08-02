@@ -1,6 +1,6 @@
 package com.kjipo.raster;
 
-import visualization.CellType;
+import com.kjipo.visualization.CellType;
 
 public abstract class AbstractCell implements CellType {
     protected final int row;

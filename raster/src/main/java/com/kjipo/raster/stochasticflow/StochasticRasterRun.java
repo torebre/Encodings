@@ -2,7 +2,7 @@ package com.kjipo.raster.stochasticflow;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import visualization.RasterRun;
+import com.kjipo.visualization.RasterRun;
 
 import java.util.List;
 

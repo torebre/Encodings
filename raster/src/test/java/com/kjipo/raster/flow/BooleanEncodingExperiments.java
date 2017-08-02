@@ -6,7 +6,7 @@ import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.complex.ComplexUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import visualization.RasterVisualizer;
+import com.kjipo.visualization.RasterVisualizer;
 
 import java.util.ArrayList;
 import java.util.List;

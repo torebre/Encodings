@@ -1,4 +1,4 @@
-package visualization;
+package com.kjipo.visualization;
 
 import com.kjipo.raster.AbstractCell;
 import com.kjipo.raster.flow.FlowEncodedRaster;

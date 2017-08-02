@@ -1,4 +1,4 @@
-package visualization;
+package com.kjipo.visualization;
 
 import com.kjipo.raster.flow.BooleanEncodingUtilities;
 import javafx.application.Platform;

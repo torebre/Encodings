@@ -8,9 +8,9 @@ import com.kjipo.parser.Parsers;
 import com.kjipo.raster.filter.Filter;
 import com.kjipo.raster.filter.MaskFilter;
 import com.kjipo.representation.EncodedKanji;
-import visualization.RasterVisualizer2;
-import visualization.stochasticflow.FlowPainter;
-import visualization.stochasticflow.FlowStrengthPainter;
+import com.kjipo.visualization.RasterVisualizer2;
+import com.kjipo.visualization.stochasticflow.FlowPainter;
+import com.kjipo.visualization.stochasticflow.FlowStrengthPainter;
 
 
 import java.awt.*;
@@ -18,7 +18,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 

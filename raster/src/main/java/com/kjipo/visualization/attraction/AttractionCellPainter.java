@@ -1,11 +1,11 @@
-package visualization.attraction;
+package com.kjipo.visualization.attraction;
 
 import com.kjipo.raster.attraction.AttractionCell;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import visualization.RasterElementProcessor;
+import com.kjipo.visualization.RasterElementProcessor;
 
 public class AttractionCellPainter implements RasterElementProcessor<AttractionCell> {
     @Override

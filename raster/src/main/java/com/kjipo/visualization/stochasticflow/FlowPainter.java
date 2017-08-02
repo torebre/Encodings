@@ -1,4 +1,4 @@
-package visualization.stochasticflow;
+package com.kjipo.visualization.stochasticflow;
 
 import com.kjipo.raster.FlowDirection;
 import com.kjipo.raster.stochasticflow.StochasticCell;
@@ -10,7 +10,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Affine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import visualization.RasterElementProcessor;
+import com.kjipo.visualization.RasterElementProcessor;
 
 public class FlowPainter implements RasterElementProcessor<StochasticCell> {
 

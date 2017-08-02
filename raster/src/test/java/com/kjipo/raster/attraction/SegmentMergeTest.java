@@ -2,9 +2,9 @@ package com.kjipo.raster.attraction;
 
 import com.google.common.collect.ImmutableList;
 import com.kjipo.raster.EncodingUtilities;
-import visualization.RasterRun;
-import visualization.RasterVisualizer2;
-import visualization.attraction.AttractionCellPainter;
+import com.kjipo.visualization.RasterRun;
+import com.kjipo.visualization.RasterVisualizer2;
+import com.kjipo.visualization.attraction.AttractionCellPainter;
 
 import java.util.ArrayList;
 import java.util.List;

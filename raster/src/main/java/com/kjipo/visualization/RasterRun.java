@@ -1,4 +1,4 @@
-package visualization;
+package com.kjipo.visualization;
 
 public interface RasterRun<T extends CellType> {
 

@@ -4,8 +4,6 @@ import com.google.common.primitives.Chars;
 import com.kjipo.parser.FontFileParser;
 import com.kjipo.parser.KanjiDicParser;
 import com.kjipo.parser.Parsers;
-import com.kjipo.raster.filter.Filter;
-import com.kjipo.raster.filter.SkeletonFilter;
 import com.kjipo.representation.EncodedKanji;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +13,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class RunStochasticFlowTest {
@@ -40,17 +37,7 @@ public class RunStochasticFlowTest {
 
         EncodedKanji kanji = encodedKanjis.iterator().next();
         boolean[][] rawImage = kanji.getImage();
-
-        Filter skeletonFilter = new SkeletonFilter();
-        List<boolean[][]> results = skeletonFilter.applyFilter(rawImage);
-        boolean filteredImage[][] = results.get(results.size() - 1);
-
-
-//        Filter maskFilter = new MaskFilter();
-//        boolean filteredImage2[][] = maskFilter.applyFilter(filteredImage);
-
         java.util.List<StochasticFlowRasterImpl> run = runStochasticFlow.createRun(rawImage);
-
 
         int counter = 0;
         for (StochasticFlowRasterImpl stochasticFlowRaster : run) {

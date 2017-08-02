@@ -60,16 +60,6 @@ public class MaskFilter implements Filter {
                                 {false, false, false},
                                 {true, true, true},
                         }))
-//                .put(getKey(signatureToArray(new boolean[][]{
-//                                {false, false, false},
-//                                {true, true, true},
-//                                {true, true, true},
-//                        })),
-//                        signatureToArray(new boolean[][]{
-//                                {false, false, false},
-//                                {false, false, false},
-//                                {true, true, true},
-//                        }))
                 .build();
 
     }

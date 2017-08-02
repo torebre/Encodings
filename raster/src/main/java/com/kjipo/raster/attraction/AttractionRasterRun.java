@@ -1,6 +1,6 @@
 package com.kjipo.raster.attraction;
 
-import visualization.RasterRun;
+import com.kjipo.visualization.RasterRun;
 
 public class AttractionRasterRun implements RasterRun<AttractionCell> {
 

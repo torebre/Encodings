@@ -12,10 +12,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import visualization.CellType;
-import visualization.RasterElementProcessor;
-import visualization.RasterRun;
-import visualization.RasterVisualizer2;
+import com.kjipo.visualization.CellType;
+import com.kjipo.visualization.RasterElementProcessor;
+import com.kjipo.visualization.RasterRun;
+import com.kjipo.visualization.RasterVisualizer2;
 
 import java.util.ArrayList;
 import java.util.Collection;

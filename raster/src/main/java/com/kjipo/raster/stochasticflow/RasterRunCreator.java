@@ -1,6 +1,6 @@
 package com.kjipo.raster.stochasticflow;
 
-import visualization.RasterRun;
+import com.kjipo.visualization.RasterRun;
 
 import java.util.List;
 

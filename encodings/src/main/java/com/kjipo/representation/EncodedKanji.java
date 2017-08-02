@@ -1,11 +1,12 @@
 package com.kjipo.representation;
 
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.PrintStream;
+import java.io.Serializable;
 import java.util.stream.IntStream;
 
-public class EncodedKanji {
+
+public class EncodedKanji implements Serializable {
     private final boolean image[][];
 
 

@@ -1,4 +1,4 @@
-package visualization;
+package com.kjipo.visualization;
 
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
