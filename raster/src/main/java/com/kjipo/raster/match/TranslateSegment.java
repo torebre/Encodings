@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 
 public class TranslateSegment {
 
-    public static Segment updateMatch(Segment segment, FlowDirection flowDirection, int numberOfRows, int numberOfColumns) {
-        List<Pair> pairs = segment.getPairs().stream().map(pair -> new Pair(pair.getRow() + flowDirection.getRowShift(),
+    public static Segment updateMatch(List<Pair> coordinates, FlowDirection flowDirection, int numberOfRows, int numberOfColumns) {
+        List<Pair> pairs = coordinates.stream().map(pair -> new Pair(pair.getRow() + flowDirection.getRowShift(),
                 pair.getColumn() + flowDirection.getColumnShift()))
                 .collect(Collectors.toList());
 

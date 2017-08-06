@@ -16,8 +16,11 @@ public class RasterTransformer {
 
     public static Cell[][] segmentTransformer(boolean raster[][]) {
         Filter maskFilter = new MaskFilter();
-        List<boolean[][]> results = maskFilter.applyFilter(raster);
-        boolean filteredImage[][] = results.get(results.size() - 1);
+//        List<boolean[][]> results = maskFilter.applyFilter(raster);
+//        boolean filteredImage[][] = results.get(results.size() - 1);
+
+        boolean filteredImage[][] = raster;
+
         Cell flowRaster[][] = createEmptyFlowRaster(filteredImage);
         Pair startPoint;
 

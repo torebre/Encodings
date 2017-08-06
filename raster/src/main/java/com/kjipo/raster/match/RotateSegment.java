@@ -1,6 +1,7 @@
 package com.kjipo.raster.match;
 
 
+import com.kjipo.raster.attraction.MoveOperation;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.SegmentWithOriginal;
 import org.apache.commons.math3.complex.Complex;
@@ -19,6 +20,27 @@ public class RotateSegment {
     private static final Logger LOG = LoggerFactory.getLogger(RotateSegment.class);
 
 
+    public static SegmentWithOriginal rotateSegment45DegreesCounterClockwise(
+            List<Pair> coordinates, int numberOfRows, int numberOfColumns, int squareSide) {
+        Pair midpointCell = findMidpointCell(coordinates);
+        int pivotRow = midpointCell.getRow();
+        int pivotColumn = midpointCell.getColumn();
+
+        rotate(coordinates, pivotRow, pivotColumn, numberOfRows, numberOfColumns, squareSide, angleIncrement);
+
+        return new SegmentWithOriginal(coordinates,
+                rotateSegment(coordinates,
+                        numberOfRows,
+                        numberOfColumns,
+                        squareSide,
+                        angleIncrement),
+                angleIncrement,
+                squareSide,
+                numberOfRows,
+                numberOfColumns,
+                new MoveOperation(0, 0, angleIncrement, pivotRow, pivotColumn));
+    }
+
     public static SegmentWithOriginal updateMatch(SegmentWithOriginal segment) {
         return new SegmentWithOriginal(segment.getOriginalData(),
                 rotateSegment(segment.getOriginalData(),
@@ -29,10 +51,11 @@ public class RotateSegment {
                 segment.getRotationAngle() + angleIncrement,
                 segment.getSquareSide(),
                 segment.getNumberOfRows(),
-                segment.getNumberOfColumns());
+                segment.getNumberOfColumns(),
+                new MoveOperation(0, 0, 0, 0, 0));
     }
 
-    public static List<Pair> rotateSegment(List<Pair> coordinates, int rows, int columns, int squareSide, double angle) {
+    private static List<Pair> rotateSegment(List<Pair> coordinates, int rows, int columns, int squareSide, double angle) {
         Pair midpointCell = findMidpointCell(coordinates);
         int pivotRow = midpointCell.getRow();
         int pivotColumn = midpointCell.getColumn();

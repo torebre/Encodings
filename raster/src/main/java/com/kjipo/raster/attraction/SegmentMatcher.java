@@ -20,18 +20,25 @@ import java.util.stream.Collectors;
 public class SegmentMatcher {
 
     private static final double ROTATION_45_DEGREES = Math.PI / 4;
+    private static final int MAX_ITERATIONS = 20;
+    private static final int SQUARE_SIDE = 20;
 
     private static final Logger LOG = LoggerFactory.getLogger(SegmentMatcher.class);
 
 
+    /**
+     * Returns a list of list with segments that show the
+     * transformation each segment has gone through.
+     */
     public static List<List<Segment>> matchSegments(int numberOfRows, int numberOfColumns,
-                                                    List<Segment> originalSegmentData, List<Pair> prototypeData) {
+                                                    List<Segment> originalSegmentData, Prototype prototype) {
         List<List<Segment>> segmentLines = new ArrayList<>();
 
         // TODO Support multiple segments
         Segment originalSegment = originalSegmentData.get(0);
 
-        List<Segment> segments = matchSingleSegment(numberOfRows, numberOfColumns, originalSegment, prototypeData);
+        List<Segment> segments = matchSingleSegment(numberOfRows, numberOfColumns, originalSegment, prototype.getSegments().iterator().next().getPairs());
+
         MoveOperation moveOperation = rotateSegments(originalSegment, segments.get(segments.size() - 1));
 
         segmentLines.add(segments);
@@ -44,17 +51,44 @@ public class SegmentMatcher {
         return segmentLines;
     }
 
+
+    public static List<List<Segment>> positionPrototype(int numberOfRows, int numberOfColumns,
+                                                        Segment originalSegmentData, Prototype prototype) {
+        List<List<Segment>> segmentLines = new ArrayList<>();
+
+        List<Segment> prototypeSegments = new ArrayList<>(prototype.getSegments());
+        Segment startSegment = prototypeSegments.get(0);
+        List<MoveOperation> moveOperations = matchSingleSegment(numberOfRows, numberOfColumns,
+                originalSegmentData.getPairs(), startSegment.getPairs());
+
+        for (Segment prototypeSegment : prototypeSegments) {
+            List<Segment> segmentLine = new ArrayList<>(moveOperations.size() + 1);
+            segmentLine.add(prototypeSegment);
+            segmentLines.add(segmentLine);
+        }
+
+        for (int i = 0; i < moveOperations.size(); ++i) {
+            for (List<Segment> segmentLine : segmentLines) {
+                Segment segment = applyMoveOperation(segmentLine.get(segmentLine.size() - 1), moveOperations.get(i),
+                        numberOfRows, numberOfColumns);
+                segmentLine.add(segment);
+            }
+        }
+        return segmentLines;
+    }
+
+
     private static List<Segment> matchSingleSegment(int numberOfRows, int numberOfColumns,
                                                     Segment originalSegment, List<Pair> prototypeData) {
         List<Segment> segments = new ArrayList<>();
 
         segments.add(new SegmentWithOriginal(originalSegment.getPairs(), originalSegment.getPairs(), 0,
-                20, numberOfRows, numberOfColumns));
+                SQUARE_SIDE, numberOfRows, numberOfColumns, new MoveOperation(0, 0, 0, 0, 0)));
 
         boolean prototypeRaster[][] = EncodingUtilities.computeRasterBasedOnPairs(numberOfRows, numberOfColumns, prototypeData);
         int[][] distanceMap = MatchDistance.computeDistanceMap(prototypeRaster);
 
-        for (int i = 1; i < 20; ++i) {
+        for (int i = 1; i < MAX_ITERATIONS; ++i) {
             Segment segment = segments.get(i - 1);
 
             Segment nextSegment =
@@ -62,9 +96,10 @@ public class SegmentMatcher {
                             segment.getPairs(),
                             segment.getPairs(),
                             0,
-                            20,
+                            SQUARE_SIDE,
                             numberOfRows,
-                            numberOfColumns));
+                            numberOfColumns,
+                            new MoveOperation(0, 0, 0, 0, 0)));
 
             int minDistance = MatchDistance.computeDistanceBasedOnDistanceMap(
                     EncodingUtilities.computeRasterBasedOnPairs(numberOfRows, numberOfColumns, nextSegment.getPairs()),
@@ -73,13 +108,15 @@ public class SegmentMatcher {
             LOG.info("Min distance: {}", minDistance);
 
             for (FlowDirection flowDirection : FlowDirection.values()) {
-                Segment segment1 = TranslateSegment.updateMatch(segment, flowDirection, numberOfRows, numberOfColumns);
+                Segment segment1 = TranslateSegment.updateMatch(segment.getPairs(), flowDirection, numberOfRows, numberOfColumns);
 
                 int distance = MatchDistance.computeDistanceBasedOnDistanceMap(
                         EncodingUtilities.computeRasterBasedOnPairs(numberOfRows, numberOfColumns, segment1.getPairs()),
                         distanceMap);
 
-                LOG.info("Flow direction: {}. Distance: {}", flowDirection, distance);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Flow direction: {}. Distance: {}", flowDirection, distance);
+                }
 
                 if (distance < minDistance) {
                     nextSegment = segment1;
@@ -91,6 +128,67 @@ public class SegmentMatcher {
         }
 
         return segments;
+    }
+
+    private static List<MoveOperation> matchSingleSegment(int numberOfRows, int numberOfColumns,
+                                                          List<Pair> stationaryPairs, List<Pair> movablePairs) {
+        List<MoveOperation> moveOperations = new ArrayList<>();
+        boolean prototypeRaster[][] = EncodingUtilities.computeRasterBasedOnPairs(numberOfRows, numberOfColumns, stationaryPairs);
+        int[][] distanceMap = MatchDistance.computeDistanceMap(prototypeRaster);
+        List<Pair> previousCoordinates = movablePairs;
+
+        for (int i = 0; i < MAX_ITERATIONS; ++i) {
+            SegmentWithOriginal rotatedSegment = RotateSegment.rotateSegment45DegreesCounterClockwise(previousCoordinates, numberOfRows, numberOfColumns, SQUARE_SIDE);
+            MoveOperation moveOperation = rotatedSegment.getMoveOperation();
+            Segment currentSegment = rotatedSegment;
+
+            int minDistance = MatchDistance.computeDistanceBasedOnDistanceMap(
+                    EncodingUtilities.computeRasterBasedOnPairs(numberOfRows, numberOfColumns, currentSegment.getPairs()),
+                    distanceMap);
+
+            LOG.info("Min distance: {}", minDistance);
+
+            for (FlowDirection flowDirection : FlowDirection.values()) {
+                Segment segment1 = TranslateSegment.updateMatch(previousCoordinates, flowDirection, numberOfRows, numberOfColumns);
+
+                boolean validCoordinates = true;
+                for (Pair pair : segment1.getPairs()) {
+                    if(pair.getRow() < 0
+                            || pair.getRow() >= numberOfRows
+                            || pair.getColumn() < 0
+                            || pair.getColumn() >= numberOfColumns) {
+                        validCoordinates = false;
+                        break;
+                    }
+                }
+
+                if(!validCoordinates) {
+                    continue;
+                }
+
+
+                MoveOperation translatedMovement = new MoveOperation(flowDirection.getRowShift(), flowDirection.getColumnShift(), 0, 0, 0);
+
+                int distance = MatchDistance.computeDistanceBasedOnDistanceMap(
+                        EncodingUtilities.computeRasterBasedOnPairs(numberOfRows, numberOfColumns, segment1.getPairs()),
+                        distanceMap);
+
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Flow direction: {}. Distance: {}", flowDirection, distance);
+                }
+
+                if (distance < minDistance) {
+                    currentSegment = segment1;
+                    moveOperation = translatedMovement;
+                    minDistance = distance;
+                }
+            }
+
+            previousCoordinates = currentSegment.getPairs();
+            moveOperations.add(moveOperation);
+        }
+
+        return moveOperations;
     }
 
 
@@ -131,12 +229,19 @@ public class SegmentMatcher {
 
 
     private static Segment applyMoveOperation(Segment segment, MoveOperation moveOperation, int numberOfRows, int numberOfColumns) {
-        List<Pair> translatedCoordinates = segment.getPairs().stream().map(pair -> Pair.of(pair.getRow() + moveOperation.getRowOffset(), pair.getColumn() + moveOperation.getColumnOffset())).collect(Collectors.toList());
+        List<Pair> translatedCoordinates = segment.getPairs().stream()
+                .map(pair -> Pair.of(pair.getRow() + moveOperation.getRowOffset(), pair.getColumn() + moveOperation.getColumnOffset()))
+                .collect(Collectors.toList());
         List<Pair> rotatedCoordinates;
 
         if (Math.abs(moveOperation.getRotation()) > 0.001) {
-            rotatedCoordinates = RotateSegment.rotate(translatedCoordinates, moveOperation.getPivotRow(), moveOperation.getPivotColumn(),
-                    numberOfRows, numberOfColumns, 20, moveOperation.getRotation());
+            rotatedCoordinates = RotateSegment.rotate(translatedCoordinates,
+                    moveOperation.getPivotRow(),
+                    moveOperation.getPivotColumn(),
+                    numberOfRows,
+                    numberOfColumns,
+                    SQUARE_SIDE,
+                    moveOperation.getRotation());
         } else {
             rotatedCoordinates = translatedCoordinates;
         }
