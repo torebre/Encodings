@@ -16,18 +16,16 @@ public class RasterTransformer {
 
     public static Cell[][] segmentTransformer(boolean raster[][]) {
         Filter maskFilter = new MaskFilter();
-//        List<boolean[][]> results = maskFilter.applyFilter(raster);
-//        boolean filteredImage[][] = results.get(results.size() - 1);
-
-        boolean filteredImage[][] = raster;
+        List<boolean[][]> results = maskFilter.applyFilter(raster);
+        boolean filteredImage[][] = results.get(results.size() - 1);
 
         Cell flowRaster[][] = createEmptyFlowRaster(filteredImage);
         Pair startPoint;
 
-        while(true) {
+        while (true) {
             startPoint = getStartPoint(filteredImage, flowRaster);
 
-            if(startPoint == null) {
+            if (startPoint == null) {
                 break;
             }
 
@@ -36,7 +34,7 @@ public class RasterTransformer {
                 int rowNeighbour = startPoint.getRow() + flowDirection.getRowShift();
                 int columnNeighbour = startPoint.getColumn() + flowDirection.getColumnShift();
 
-                if(rowNeighbour < 0 || rowNeighbour >= raster.length || columnNeighbour < 0 || columnNeighbour > raster[0].length) {
+                if (rowNeighbour < 0 || rowNeighbour >= raster.length || columnNeighbour < 0 || columnNeighbour > raster[0].length) {
                     continue;
                 }
 
