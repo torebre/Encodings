@@ -8,14 +8,8 @@ import com.kjipo.raster.attraction.SegmentMatcher;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
 import com.kjipo.raster.segment.SegmentImpl;
-import javafx.collections.ObservableList;
-import javafx.scene.Node;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.kjipo.visualization.CellType;
-import com.kjipo.visualization.RasterElementProcessor;
 import com.kjipo.visualization.RasterRun;
 import com.kjipo.visualization.RasterVisualizer2;
 
@@ -139,26 +133,13 @@ public class MatchTest {
     }
 
 
-    public class PrototypePainter implements RasterElementProcessor<MatchCell> {
-
-        @Override
-        public void processCell(MatchCell cell, int squareSize, ObservableList<Node> node, Rectangle rectangle) {
-            if (cell.isSegmentData()) {
-                rectangle.setFill(Color.GREEN);
-            }
-            if (cell.isPrototypeData()) {
-                rectangle.setFill(Color.RED);
-            }
-        }
-    }
-
     private void addSegmentsToRaster(Collection<Segment> segments, boolean raster[][]) {
         segments.stream()
                 .flatMap(segment -> segment.getPairs().stream())
                 .forEach(segment -> raster[segment.getRow()][segment.getColumn()] = true);
     }
 
-    private List<Segment> joinSegmentLines(List<List<Segment>> segmentLines) {
+    public static List<Segment> joinSegmentLines(List<List<Segment>> segmentLines) {
         List<Segment> result = new ArrayList<>();
         List<Segment> previousSegmentInLine = new ArrayList<>();
 
@@ -201,7 +182,7 @@ public class MatchTest {
         return new PrototypeImpl(segments);
     }
 
-    private static Prototype getTestPrototype2() {
+    public static Prototype getTestPrototype2() {
         List<Pair> prototypeData = Lists.newArrayList(new Pair(15, 8),
                 new Pair(16, 9),
                 new Pair(17, 10));
@@ -254,39 +235,6 @@ public class MatchTest {
                 .build());
 
         return Lists.newArrayList(segment1, segment2, segment3, segment4, segment5);
-    }
-
-
-    public class MatchCell implements CellType {
-        private final int row;
-        private final int column;
-
-        private final List<Pair> segmentData;
-        private final List<Pair> prototypeData;
-
-
-        public MatchCell(int row, int column, List<Pair> segmentData, List<Pair> prototypeData) {
-            this.row = row;
-            this.column = column;
-            this.segmentData = segmentData;
-            this.prototypeData = prototypeData;
-        }
-
-        public int getRow() {
-            return row;
-        }
-
-        public int getColumn() {
-            return column;
-        }
-
-        public boolean isSegmentData() {
-            return segmentData.contains(new Pair(row, column));
-        }
-
-        public boolean isPrototypeData() {
-            return prototypeData.contains(new Pair(row, column));
-        }
     }
 
 
