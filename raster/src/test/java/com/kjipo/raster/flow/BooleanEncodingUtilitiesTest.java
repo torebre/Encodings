@@ -2,7 +2,7 @@ package com.kjipo.raster.flow;
 
 
 import com.google.common.primitives.Ints;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

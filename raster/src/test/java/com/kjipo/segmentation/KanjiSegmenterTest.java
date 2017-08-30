@@ -19,11 +19,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class KanjiSegmenterTest {
     private static final Logger logger = LoggerFactory.getLogger(KanjiSegmenterTest.class);
@@ -43,10 +44,6 @@ public class KanjiSegmenterTest {
              ObjectInputStream objectInputStream = new ObjectInputStream(fontStream)) {
             encodedKanji = (EncodedKanji) objectInputStream.readObject();
         }
-
-
-        logger.info("Determining flow");
-
 
         Cell[][] flowRaster = RasterTransformer.segmentTransformer(encodedKanji.getImage());
 

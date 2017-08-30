@@ -10,10 +10,10 @@ import javafx.scene.shape.Polyline;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Affine;
 import org.apache.commons.math3.complex.Complex;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,15 +27,15 @@ import java.util.concurrent.atomic.AtomicReference;
 
 
 public class TestFlow {
-    private Font testFont;
-    private String testCharacter;
+    private static Font testFont;
+    private static String testCharacter;
 
     private static final Logger LOG = LoggerFactory.getLogger(TestFlow.class);
 
 
     @BeforeClass
-    public void beforeClass() throws IOException, FontFormatException {
-        InputStream fontStream = getClass().getResourceAsStream("/font/kochi-mincho-subst.ttf");
+    public static void beforeClass() throws IOException, FontFormatException {
+        InputStream fontStream = TestFlow.class.getResourceAsStream("/font/kochi-mincho-subst.ttf");
         testFont = Font.createFont(Font.TRUETYPE_FONT, fontStream);
         fontStream.close();
         InputStreamReader input = new InputStreamReader(
