@@ -77,31 +77,68 @@ fun determineAxis(matrix: Matrix<Boolean>, start: Pair<Int, Int>): FlowDirection
 
 fun traceSegments(raster: Array<BooleanArray>): List<Pair<Int, Int>> {
     val matrix = Matrix(raster.size, raster[0].size, raster.map { it.toTypedArray() }.toTypedArray())
-    val seenCells = Matrix(raster.size, raster[0].size, Array<Array<Boolean>>(raster.size, { Array<Boolean>(raster[0].size, { false }) }))
-    var start: Pair<Int, Int>? = null
+    return getStartCell(matrix)?.let { traceLineSegment(matrix, it) }.orEmpty()
+}
 
+private fun getStartCell(matrix: Matrix<Boolean>): Pair<Int, Int>? {
     matrix.forEachIndexed { x, y, b ->
-        if (b && !seenCells[x, y]) {
-            start = Pair(x, y)
-            seenCells[x, y] = true
-            return@forEachIndexed
+        if (b) {
+            return Pair(x, y)
         }
     }
-
-    if (start == null) {
-        return emptyList()
-    }
-
-    println("Start: ${start}")
-
-    return traceLineSegment(matrix, start!!)
+    return null
 }
+
 
 
 fun traceLineSegment(matrix: Matrix<Boolean>, start: Pair<Int, Int>): List<Pair<Int, Int>> {
     val segment = mutableListOf<Pair<Int, Int>>()
     val seenCells = Matrix(matrix.numberOfRows, matrix.numberOfColumns,
             Array<Array<Boolean>>(matrix.numberOfRows, { Array<Boolean>(matrix.numberOfColumns, { false }) }))
+
+    var startCell = start
+
+    for(i in 0..20) {
+
+        println("Start cell: $startCell")
+
+        seenCells[startCell.first, startCell.second] = true
+
+        val newSegment = addSingleSegment(matrix, seenCells, startCell)
+
+        println("New segment: $newSegment")
+
+        segment.addAll(newSegment)
+
+        val distanceMap = computeDistanceMap(matrix, segment)
+
+        var startCandidate = Pair(-1, -1)
+        var maxDistance = -1
+
+        for(row in 0 until matrix.numberOfRows) {
+            for(column in 0 until matrix.numberOfColumns) {
+                if(!seenCells[row, column]
+                        && matrix[row, column]
+                        && maxDistance < distanceMap[row, column]) {
+                    startCandidate = Pair(row, column)
+                    maxDistance = distanceMap[row, column]
+                }
+            }
+        }
+
+        if(maxDistance == -1) {
+            return segment
+        }
+
+        startCell = startCandidate
+    }
+
+    return segment
+}
+
+
+fun addSingleSegment(matrix: Matrix<Boolean>, seenCells: Matrix<Boolean>, start: Pair<Int, Int>): List<Pair<Int, Int>> {
+    val segment = mutableListOf<Pair<Int, Int>>()
 
     segment.add(start)
 
@@ -111,7 +148,7 @@ fun traceLineSegment(matrix: Matrix<Boolean>, start: Pair<Int, Int>): List<Pair<
     var upperChange = true
     var lowerChange = true
 
-    while(upperChange || lowerChange) {
+    while (upperChange || lowerChange) {
         upperChange = false
         lowerChange = false
 
@@ -130,7 +167,8 @@ fun traceLineSegment(matrix: Matrix<Boolean>, start: Pair<Int, Int>): List<Pair<
             }
         }.filterNotNull().firstOrNull()?.let {
             segment.add(it)
-            upperEndpoint = it }
+            upperEndpoint = it
+        }
 
         (5..7).map {
             val lowerCandidate = Pair(lowerEndpoint.first + FlowDirection.values()[it].rowShift,
@@ -147,14 +185,9 @@ fun traceLineSegment(matrix: Matrix<Boolean>, start: Pair<Int, Int>): List<Pair<
             }
         }.filterNotNull().firstOrNull()?.let {
             segment.add(it)
-            lowerEndpoint = it }
-
-        println("Upper: $upperEndpoint. Lower: $lowerEndpoint")
+            lowerEndpoint = it
+        }
     }
-
-    val distance = distance(lowerEndpoint, upperEndpoint)
-
-    println("Distance: ${distance}")
 
     return segment
 }
@@ -163,21 +196,6 @@ fun traceLineSegment(matrix: Matrix<Boolean>, start: Pair<Int, Int>): List<Pair<
 fun distance(start: Pair<Int, Int>, stop: Pair<Int, Int>) =
         Math.sqrt(Math.pow(Math.abs(stop.first.minus(start.first).toDouble()), 2.0)
                 + Math.pow(Math.abs(stop.second.minus(start.second).toDouble()), 2.0))
-
-
-//function line(x0, y0, x1, y1)
-//real deltax := x1 - x0
-//real deltay := y1 - y0
-//real deltaerr := abs(deltay / deltax)    // Assume deltax != 0 (line is not vertical),
-//// note that this division needs to be done in a way that preserves the fractional part
-//real error := deltaerr - 0.5
-//int y := y0
-//for x from x0 to x1
-//plot(x,y)
-//error := error + deltaerr
-//if error ≥ 0.5 then
-//y := y + 1
-//error := error - 1.0
 
 
 fun computeLine(start: Pair<Int, Int>, stop: Pair<Int, Int>): List<Pair<Int, Int>> {
@@ -218,4 +236,30 @@ fun computeSegmentScore(matrix: Matrix<Boolean>, segment: List<Pair<Int, Int>>):
     }.sum()
 }
 
+
+fun computeDistanceMap(matrix: Matrix<Boolean>, segment: List<Pair<Int, Int>>): Matrix<Int> {
+    val distanceMap = Matrix(matrix.numberOfRows, matrix.numberOfColumns,
+            Array<Array<Int>>(matrix.numberOfRows, { Array<Int>(matrix.numberOfColumns, { Int.MIN_VALUE }) }))
+
+    var cellsToProcessNext = mutableSetOf<Pair<Int, Int>>()
+    cellsToProcessNext.addAll(segment)
+
+    var distance = 0
+
+    while (cellsToProcessNext.isNotEmpty()) {
+        cellsToProcessNext = cellsToProcessNext.map {
+            distanceMap[it.first, it.second] = distance
+            val currentCell = it
+
+            FlowDirection.values()
+                    .map { Pair(currentCell.first + it.rowShift, currentCell.second + it.columnShift) }
+                    .filter { EncodingUtilities.validCoordinates(it.first, it.second, matrix.numberOfRows, matrix.numberOfColumns) }
+                    .filter { distanceMap[it.first, it.second] == Int.MIN_VALUE }
+        }.flatten().toMutableSet()
+
+        ++distance
+    }
+
+    return distanceMap
+}
 

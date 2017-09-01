@@ -30,9 +30,10 @@ fun segmentKanji() {
             encodedKanji.image.map { it.toTypedArray() }.toTypedArray())
     val expandedLine = expandLine(encodedKanji.image)
 
-    showRasterFlow(encodedKanji.image, matrix, expandedLine)
 
-    Thread.sleep(Long.MAX_VALUE)
+    println("Segment: $expandedLine")
+
+    showRasterFlow(encodedKanji.image, matrix, expandedLine)
 
 }
 
@@ -107,11 +108,9 @@ fun segmentKanji2() {
             encodedKanji.image.map { it.toTypedArray() }.toTypedArray())
     val expandedLine = traceSegments(encodedKanji.image)
 
+    println("Segment: $expandedLine")
 
     showRasterFlow(encodedKanji.image, matrix, expandedLine)
-
-    Thread.sleep(Long.MAX_VALUE)
-
 
 }
 
