@@ -23,15 +23,10 @@ fun segmentKanji() {
         }
     } as EncodedKanji
 
-    logger.info("Determining flow: {}", encodedKanji)
-
-
     val matrix = Matrix(encodedKanji.image.size, encodedKanji.image[0].size,
             encodedKanji.image.map { it.toTypedArray() }.toTypedArray())
     val expandedLine = expandLine(encodedKanji.image)
 
-
-    println("Segment: $expandedLine")
 
     showRasterFlow(encodedKanji.image, matrix, expandedLine)
 
@@ -102,16 +97,12 @@ fun segmentKanji2() {
         }
     } as EncodedKanji
 
-    logger.info("Determining flow: {}", encodedKanji)
-
     val matrix = Matrix(encodedKanji.image.size, encodedKanji.image[0].size,
             encodedKanji.image.map { it.toTypedArray() }.toTypedArray())
+
     val expandedLine = traceSegments(encodedKanji.image)
 
-    println("Segment: $expandedLine")
-
     showRasterFlow(encodedKanji.image, matrix, expandedLine)
-
 }
 
 

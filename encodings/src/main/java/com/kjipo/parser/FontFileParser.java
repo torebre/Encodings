@@ -19,8 +19,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class FontFileParser {
-    private static final int NUMBER_OF_ROWS = 100;
-    private static final int NUMBER_OF_COLUMNS = 100;
+    public static final int NUMBER_OF_ROWS = 100;
+    public static final int NUMBER_OF_COLUMNS = 100;
 
     private static final Logger logger = LoggerFactory.getLogger(FontFileParser.class);
 
@@ -36,10 +36,9 @@ public class FontFileParser {
                         logger.warn("Skipping character: " + character);
                         return null;
                     }
-                    return glyphVector;
+                    return new EncodedKanji(character, paintOnRaster(glyphVector, NUMBER_OF_ROWS, NUMBER_OF_COLUMNS));
                 })
                 .filter(Objects::nonNull)
-                .map(glyphVector -> new EncodedKanji(paintOnRaster(glyphVector, NUMBER_OF_ROWS, NUMBER_OF_COLUMNS)))
                 .collect(Collectors.toList());
     }
 
@@ -49,7 +48,7 @@ public class FontFileParser {
         return paintOnRaster(glyphVector, height, width);
     }
 
-    private static boolean[][] paintOnRaster(GlyphVector glyphVector, int pRows, int pColumns) {
+    public static boolean[][] paintOnRaster(GlyphVector glyphVector, int pRows, int pColumns) {
         assertOnlyOneGlyphInGlyphVector(glyphVector);
         for (int i = 0; i < glyphVector.getNumGlyphs(); ++i) {
             Shape shape = glyphVector.getGlyphOutline(i);

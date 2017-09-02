@@ -1,15 +1,8 @@
 package com.kjipo.raster.filter;
 
-import com.google.common.base.Equivalence;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.kjipo.raster.EncodingUtilities;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 

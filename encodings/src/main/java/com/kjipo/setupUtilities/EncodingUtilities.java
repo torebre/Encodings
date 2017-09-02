@@ -32,19 +32,9 @@ public final class EncodingUtilities {
     }
 
 
-    private static void writeCharactersToFile(Iterable<EncodedKanji> kanjiData, Path outputFile) throws IOException {
+    public static void writeCharactersToFile(Iterable<EncodedKanji> kanjiData, Path outputFile) throws IOException {
         int maxRow = 100;
         int maxColumn = 100;
-
-//        for (EncodedKanji kanji : kanjiData) {
-//            boolean booleanEncoding[][] = kanji.getImage();
-//            if (booleanEncoding.length > maxRow) {
-//                maxRow = booleanEncoding.length;
-//            }
-//            if (booleanEncoding.length > 0 && booleanEncoding[0].length > maxColumn) {
-//                maxColumn = booleanEncoding[0].length;
-//            }
-//        }
 
         try (BufferedWriter bufferedWriter = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8)) {
             Iterator<EncodedKanji> iterator = kanjiData.iterator();
@@ -54,7 +44,7 @@ public final class EncodingUtilities {
         }
     }
 
-    private static String transformKanjiData(EncodedKanji encodedKanji, int maxRow, int maxColumn) {
+    public static String transformKanjiData(EncodedKanji encodedKanji, int maxRow, int maxColumn) {
         boolean booleanEncoding[][] = encodedKanji.getImage();
         StringBuilder stringBuilder = new StringBuilder();
 

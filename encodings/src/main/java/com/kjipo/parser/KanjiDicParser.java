@@ -12,20 +12,34 @@ import java.util.stream.Stream;
 public class KanjiDicParser {
 
     public static Stream<KanjiDicEntry> parseKanjidicFile(Path file) throws IOException {
-        return Files.lines(file, Parsers.JAPANESE_CHARSET).map(line -> new KanjiDicEntry(line.substring(0, line.indexOf(' ')),
-                Arrays.stream(line.split(" ")).filter(line2 -> line2.startsWith("{"))
-                        .map(line3 -> line3.substring(1, line3.length() - 1)).collect(Collectors.toList())));
+        return Files.lines(file, Parsers.JAPANESE_CHARSET).map(line -> {
+            String[] splitLine = line.split("/");
+
+
+            List<String> meanings = Arrays.asList(splitLine).subList(1, splitLine.length - 2);
+//            Arrays.stream(line.split(" "))
+//                    .filter(line2 -> line2.startsWith("{"))
+//                    .map(line3 -> line3.substring(1, line3.length() - 1))
+//                    .collect(Collectors.toList());
+            String identifier = splitLine[splitLine.length - 1];
+
+            return new KanjiDicEntry(splitLine[0],
+                    meanings,
+                    identifier);
+        });
     }
 
 
     public static class KanjiDicEntry {
         private final String kanji;
         private final List<String> meanings;
+        private final String identifier;
 
 
-        public KanjiDicEntry(String kanji, List<String> meanings) {
+        public KanjiDicEntry(String kanji, List<String> meanings, String identifier) {
             this.kanji = kanji;
             this.meanings = Collections.unmodifiableList(meanings);
+            this.identifier = identifier;
         }
 
         public String getKanji() {
@@ -38,7 +52,15 @@ public class KanjiDicParser {
 
         @Override
         public String toString() {
-            return "Kanji: " + getKanji() + ". Meanings: " + getMeanings();
+            return "KanjiDicEntry{" +
+                    "kanji='" + kanji + '\'' +
+                    ", meanings=" + meanings +
+                    ", identifier='" + identifier + '\'' +
+                    '}';
+        }
+
+        public String getIdentifier() {
+            return identifier;
         }
     }
 
