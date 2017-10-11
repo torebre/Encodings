@@ -2,18 +2,15 @@ package com.kjipo.segmentation;
 
 import com.google.common.collect.ImmutableList;
 import com.kjipo.raster.Cell;
-import com.kjipo.raster.attraction.Prototype;
+import com.kjipo.prototype.Prototype;
 import com.kjipo.raster.attraction.SegmentMatcher;
 import com.kjipo.raster.match.MatchTest;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
+import com.kjipo.recognition.RecognitionUtilities;
 import com.kjipo.representation.EncodedKanji;
-import com.kjipo.visualization.CellType;
-import com.kjipo.visualization.RasterElementProcessor;
 import com.kjipo.visualization.RasterRun;
 import com.kjipo.visualization.RasterVisualizer2;
-import javafx.collections.ObservableList;
-import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -37,7 +34,6 @@ public class KanjiSegmenterTest {
 //            prototype[8][i + 2] = true;
 //        }
 //        EncodedKanji encodedKanji = new EncodedKanji(prototype);
-
 
         EncodedKanji encodedKanji;
         try (InputStream fontStream = new FileInputStream(Paths.get("/home/student/test_kanji.xml").toFile());
@@ -75,7 +71,7 @@ public class KanjiSegmenterTest {
         List<List<Segment>> segmentLines = SegmentMatcher.positionPrototype(flowRaster.length, flowRaster[0].length,
                 inputSegmentData, testPrototype2);
 
-        List<Segment> joinedSegmentLines = MatchTest.joinSegmentLines(segmentLines);
+        List<Segment> joinedSegmentLines = RecognitionUtilities.joinSegmentLines(segmentLines);
 
 //        List<Pair> prototypeSegments = testPrototype2.getSegments().stream().map(Segment::getPairs).flatMap(Collection::stream).collect(Collectors.toList());
 
@@ -126,51 +122,6 @@ public class KanjiSegmenterTest {
                 },
                 ImmutableList.of(new ColorPainter()));
 
-    }
-
-
-    private static class ColorCell implements CellType {
-        private final int row;
-        private final int column;
-        private final Color color;
-        private final List<Pair> segmentData;
-        private final List<Pair> prototypeData;
-
-
-        public ColorCell(int row, int column, Color color, List<Pair> segmentData, List<Pair> prototypeData) {
-            this.row = row;
-            this.column = column;
-            this.color = color;
-            this.segmentData = segmentData;
-            this.prototypeData = prototypeData;
-        }
-
-        public Color getColor() {
-            return color;
-        }
-
-        public boolean isSegmentData() {
-            return segmentData.contains(new Pair(row, column));
-        }
-
-        public boolean isPrototypeData() {
-            return prototypeData.contains(new Pair(row, column));
-        }
-    }
-
-
-    public static class ColorPainter implements RasterElementProcessor<ColorCell> {
-
-        @Override
-        public void processCell(ColorCell cell, int squareSize, ObservableList<Node> node, javafx.scene.shape.Rectangle rectangle) {
-            rectangle.setFill(cell.getColor());
-            if (cell.isSegmentData()) {
-                rectangle.setFill(Color.GREEN);
-            }
-            if (cell.isPrototypeData()) {
-                rectangle.setFill(Color.RED);
-            }
-        }
     }
 
 

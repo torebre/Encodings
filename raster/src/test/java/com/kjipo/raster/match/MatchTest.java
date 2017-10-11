@@ -2,12 +2,13 @@ package com.kjipo.raster.match;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.kjipo.raster.attraction.Prototype;
+import com.kjipo.prototype.Prototype;
 import com.kjipo.raster.attraction.PrototypeImpl;
 import com.kjipo.raster.attraction.SegmentMatcher;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
 import com.kjipo.raster.segment.SegmentImpl;
+import com.kjipo.recognition.RecognitionUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.kjipo.visualization.RasterRun;
@@ -34,7 +35,7 @@ public class MatchTest {
         List<List<Segment>> segmentLines = SegmentMatcher.positionPrototype(numberOfRows, numberOfColumns,
                 inputSegments.get(0), prototype);
 
-        List<Segment> segments = joinSegmentLines(segmentLines);
+        List<Segment> segments = RecognitionUtilities.joinSegmentLines(segmentLines);
 
         showRun(inputData, segments, inputSegments.get(0));
 
@@ -49,7 +50,7 @@ public class MatchTest {
         addSegmentsToRaster(inputSegments, inputData);
 
         List<List<Segment>> segmentLines = SegmentMatcher.matchSegments(numberOfRows, numberOfColumns, inputSegments, prototype);
-        List<Segment> segments = joinSegmentLines(segmentLines);
+        List<Segment> segments = RecognitionUtilities.joinSegmentLines(segmentLines);
 
         RasterVisualizer2.showRasterFlow(
                 new RasterRun<MatchCell>() {
@@ -139,37 +140,6 @@ public class MatchTest {
                 .forEach(segment -> raster[segment.getRow()][segment.getColumn()] = true);
     }
 
-    public static List<Segment> joinSegmentLines(List<List<Segment>> segmentLines) {
-        List<Segment> result = new ArrayList<>();
-        List<Segment> previousSegmentInLine = new ArrayList<>();
-
-        segmentLines.forEach(segmentLine -> previousSegmentInLine.add(segmentLine.get(0)));
-
-        boolean foundNewElement = true;
-        int counter = 0;
-        while (foundNewElement) {
-            foundNewElement = false;
-
-            List<Segment> segmentsInStep = new ArrayList<>();
-            int lineCounter = 0;
-            for (List<Segment> segmentLine : segmentLines) {
-                if (counter < segmentLine.size()) {
-                    foundNewElement = true;
-                    segmentsInStep.add(segmentLine.get(counter));
-                    previousSegmentInLine.set(lineCounter, segmentLine.get(counter));
-                } else {
-                    segmentsInStep.add(previousSegmentInLine.get(lineCounter));
-                }
-
-                ++lineCounter;
-            }
-
-            ++counter;
-            result.add(new UnionSegment(segmentsInStep));
-        }
-
-        return result;
-    }
 
     private static Prototype getTestPrototype() {
         List<Pair> prototypeData = Lists.newArrayList(new Pair(15, 8),

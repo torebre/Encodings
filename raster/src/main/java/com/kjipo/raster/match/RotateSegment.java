@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class RotateSegment {
@@ -25,8 +26,6 @@ public class RotateSegment {
         Pair midpointCell = findMidpointCell(coordinates);
         int pivotRow = midpointCell.getRow();
         int pivotColumn = midpointCell.getColumn();
-
-        rotate(coordinates, pivotRow, pivotColumn, numberOfRows, numberOfColumns, squareSide, angleIncrement);
 
         return new SegmentWithOriginal(coordinates,
                 rotateSegment(coordinates,
@@ -55,15 +54,28 @@ public class RotateSegment {
                 new MoveOperation(0, 0, 0, 0, 0));
     }
 
-    private static List<Pair> rotateSegment(List<Pair> coordinates, int rows, int columns, int squareSide, double angle) {
+    public static List<Pair> rotateSegment(List<Pair> coordinates, int rows, int columns, int squareSide, double angle) {
         Pair midpointCell = findMidpointCell(coordinates);
         int pivotRow = midpointCell.getRow();
         int pivotColumn = midpointCell.getColumn();
 
-        return rotate(coordinates, pivotRow, pivotColumn, rows, columns, squareSide, angle);
+        return rotateSegment(coordinates, pivotRow, pivotColumn, rows, columns, squareSide, angle);
     }
 
-    public static List<Pair> rotate(List<Pair> coordinates, int pivotRow, int pivotColumn, int rows, int columns, int squareSide, double angle) {
+    public static List<Pair> rotateSegment(List<Pair> coordinates, int pivotRow, int pivotColumn, int rows, int columns, int squareSide, double angle) {
+        List<Pair> rotatedPairs = rotate(coordinates, pivotRow, pivotColumn, squareSide, angle);
+
+        return rotatedPairs.stream().filter(pair -> filterOutInvalidCells(pair, rows, columns)).collect(Collectors.toList());
+    }
+
+    private static boolean filterOutInvalidCells(Pair cell, int rows, int columns) {
+        return !(cell.getRow() < 0
+                || cell.getRow() >= rows
+                || cell.getColumn() < 0
+                || cell.getColumn() >= columns);
+    }
+
+    public static List<Pair> rotate(List<Pair> coordinates, int pivotRow, int pivotColumn, int squareSide, double angle) {
         double cellCenter = (double) squareSide / 2;
         double xCenter = squareSide * pivotColumn + cellCenter;
         double yCenter = squareSide * pivotRow + cellCenter;
@@ -81,33 +93,16 @@ public class RotateSegment {
             Complex rotatedCellCoordinates = ComplexUtils.polar2Complex(complex.abs(), complex.getArgument() + angle);
 
             Pair newCoordinates = determineCellFromCoordinates(rotatedCellCoordinates.getReal() + xCenter,
-                    rotatedCellCoordinates.getImaginary() + yCenter, rows, columns, squareSide);
+                    rotatedCellCoordinates.getImaginary() + yCenter, squareSide);
 
-            if (newCoordinates != null) {
-
-                LOG.info("X center: {}. Y center: {}", xCenter, yCenter);
-
-                LOG.info("New coordinates. Row: {}. Column: {}", rotatedCellCoordinates.getReal() + xCenter,
-                        rotatedCellCoordinates.getImaginary() + yCenter);
-
-                LOG.info("New row: {}. New column: {}", newCoordinates.getRow(), newCoordinates.getColumn());
-
-                newResults.add(newCoordinates);
-            }
+            newResults.add(newCoordinates);
         }
 
         return newResults;
     }
 
 
-    private static Pair determineCellFromCoordinates(double xCoordinate, double yCoordinate, int rows, int columns, int squareSide) {
-        if (xCoordinate < 0
-                || yCoordinate < 0
-                || xCoordinate > rows * squareSide
-                || yCoordinate > columns * squareSide) {
-            return null;
-        }
-
+    private static Pair determineCellFromCoordinates(double xCoordinate, double yCoordinate, int squareSide) {
         int column = (int) Math.floor(xCoordinate / squareSide);
         int row = (int) Math.floor(yCoordinate / squareSide);
 
@@ -115,12 +110,10 @@ public class RotateSegment {
     }
 
 
-    private static Pair findMidpointCell(Collection<Pair> coordinates) {
+    public static Pair findMidpointCell(Collection<Pair> coordinates) {
         int numberOfPoints = coordinates.size();
         int pivotRow = coordinates.stream().map(Pair::getRow).sorted().skip(numberOfPoints / 2).findFirst().orElse(0);
         int pivotColumn = coordinates.stream().map(Pair::getColumn).sorted().skip(numberOfPoints / 2).findFirst().orElse(0);
-
-//        LOG.info("Midpoint. Row: {}. Column: {}", pivotRow, pivotColumn);
 
         return new Pair(pivotRow, pivotColumn);
     }

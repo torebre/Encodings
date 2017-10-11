@@ -1,5 +1,6 @@
 package com.kjipo.raster.attraction;
 
+import com.kjipo.prototype.Prototype;
 import com.kjipo.raster.EncodingUtilities;
 import com.kjipo.raster.FlowDirection;
 import com.kjipo.raster.match.MatchDistance;
@@ -57,10 +58,15 @@ public class SegmentMatcher {
         List<List<Segment>> segmentLines = new ArrayList<>();
 
         List<Segment> prototypeSegments = new ArrayList<>(prototype.getSegments());
+
+        // Select a segment in the prototype
         Segment startSegment = prototypeSegments.get(0);
+
+        // Move the segment in the prototype to the segment given as input
         List<MoveOperation> moveOperations = matchSingleSegment(numberOfRows, numberOfColumns,
                 originalSegmentData.getPairs(), startSegment.getPairs());
 
+        // Apply the move operation to the other segments in the prototype
         for (Segment prototypeSegment : prototypeSegments) {
             List<Segment> segmentLine = new ArrayList<>(moveOperations.size() + 1);
             segmentLine.add(prototypeSegment);
@@ -75,6 +81,27 @@ public class SegmentMatcher {
             }
         }
         return segmentLines;
+    }
+
+
+    public static void addRemainingSegments(Segment originalSegmentData, Prototype prototype,
+                                            Segment prototypeMatch, Segment matchedTo) {
+        for (Segment segment : prototype.getSegments()) {
+            if (segment == prototypeMatch) {
+                continue;
+            }
+            // TODO
+            getAngle(segment, prototypeMatch);
+        }
+
+
+    }
+
+
+    private static double getAngle(Segment segment1, Segment segment2) {
+        // TODO
+
+        return 0.0;
     }
 
 
@@ -108,7 +135,7 @@ public class SegmentMatcher {
             LOG.info("Min distance: {}", minDistance);
 
             for (FlowDirection flowDirection : FlowDirection.values()) {
-                Segment segment1 = TranslateSegment.updateMatch(segment.getPairs(), flowDirection, numberOfRows, numberOfColumns);
+                Segment segment1 = TranslateSegment.updateMatch(segment.getPairs(), flowDirection);
 
                 int distance = MatchDistance.computeDistanceBasedOnDistanceMap(
                         EncodingUtilities.computeRasterBasedOnPairs(numberOfRows, numberOfColumns, segment1.getPairs()),
@@ -149,11 +176,11 @@ public class SegmentMatcher {
             LOG.info("Min distance: {}", minDistance);
 
             for (FlowDirection flowDirection : FlowDirection.values()) {
-                Segment segment1 = TranslateSegment.updateMatch(previousCoordinates, flowDirection, numberOfRows, numberOfColumns);
+                Segment segment1 = TranslateSegment.updateMatch(previousCoordinates, flowDirection);
 
                 boolean validCoordinates = true;
                 for (Pair pair : segment1.getPairs()) {
-                    if(pair.getRow() < 0
+                    if (pair.getRow() < 0
                             || pair.getRow() >= numberOfRows
                             || pair.getColumn() < 0
                             || pair.getColumn() >= numberOfColumns) {
@@ -162,7 +189,7 @@ public class SegmentMatcher {
                     }
                 }
 
-                if(!validCoordinates) {
+                if (!validCoordinates) {
                     continue;
                 }
 
@@ -235,7 +262,7 @@ public class SegmentMatcher {
         List<Pair> rotatedCoordinates;
 
         if (Math.abs(moveOperation.getRotation()) > 0.001) {
-            rotatedCoordinates = RotateSegment.rotate(translatedCoordinates,
+            rotatedCoordinates = RotateSegment.rotateSegment(translatedCoordinates,
                     moveOperation.getPivotRow(),
                     moveOperation.getPivotColumn(),
                     numberOfRows,

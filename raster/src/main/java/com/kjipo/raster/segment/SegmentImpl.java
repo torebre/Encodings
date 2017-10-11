@@ -7,6 +7,9 @@ public class SegmentImpl implements Segment {
 
 
     public SegmentImpl(List<Pair> pairs) {
+        if (pairs.isEmpty()) {
+            throw new IllegalArgumentException("List of pairs cannot be empty");
+        }
         this.pairs = pairs;
     }
 

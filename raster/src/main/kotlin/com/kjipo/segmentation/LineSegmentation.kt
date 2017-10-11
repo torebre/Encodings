@@ -90,7 +90,6 @@ private fun getStartCell(matrix: Matrix<Boolean>): Pair<Int, Int>? {
 }
 
 
-
 fun traceLineSegment(matrix: Matrix<Boolean>, start: Pair<Int, Int>): List<Pair<Int, Int>> {
     val segment = mutableListOf<Pair<Int, Int>>()
     val seenCells = Matrix(matrix.numberOfRows, matrix.numberOfColumns,
@@ -98,7 +97,7 @@ fun traceLineSegment(matrix: Matrix<Boolean>, start: Pair<Int, Int>): List<Pair<
 
     var startCell = start
 
-    for(i in 0..20) {
+    for (i in 0..20) {
 
         println("Start cell: $startCell")
 
@@ -115,9 +114,9 @@ fun traceLineSegment(matrix: Matrix<Boolean>, start: Pair<Int, Int>): List<Pair<
         var startCandidate = Pair(-1, -1)
         var maxDistance = -1
 
-        for(row in 0 until matrix.numberOfRows) {
-            for(column in 0 until matrix.numberOfColumns) {
-                if(!seenCells[row, column]
+        for (row in 0 until matrix.numberOfRows) {
+            for (column in 0 until matrix.numberOfColumns) {
+                if (!seenCells[row, column]
                         && matrix[row, column]
                         && maxDistance < distanceMap[row, column]) {
                     startCandidate = Pair(row, column)
@@ -126,7 +125,7 @@ fun traceLineSegment(matrix: Matrix<Boolean>, start: Pair<Int, Int>): List<Pair<
             }
         }
 
-        if(maxDistance == -1) {
+        if (maxDistance == -1) {
             return segment
         }
 
@@ -199,30 +198,47 @@ fun distance(start: Pair<Int, Int>, stop: Pair<Int, Int>) =
 
 
 fun computeLine(start: Pair<Int, Int>, stop: Pair<Int, Int>): List<Pair<Int, Int>> {
-    if (start.first == stop.first) {
+    val swap = stop.first < start.first
+
+    val firstTranslate = Math.abs(Math.min(0, Math.min(start.first, stop.first)))
+    val secondTranslate = Math.abs(Math.min(0, Math.min(start.second, stop.second)))
+
+    val (startPair, stopPair) = if (swap) {
+        Pair(Pair(stop.first + firstTranslate, stop.second + secondTranslate), Pair(start.first + firstTranslate, start.second + secondTranslate))
+
+    } else {
+        Pair(Pair(start.first + firstTranslate, start.second + secondTranslate), Pair(stop.first + firstTranslate, stop.second + secondTranslate))
+    }
+
+    val segmentToReturn = if (startPair.first == stopPair.first) {
         // Vertical line
-        return (start.second..stop.second).map { Pair(start.first, it) }
-    }
+        (startPair.second..(stopPair.second + 1)).map { Pair(startPair.first, it) }
+    } else {
+        val xDelta = stopPair.first.minus(startPair.first).toDouble()
+        val yDelta = stopPair.second.minus(startPair.second).toDouble()
+        val deltaError = Math.abs(yDelta / xDelta)
 
-    val xDelta = stop.first.minus(start.first).toDouble()
-    val yDelta = stop.second.minus(start.second).toDouble()
-    val deltaError = Math.abs(yDelta / xDelta)
+        var error = deltaError - 0.5
+        var y = startPair.second
 
-    var error = deltaError - 0.5
-    var y = start.second
+        val segment = mutableListOf<Pair<Int, Int>>()
 
-    val segment = mutableListOf<Pair<Int, Int>>()
-
-    for (x in start.first..stop.first) {
-        segment.add(Pair(x, y))
-        error += deltaError
-        if (error >= 0.5) {
-            y += 1
-            error -= 1.0
+        for (x in startPair.first..stopPair.first) {
+            segment.add(Pair(x, y))
+            error += deltaError
+            if (error >= 0.5) {
+                y += 1
+                error -= 1.0
+            }
         }
+        segment
     }
 
-    return segment
+    return if (swap) {
+        segmentToReturn.map { Pair(it.first - firstTranslate, it.second - secondTranslate) }.reversed()
+    } else {
+        segmentToReturn.map { Pair(it.first - firstTranslate, it.second - secondTranslate) }
+    }
 }
 
 
