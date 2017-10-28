@@ -9,6 +9,7 @@ import com.kjipo.visualization.RasterVisualizer2
 import javafx.collections.ObservableList
 import javafx.scene.Node
 import javafx.scene.paint.Color
+import org.junit.Test
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -38,7 +39,7 @@ private fun showRasterFlow(rasterInput: Array<BooleanArray>,
                            encodedKanji: Matrix<Boolean>,
                            segment: List<Pair<Int, Int>>) {
     RasterVisualizer2.showRasterFlow(
-            object : RasterRun<ColorCell> {
+            object : RasterRun<ColorCell2> {
                 private var current = 0
 
                 override fun getRawInput(): Array<BooleanArray> {
@@ -57,7 +58,7 @@ private fun showRasterFlow(rasterInput: Array<BooleanArray>,
                     return encodedKanji.numberOfRows
                 }
 
-                override fun getCell(row: Int, column: Int): ColorCell {
+                override fun getCell(row: Int, column: Int): ColorCell2 {
                     val color = if(segment.contains(Pair(row, column))) {
                         Color.RED
                     }
@@ -67,24 +68,24 @@ private fun showRasterFlow(rasterInput: Array<BooleanArray>,
                     else {
                         Color.BLACK
                     }
-                    return ColorCell(row, column, color)
+                    return ColorCell2(row, column, color)
                 }
 
                 override fun next() {
                     ++current
                 }
             },
-            ImmutableList.of<RasterElementProcessor<ColorCell>>(ColorPainter()))
+            ImmutableList.of<RasterElementProcessor<ColorCell2>>(ColorPainter2()))
 
 }
 
 
-data class ColorCell(val row: Int, val column: Int, val colour: Color) : CellType
+data class ColorCell2(val row: Int, val column: Int, val colour: Color) : CellType
 
 
-class ColorPainter : RasterElementProcessor<ColorCell> {
+class ColorPainter2 : RasterElementProcessor<ColorCell2> {
 
-    override fun processCell(cell: ColorCell, squareSize: Int, node: ObservableList<Node>, rectangle: javafx.scene.shape.Rectangle) {
+    override fun processCell(cell: ColorCell2, squareSize: Int, node: ObservableList<Node>, rectangle: javafx.scene.shape.Rectangle) {
         rectangle.fill = cell.colour
     }
 }
@@ -106,8 +107,15 @@ fun segmentKanji2() {
 }
 
 
+fun computeLineTest() {
+    computeLine(Pair(0, 3), Pair(0, 1)).forEach(System.out::println)
+
+}
+
+
 
 fun main(args: Array<String> ) {
-    segmentKanji2()
+//    segmentKanji2()
+    computeLineTest()
 
 }

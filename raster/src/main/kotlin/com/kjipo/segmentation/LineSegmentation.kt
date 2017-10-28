@@ -198,6 +198,15 @@ fun distance(start: Pair<Int, Int>, stop: Pair<Int, Int>) =
 
 
 fun computeLine(start: Pair<Int, Int>, stop: Pair<Int, Int>): List<Pair<Int, Int>> {
+    if (start.first == stop.first) {
+        // Vertical line
+        return if (start.second < stop.second) {
+            (start.second..(stop.second + 1)).map { Pair(start.first, it) }
+        } else {
+            (stop.second..(start.second + 1)).map { Pair(start.first, it) }
+        }
+    }
+
     val swap = stop.first < start.first
 
     val firstTranslate = Math.abs(Math.min(0, Math.min(start.first, stop.first)))
@@ -205,39 +214,32 @@ fun computeLine(start: Pair<Int, Int>, stop: Pair<Int, Int>): List<Pair<Int, Int
 
     val (startPair, stopPair) = if (swap) {
         Pair(Pair(stop.first + firstTranslate, stop.second + secondTranslate), Pair(start.first + firstTranslate, start.second + secondTranslate))
-
     } else {
         Pair(Pair(start.first + firstTranslate, start.second + secondTranslate), Pair(stop.first + firstTranslate, stop.second + secondTranslate))
     }
 
-    val segmentToReturn = if (startPair.first == stopPair.first) {
-        // Vertical line
-        (startPair.second..(stopPair.second + 1)).map { Pair(startPair.first, it) }
-    } else {
-        val xDelta = stopPair.first.minus(startPair.first).toDouble()
-        val yDelta = stopPair.second.minus(startPair.second).toDouble()
-        val deltaError = Math.abs(yDelta / xDelta)
+    val xDelta = stopPair.first.minus(startPair.first).toDouble()
+    val yDelta = stopPair.second.minus(startPair.second).toDouble()
+    val deltaError = Math.abs(yDelta / xDelta)
 
-        var error = deltaError - 0.5
-        var y = startPair.second
+    var error = deltaError - 0.5
+    var y = startPair.second
 
-        val segment = mutableListOf<Pair<Int, Int>>()
+    val segment = mutableListOf<Pair<Int, Int>>()
 
-        for (x in startPair.first..stopPair.first) {
-            segment.add(Pair(x, y))
-            error += deltaError
-            if (error >= 0.5) {
-                y += 1
-                error -= 1.0
-            }
+    for (x in startPair.first..stopPair.first) {
+        segment.add(Pair(x, y))
+        error += deltaError
+        if (error >= 0.5) {
+            y += 1
+            error -= 1.0
         }
-        segment
     }
 
     return if (swap) {
-        segmentToReturn.map { Pair(it.first - firstTranslate, it.second - secondTranslate) }.reversed()
+        segment.map { Pair(it.first - firstTranslate, it.second - secondTranslate) }.reversed()
     } else {
-        segmentToReturn.map { Pair(it.first - firstTranslate, it.second - secondTranslate) }
+        segment.map { Pair(it.first - firstTranslate, it.second - secondTranslate) }
     }
 }
 

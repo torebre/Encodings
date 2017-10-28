@@ -2,22 +2,15 @@ package com.kjipo.prototype;
 
 import com.kjipo.raster.EncodingUtilities;
 import com.kjipo.raster.FlowDirection;
-import com.kjipo.raster.attraction.MoveOperation;
-import com.kjipo.raster.attraction.SegmentMatcher;
 import com.kjipo.raster.match.MatchDistance;
-import com.kjipo.raster.match.RotateSegment;
-import com.kjipo.raster.match.TranslateSegment;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
-import com.kjipo.raster.segment.SegmentWithOriginal;
-import com.kjipo.recognition.RecognitionUtilities;
-import com.kjipo.segmentation.KanjiSegmenter;
+import com.kjipo.representation.EncodedKanji;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sound.sampled.Line;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class FitPrototype {
 
@@ -26,63 +19,112 @@ public class FitPrototype {
     private static final Logger LOG = LoggerFactory.getLogger(FitPrototype.class);
 
 
-    public Collection<Prototype> fit(boolean inputData[][]) {
+    public List<Collection<Prototype>> fit(boolean inputData[][]) {
         int numberOfRows = inputData.length;
         int numberOfColumns = inputData[0].length;
 
-        List<MoveOperation> moveOperations = new ArrayList<>();
-
-        List<Prototype> result = new ArrayList<>();
-
         int[][] distanceMap = MatchDistance.computeDistanceMap(inputData);
 
-        LinePrototype linePrototype = new LinePrototype(Pair.of(0, 0), Pair.of(0, 1));
-        int minDistance = computeDistance(linePrototype.getSegments().get(0).getPairs(), distanceMap);
+        List<Collection<Prototype>> prototypeDevelopment = new ArrayList<>();
+        prototypeDevelopment.add(Collections.emptyList());
 
-        for (int i = 0; i < MAX_ITERATIONS; ++i) {
-            Map<LinePrototype, Integer> lineDistanceMap = new HashMap<>();
+//        Random random = new Random();
 
-            // A line prototype only has one segment
-            Segment segment = linePrototype.getSegments().iterator().next();
+        int[][] disjunctRegions = findDisjunctRegions(inputData);
 
-            kotlin.Pair<LinePrototype, Integer> newPrototype = linePrototype.getMovements()
-                    .map(linePrototype1 -> {
-                        Segment segment1 = linePrototype1.getSegments().get(0);
-                        Pair startPair = segment1.getPairs().get(0);
-                        Pair endPair = segment1.getPairs().get(segment1.getPairs().size() - 1);
+        for (int j = 1; j < 10; ++j) {
+            LOG.info("Adding prototype: {}", j);
+            int addPoint = prototypeDevelopment.size() - 1;
 
-                        if (!validCoordinates(startPair, numberOfRows, numberOfColumns)
-                                || !validCoordinates(endPair, numberOfRows, numberOfColumns)) {
-                            return null;
-                        }
+            boolean[][] occupiedData = computeOccupied(prototypeDevelopment.get(addPoint), numberOfRows, numberOfColumns);
 
-                        return new kotlin.Pair<>(new LinePrototype(startPair, endPair), computeDistance(segment1.getPairs(), distanceMap));
-                    })
-                    .filter(Objects::nonNull)
-                    .reduce(new kotlin.Pair<>(new LinePrototype(new Pair(0, 0), new Pair(0, 0)), Integer.MAX_VALUE),
-                            (first, second) -> {
-                                if (first.getSecond().compareTo(second.getSecond()) > 0) {
-                                    return first;
-                                } else {
-                                    return second;
-                                }
-                            });
+//            LinePrototype linePrototype = nextStart(inputData, occupiedData);
+            LinePrototype linePrototype = nextStartInRegion(inputData, occupiedData, disjunctRegions, j);
 
-            if (newPrototype.getSecond() >= minDistance) {
+
+            int scoreUnchanged = 0;
+
+            if (linePrototype == null) {
+                LOG.info("No available start point");
                 break;
             }
 
-            linePrototype = newPrototype.getFirst();
-            minDistance = newPrototype.getSecond();
+            int score = computeScore(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
+
+            for (int i = 0; i < MAX_ITERATIONS; ++i) {
+                // A line prototype only has one segment
+                kotlin.Pair<LinePrototype, Integer> newPrototype = linePrototype.getMovements()
+                        .map(linePrototype1 -> {
+                            Segment segment1 = linePrototype1.getSegments().get(0);
+                            Pair startPair = segment1.getPairs().get(0);
+                            Pair endPair = segment1.getPairs().get(segment1.getPairs().size() - 1);
+
+                            // If the end points are valid, then all the points in between has to be valid
+                            if (!validCoordinates(startPair, numberOfRows, numberOfColumns)
+                                    || !validCoordinates(endPair, numberOfRows, numberOfColumns)) {
+                                return null;
+                            }
+
+                            return new kotlin.Pair<>(new LinePrototype(startPair, endPair),
+                                    computeScore(segment1.getPairs(),
+                                            distanceMap,
+                                            computeOccupied(prototypeDevelopment.get(addPoint),
+                                                    inputData.length,
+                                                    inputData[0].length)));
+                        })
+                        .filter(Objects::nonNull)
+                        .reduce(new kotlin.Pair<>(new LinePrototype(new Pair(0, 0), new Pair(0, 0)), Integer.MIN_VALUE),
+                                (first, second) -> {
+                                    if (first.getSecond().compareTo(second.getSecond()) > 0) {
+                                        return first;
+                                    } else {
+                                        return second;
+                                    }
+                                });
+
+                if (newPrototype.getSecond() < score) {
+                    break;
+                } else if (newPrototype.getSecond() == score) {
+                    if (scoreUnchanged == 5) {
+                        break;
+                    }
+                    ++scoreUnchanged;
+                } else {
+                    scoreUnchanged = 0;
+                }
+
+                linePrototype = newPrototype.getFirst();
+                score = newPrototype.getSecond();
+
+//                result.add(linePrototype);
+
+                Collection<Prototype> newDevelopment = new ArrayList<>();
+                newDevelopment.addAll(prototypeDevelopment.get(addPoint));
+                newDevelopment.add(linePrototype);
+
+                prototypeDevelopment.add(newDevelopment);
+            }
+
         }
 
+        return prototypeDevelopment;
+    }
 
-        // TODO For now only returning one prototype
-        result.add(linePrototype);
-
-
-        return result;
-
+    private static int computeScore(List<Pair> pairs, int distanceMatrix[][], boolean occupiedMatrix[][]) {
+        return pairs.stream()
+                .mapToInt(pair -> {
+                    int score = 0;
+                    int distance = distanceMatrix[pair.getRow()][pair.getColumn()];
+                    if (distance > 0) {
+                        score += -distance;
+                    } else {
+                        score += 1;
+                    }
+                    if (occupiedMatrix[pair.getRow()][pair.getColumn()]) {
+                        score += -50;
+                    }
+                    return score;
+                }).sum();
 
     }
 
@@ -96,6 +138,103 @@ public class FitPrototype {
                 || pair.getRow() >= numberOfRows
                 || pair.getColumn() < 0
                 || pair.getColumn() >= numberOfColumns);
+    }
+
+
+    private static boolean[][] computeOccupied(Collection<Prototype> prototypes, int rows, int columns) {
+        boolean result[][] = new boolean[rows][columns];
+        prototypes.stream()
+                .flatMap(prototype -> prototype.getSegments().stream())
+                .flatMap(segment -> segment.getPairs().stream())
+                .forEach(pair -> result[pair.getRow()][pair.getColumn()] = false);
+
+        return result;
+    }
+
+    private static LinePrototype nextStart(boolean inputData[][], boolean occupiedData[][]) {
+        for (int row = 0; row < inputData.length; ++row) {
+            for (int column = 0; column < inputData[0].length; ++column) {
+                if (inputData[row][column]
+                        && !occupiedData[row][column]) {
+                    return new LinePrototype(Pair.of(row, column), Pair.of(row, column));
+                }
+            }
+        }
+        return null;
+    }
+
+    private static LinePrototype nextStartInRegion(boolean inputData[][], boolean occupiedData[][],
+                                                   int regionData[][], int regionValue) {
+        for (int row = 0; row < inputData.length; ++row) {
+            for (int column = 0; column < inputData[0].length; ++column) {
+                if (inputData[row][column]
+                        && !occupiedData[row][column]
+                        && regionData[row][column] == regionValue) {
+                    return new LinePrototype(Pair.of(row, column), Pair.of(row, column));
+                }
+            }
+        }
+        return null;
+    }
+
+    private static int[][] findDisjunctRegions(boolean inputData[][]) {
+        int regionData[][] = new int[inputData.length][inputData[0].length];
+        int fillValue = 1;
+        boolean foundHit = true;
+
+        while (foundHit) {
+            foundHit = false;
+            for (int row = 0; row < inputData.length; ++row) {
+                for (int column = 0; column < inputData[0].length; ++column) {
+                    if (inputData[row][column]
+                            && regionData[row][column] == 0) {
+                        spreadAcrossRegion(row, column, fillValue++, inputData, regionData);
+                        foundHit = true;
+                    }
+                    if (foundHit) {
+                        break;
+                    }
+                }
+                if (foundHit) {
+                    break;
+                }
+
+            }
+
+        }
+        return regionData;
+    }
+
+
+    private static void spreadAcrossRegion(int startRow, int startColumn, int fillValue,
+                                                       boolean inputData[][], int regionData[][]) {
+        Deque<Pair> cellsToVisit = new ArrayDeque<>();
+        cellsToVisit.add(Pair.of(startRow, startColumn));
+
+        while (!cellsToVisit.isEmpty()) {
+            Pair pair = cellsToVisit.poll();
+
+            int row = pair.getRow();
+            int column = pair.getColumn();
+
+            if (EncodingUtilities.validCoordinates(row, column, inputData.length, inputData[0].length)
+                    && inputData[row][column]) {
+                regionData[row][column] = fillValue;
+            }
+
+            for (FlowDirection flowDirection : FlowDirection.values()) {
+                int nextRow = row + flowDirection.getRowShift();
+                int nextColumn = column + flowDirection.getColumnShift();
+                Pair nextPair = Pair.of(nextRow, nextColumn);
+
+                if (EncodingUtilities.validCoordinates(nextRow, nextColumn, inputData.length, inputData[0].length)
+                        && inputData[nextRow][nextColumn]
+                        && regionData[nextRow][nextColumn] == 0
+                        && !cellsToVisit.contains(nextPair)) {
+                    cellsToVisit.add(nextPair);
+                }
+            }
+        }
     }
 
 
