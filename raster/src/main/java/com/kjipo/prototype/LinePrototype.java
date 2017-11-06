@@ -2,15 +2,12 @@ package com.kjipo.prototype;
 
 
 import com.kjipo.raster.FlowDirection;
-import com.kjipo.raster.RasterConstants;
-import com.kjipo.raster.match.RotateSegment;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
 import com.kjipo.raster.segment.SegmentImpl;
 import com.kjipo.segmentation.LineSegmentationKt;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,9 +48,21 @@ public class LinePrototype implements Prototype {
     public Stream<LinePrototype> getMovements() {
         return Arrays.stream(FlowDirection.values())
                 .flatMap(flowDirection ->
-                Stream.of(moveStartPair(flowDirection), moveEndPair(flowDirection)))
+                        Stream.of(moveStartPair(flowDirection), moveEndPair(flowDirection)))
                 .filter(linePrototype -> !linePrototype.startPair.equals(linePrototype.endPair));
     }
 
+    public Pair getStartPair() {
+        return startPair;
+    }
+
+    public Pair getEndPair() {
+        return endPair;
+    }
+
+    public double getDistance() {
+        return Math.sqrt(Math.pow(endPair.getRow() - startPair.getRow(), 2)
+                + Math.pow(endPair.getColumn() - startPair.getColumn(), 2));
+    }
 
 }

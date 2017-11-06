@@ -1,4 +1,4 @@
-package com.kjipo.segmentation;
+package com.kjipo.visualization.segmentation;
 
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.visualization.CellType;

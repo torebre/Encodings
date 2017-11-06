@@ -55,32 +55,51 @@ public class SegmentMatcher {
 
     public static List<List<Segment>> positionPrototype(int numberOfRows, int numberOfColumns,
                                                         Segment originalSegmentData, Prototype prototype) {
-        List<List<Segment>> segmentLines = new ArrayList<>();
-
         List<Segment> prototypeSegments = new ArrayList<>(prototype.getSegments());
 
         // Select a segment in the prototype
         Segment startSegment = prototypeSegments.get(0);
+        return matchSegment(numberOfRows, numberOfColumns, originalSegmentData, startSegment, prototypeSegments);
+    }
 
+    public static List<List<Segment>> matchSegment(int numberOfRows, int numberOfColumns,
+                                                   Segment originalSegmentData, Segment startSegment,
+                                                   List<Segment> segmentsInPrototype) {
         // Move the segment in the prototype to the segment given as input
-        List<MoveOperation> moveOperations = matchSingleSegment(numberOfRows, numberOfColumns,
+        List<MoveScore> moveOperations = matchSingleSegment(numberOfRows, numberOfColumns,
                 originalSegmentData.getPairs(), startSegment.getPairs());
 
-        // Apply the move operation to the other segments in the prototype
-        for (Segment prototypeSegment : prototypeSegments) {
+        return moveSegments(numberOfRows, numberOfColumns, moveOperations, segmentsInPrototype);
+    }
+
+
+    public static List<List<Segment>> moveSegments(int numberOfRows,
+                                                   int numberOfColumns,
+                                                   List<MoveScore> moveOperations,
+                                                   List<Segment> segmentsInPrototype) {
+        List<List<Segment>> segmentLines = new ArrayList<>();
+
+        // Apply the move operation to the segments in the prototype
+        for (Segment prototypeSegment : segmentsInPrototype) {
             List<Segment> segmentLine = new ArrayList<>(moveOperations.size() + 1);
             segmentLine.add(prototypeSegment);
             segmentLines.add(segmentLine);
         }
 
+        // Go through the list of move operations, apply one by
+        // one and store all intermediate and final result in
+        // segmentLines
         for (int i = 0; i < moveOperations.size(); ++i) {
             for (List<Segment> segmentLine : segmentLines) {
-                Segment segment = applyMoveOperation(segmentLine.get(segmentLine.size() - 1), moveOperations.get(i),
+                Segment segment = applyMoveOperation(segmentLine.get(segmentLine.size() - 1), moveOperations.get(i).getMoveOperation(),
                         numberOfRows, numberOfColumns);
                 segmentLine.add(segment);
             }
         }
+
         return segmentLines;
+
+
     }
 
 
@@ -157,9 +176,9 @@ public class SegmentMatcher {
         return segments;
     }
 
-    private static List<MoveOperation> matchSingleSegment(int numberOfRows, int numberOfColumns,
-                                                          List<Pair> stationaryPairs, List<Pair> movablePairs) {
-        List<MoveOperation> moveOperations = new ArrayList<>();
+    private static List<MoveScore> matchSingleSegment(int numberOfRows, int numberOfColumns,
+                                                      List<Pair> stationaryPairs, List<Pair> movablePairs) {
+        List<MoveScore> moveOperations = new ArrayList<>();
         boolean prototypeRaster[][] = EncodingUtilities.computeRasterBasedOnPairs(numberOfRows, numberOfColumns, stationaryPairs);
         int[][] distanceMap = MatchDistance.computeDistanceMap(prototypeRaster);
         List<Pair> previousCoordinates = movablePairs;
@@ -193,7 +212,6 @@ public class SegmentMatcher {
                     continue;
                 }
 
-
                 MoveOperation translatedMovement = new MoveOperation(flowDirection.getRowShift(), flowDirection.getColumnShift(), 0, 0, 0);
 
                 int distance = MatchDistance.computeDistanceBasedOnDistanceMap(
@@ -211,8 +229,9 @@ public class SegmentMatcher {
                 }
             }
 
+
             previousCoordinates = currentSegment.getPairs();
-            moveOperations.add(moveOperation);
+            moveOperations.add(new MoveScore(moveOperation, minDistance));
         }
 
         return moveOperations;

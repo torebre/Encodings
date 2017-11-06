@@ -1,9 +1,16 @@
 package com.kjipo.raster.segment;
 
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
+@XmlRootElement
 public class SegmentImpl implements Segment {
-    private final List<Pair> pairs;
+    private List<Pair> pairs;
+
+
+    public SegmentImpl() {
+
+    }
 
 
     public SegmentImpl(List<Pair> pairs) {

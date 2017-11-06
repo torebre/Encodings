@@ -1,4 +1,4 @@
-package com.kjipo.segmentation;
+package com.kjipo.visualization.segmentation;
 
 import com.kjipo.visualization.RasterElementProcessor;
 import javafx.collections.ObservableList;

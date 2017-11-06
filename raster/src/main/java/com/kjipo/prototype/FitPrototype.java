@@ -2,11 +2,11 @@ package com.kjipo.prototype;
 
 import com.kjipo.raster.EncodingUtilities;
 import com.kjipo.raster.FlowDirection;
+import com.kjipo.raster.attraction.MoveOperation;
+import com.kjipo.raster.attraction.ScaleOperation;
 import com.kjipo.raster.match.MatchDistance;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
-import com.kjipo.representation.EncodedKanji;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +30,7 @@ public class FitPrototype {
 
 //        Random random = new Random();
 
-        int[][] disjunctRegions = findDisjunctRegions(inputData);
+        int[][] disjunctRegions = findDisjointRegions(inputData);
 
         for (int j = 1; j < 10; ++j) {
             LOG.info("Adding prototype: {}", j);
@@ -38,10 +38,7 @@ public class FitPrototype {
 
             boolean[][] occupiedData = computeOccupied(prototypeDevelopment.get(addPoint), numberOfRows, numberOfColumns);
 
-//            LinePrototype linePrototype = nextStart(inputData, occupiedData);
             LinePrototype linePrototype = nextStartInRegion(inputData, occupiedData, disjunctRegions, j);
-
-
             int scoreUnchanged = 0;
 
             if (linePrototype == null) {
@@ -104,10 +101,121 @@ public class FitPrototype {
 
                 prototypeDevelopment.add(newDevelopment);
             }
-
         }
 
         return prototypeDevelopment;
+    }
+
+
+    public Prototype addSinglePrototype(boolean inputData[][]) {
+        LinePrototype top = new LinePrototype(Pair.of(0, 0), Pair.of(0, 3));
+        LinePrototype right = new LinePrototype(Pair.of(0, 3), Pair.of(3, 3));
+        LinePrototype bottom = new LinePrototype(Pair.of(3, 3), Pair.of(3, 0));
+        LinePrototype left = new LinePrototype(Pair.of(3, 0), Pair.of(0, 0));
+
+        int numberOfRows = inputData.length;
+        int numberOfColumns = inputData[0].length;
+
+        int[][] distanceMap = MatchDistance.computeDistanceMap(inputData);
+        boolean[][] occupiedData = computeOccupied(Collections.singleton(top), numberOfRows, numberOfColumns);
+
+        kotlin.Pair<LinePrototype, Integer> linePrototypeIntegerPair = fitSingleLinePrototype(top, distanceMap, occupiedData, numberOfRows, numberOfColumns);
+
+        computeMovements(top, linePrototypeIntegerPair.getFirst());
+
+        // TODO
+
+        return null;
+
+
+    }
+
+
+    private static void computeMovements(LinePrototype originalPrototype, LinePrototype processedPrototype) {
+        Pair originalStartPair = originalPrototype.getStartPair();
+        Pair processedStartPair = processedPrototype.getStartPair();
+
+        MoveOperation moveOperation = new MoveOperation(processedStartPair.getRow() - originalStartPair.getRow(),
+        processedStartPair.getColumn() - originalStartPair.getColumn(),
+        0,
+        // The pivot point is not used in this operation
+        originalStartPair.getRow(),
+        originalStartPair.getColumn());
+
+        ScaleOperation scaleOperation = new ScaleOperation(Math.round((float)(processedPrototype.getDistance() - originalPrototype.getDistance())));
+
+
+        double rotationAngle = Math.atan2((double) processedStartPair.getColumn() - originalStartPair.getColumn(),
+                (double) processedStartPair.getRow() - originalStartPair.getRow());
+
+
+        MoveOperation rotation = new MoveOperation(0, 0, rotationAngle, processedStartPair.getRow(), processedStartPair.getColumn());
+
+
+        // TODO
+
+
+    }
+
+
+
+
+
+    private static kotlin.Pair<LinePrototype, Integer> fitSingleLinePrototype(LinePrototype linePrototype, int distanceMap[][],
+                                               boolean occupiedData[][],
+                                               int numberOfRows, int numberOfColumns) {
+        int scoreUnchanged = 0;
+        int score = computeScore(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
+
+        for (int i = 0; i < MAX_ITERATIONS; ++i) {
+            // A line prototype only has one segment
+            kotlin.Pair<LinePrototype, Integer> newPrototype = linePrototype.getMovements()
+                    .map(linePrototype1 -> {
+                        Segment segment1 = linePrototype1.getSegments().get(0);
+                        Pair startPair = segment1.getPairs().get(0);
+                        Pair endPair = segment1.getPairs().get(segment1.getPairs().size() - 1);
+
+                        // If the end points are valid, then all the points in between has to be valid
+                        if (!validCoordinates(startPair, numberOfRows, numberOfColumns)
+                                || !validCoordinates(endPair, numberOfRows, numberOfColumns)) {
+                            return null;
+                        }
+
+                        return new kotlin.Pair<>(new LinePrototype(startPair, endPair),
+                                computeScore(segment1.getPairs(),
+                                        distanceMap,
+                                        occupiedData));
+                    })
+                    .filter(Objects::nonNull)
+                    .reduce(new kotlin.Pair<>(new LinePrototype(new Pair(0, 0), new Pair(0, 0)), Integer.MIN_VALUE),
+                            (first, second) -> {
+                                if (first.getSecond().compareTo(second.getSecond()) > 0) {
+                                    return first;
+                                } else {
+                                    return second;
+                                }
+                            });
+
+            if (newPrototype.getSecond() < score) {
+                break;
+            } else if (newPrototype.getSecond() == score) {
+                if (scoreUnchanged == 5) {
+                    break;
+                }
+                ++scoreUnchanged;
+            } else {
+                scoreUnchanged = 0;
+            }
+
+
+            linePrototype = newPrototype.getFirst();
+            score = newPrototype.getSecond();
+
+
+
+        }
+
+        return new kotlin.Pair<>(linePrototype, score);
     }
 
     private static int computeScore(List<Pair> pairs, int distanceMatrix[][], boolean occupiedMatrix[][]) {
@@ -177,7 +285,7 @@ public class FitPrototype {
         return null;
     }
 
-    private static int[][] findDisjunctRegions(boolean inputData[][]) {
+    private static int[][] findDisjointRegions(boolean inputData[][]) {
         int regionData[][] = new int[inputData.length][inputData[0].length];
         int fillValue = 1;
         boolean foundHit = true;
@@ -207,7 +315,7 @@ public class FitPrototype {
 
 
     private static void spreadAcrossRegion(int startRow, int startColumn, int fillValue,
-                                                       boolean inputData[][], int regionData[][]) {
+                                           boolean inputData[][], int regionData[][]) {
         Deque<Pair> cellsToVisit = new ArrayDeque<>();
         cellsToVisit.add(Pair.of(startRow, startColumn));
 

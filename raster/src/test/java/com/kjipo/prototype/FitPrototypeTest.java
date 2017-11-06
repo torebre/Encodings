@@ -5,17 +5,14 @@ import com.kjipo.raster.filter.Filter;
 import com.kjipo.raster.filter.MaskFilter;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.representation.EncodedKanji;
-import com.kjipo.segmentation.ColorCell;
-import com.kjipo.segmentation.ColorPainter;
+import com.kjipo.visualization.segmentation.ColorCell;
+import com.kjipo.visualization.segmentation.ColorPainter;
 import com.kjipo.visualization.RasterRun;
 import com.kjipo.visualization.RasterVisualizer2;
 import javafx.scene.paint.Color;
 import org.junit.Test;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,16 +30,38 @@ public class FitPrototypeTest {
             encodedKanji = (EncodedKanji) objectInputStream.readObject();
         }
 
-//        Filter maskFilter = new MaskFilter();
-//        List<boolean[][]> results = maskFilter.applyFilter(encodedKanji.getImage());
-//        boolean filteredImage[][] = results.get(results.size() - 1);
+        Filter maskFilter = new MaskFilter();
+        List<boolean[][]> results = maskFilter.applyFilter(encodedKanji.getImage());
+        boolean filteredImage[][] = results.get(results.size() - 1);
 
         FitPrototype fitPrototype = new FitPrototype();
-        List<Collection<Prototype>> prototypes = fitPrototype.fit(encodedKanji.getImage());
+        List<Collection<Prototype>> prototypes = fitPrototype.fit(filteredImage);
 
         showRaster(encodedKanji.getImage(), prototypes);
 
         Thread.sleep(Long.MAX_VALUE);
+    }
+
+
+    @Test
+    public void fitPrototypeTest2() throws IOException, ClassNotFoundException, InterruptedException {
+        EncodedKanji encodedKanji;
+        try (InputStream fontStream = new FileInputStream(Paths.get("/home/student/test_kanji.xml").toFile());
+             ObjectInputStream objectInputStream = new ObjectInputStream(fontStream)) {
+            encodedKanji = (EncodedKanji) objectInputStream.readObject();
+        }
+
+        Filter maskFilter = new MaskFilter();
+        List<boolean[][]> results = maskFilter.applyFilter(encodedKanji.getImage());
+        boolean filteredImage[][] = results.get(results.size() - 1);
+
+        FitPrototype fitPrototype = new FitPrototype();
+        Prototype prototype = fitPrototype.addSinglePrototype(filteredImage);
+
+        showRaster(encodedKanji.getImage(), Collections.singletonList(Collections.singletonList(prototype)));
+
+        Thread.sleep(Long.MAX_VALUE);
+
     }
 
 

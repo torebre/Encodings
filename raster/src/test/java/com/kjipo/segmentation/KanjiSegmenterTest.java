@@ -1,16 +1,14 @@
 package com.kjipo.segmentation;
 
-import com.google.common.collect.ImmutableList;
-import com.kjipo.raster.Cell;
 import com.kjipo.prototype.Prototype;
+import com.kjipo.raster.Cell;
 import com.kjipo.raster.attraction.SegmentMatcher;
 import com.kjipo.raster.match.MatchTest;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
 import com.kjipo.recognition.RecognitionUtilities;
 import com.kjipo.representation.EncodedKanji;
-import com.kjipo.visualization.RasterRun;
-import com.kjipo.visualization.RasterVisualizer2;
+import com.kjipo.visualization.segmentation.SegmentationVisualizer;
 import javafx.scene.paint.Color;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -76,53 +74,13 @@ public class KanjiSegmenterTest {
 //        List<Pair> prototypeSegments = testPrototype2.getSegments().stream().map(Segment::getPairs).flatMap(Collection::stream).collect(Collectors.toList());
 
 
-        showRasterFlow(encodedKanji, colorRaster, inputSegmentData.getPairs(), joinedSegmentLines);
+        SegmentationVisualizer.showRasterFlow(encodedKanji, colorRaster, inputSegmentData.getPairs(), joinedSegmentLines);
 
         Thread.sleep(Long.MAX_VALUE);
 
     }
 
-    private static void showRasterFlow(EncodedKanji encodedKanji,
-                                       Color colorRaster[][],
-                                       List<Pair> segmentData,
-                                       List<Segment> joinedSegmentLines) throws InterruptedException {
-        RasterVisualizer2.showRasterFlow(
-                new RasterRun<ColorCell>() {
-                    private int current = 0;
 
-                    @Override
-                    public boolean[][] getRawInput() {
-                        return encodedKanji.getImage();
-                    }
-
-                    @Override
-                    public boolean hasNext() {
-                        return current < joinedSegmentLines.size() - 1;
-                    }
-
-                    @Override
-                    public int getColumns() {
-                        return encodedKanji.getImage()[0].length;
-                    }
-
-                    @Override
-                    public int getRows() {
-                        return encodedKanji.getImage().length;
-                    }
-
-                    @Override
-                    public ColorCell getCell(int row, int column) {
-                        return new ColorCell(row, column, colorRaster[row][column], segmentData, joinedSegmentLines.get(current).getPairs());
-                    }
-
-                    @Override
-                    public void next() {
-                        ++current;
-                    }
-                },
-                ImmutableList.of(new ColorPainter()));
-
-    }
 
 
 }

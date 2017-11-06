@@ -8,13 +8,10 @@ import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
 import java.awt.geom.AffineTransform;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -122,33 +119,5 @@ public class FontFileParser {
                         .forEach(column -> result[row - minRow2][column - minCol2] = raster[row][column]));
         return result;
     }
-
-
-    public static void main(String args[]) throws IOException, FontFormatException {
-        java.util.List<KanjiDicParser.KanjiDicEntry> entries = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).collect(Collectors.toList());
-
-        Set<Character> charactersFoundInFile = new HashSet<>();
-        for (KanjiDicParser.KanjiDicEntry entry : entries) {
-            char[] chars = entry.getKanji().toCharArray();
-            for (char character : chars) {
-                charactersFoundInFile.add(character);
-            }
-        }
-
-        logger.info("Number of characters found: {}", charactersFoundInFile.size());
-
-//        for (Character character : charactersFoundInFile) {
-//            System.out.println(character);
-//        }
-
-        try (InputStream fontStream = new FileInputStream(Parsers.FONT_FILE_LOCATION.toFile())) {
-            Collection<EncodedKanji> encodedKanjis = parseFontFile(charactersFoundInFile, fontStream);
-            for (EncodedKanji encodedKanji : encodedKanjis) {
-                encodedKanji.printKanji();
-            }
-        }
-
-    }
-
 
 }
