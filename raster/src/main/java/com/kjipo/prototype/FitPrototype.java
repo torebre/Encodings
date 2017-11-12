@@ -1,8 +1,11 @@
 package com.kjipo.prototype;
 
+import com.google.common.collect.ImmutableList;
 import com.kjipo.raster.EncodingUtilities;
 import com.kjipo.raster.FlowDirection;
+import com.kjipo.raster.attraction.LineMoveOperation;
 import com.kjipo.raster.attraction.MoveOperation;
+import com.kjipo.raster.attraction.PrototypeImpl;
 import com.kjipo.raster.attraction.ScaleOperation;
 import com.kjipo.raster.match.MatchDistance;
 import com.kjipo.raster.segment.Pair;
@@ -11,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class FitPrototype {
 
@@ -37,20 +41,22 @@ public class FitPrototype {
             int addPoint = prototypeDevelopment.size() - 1;
 
             boolean[][] occupiedData = computeOccupied(prototypeDevelopment.get(addPoint), numberOfRows, numberOfColumns);
-
             LinePrototype linePrototype = nextStartInRegion(inputData, occupiedData, disjunctRegions, j);
-            int scoreUnchanged = 0;
 
             if (linePrototype == null) {
                 LOG.info("No available start point");
                 break;
             }
 
-            int score = computeScore(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
+            List<LinePrototype> linePrototypes = Collections.singletonList(linePrototype);
+            int scoreUnchanged = 0;
+
+
+            int bestScore = computeScore(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
 
             for (int i = 0; i < MAX_ITERATIONS; ++i) {
                 // A line prototype only has one segment
-                kotlin.Pair<LinePrototype, Integer> newPrototype = linePrototype.getMovements()
+                List<kotlin.Pair<LinePrototype, Integer>> newPrototypes = linePrototypes.stream()
                         .map(linePrototype1 -> {
                             Segment segment1 = linePrototype1.getSegments().get(0);
                             Pair startPair = segment1.getPairs().get(0);
@@ -70,18 +76,13 @@ public class FitPrototype {
                                                     inputData[0].length)));
                         })
                         .filter(Objects::nonNull)
-                        .reduce(new kotlin.Pair<>(new LinePrototype(new Pair(0, 0), new Pair(0, 0)), Integer.MIN_VALUE),
-                                (first, second) -> {
-                                    if (first.getSecond().compareTo(second.getSecond()) > 0) {
-                                        return first;
-                                    } else {
-                                        return second;
-                                    }
-                                });
+                        .sorted(Comparator.comparing(linePrototypeIntegerPair -> -linePrototypeIntegerPair.getSecond()))
+                        .limit(3)
+                        .collect(Collectors.toList());
 
-                if (newPrototype.getSecond() < score) {
+                if (newPrototypes.get(0).getSecond() < bestScore) {
                     break;
-                } else if (newPrototype.getSecond() == score) {
+                } else if (newPrototypes.get(0).getSecond() == bestScore) {
                     if (scoreUnchanged == 5) {
                         break;
                     }
@@ -90,8 +91,12 @@ public class FitPrototype {
                     scoreUnchanged = 0;
                 }
 
-                linePrototype = newPrototype.getFirst();
-                score = newPrototype.getSecond();
+                LOG.info("Scores:");
+                newPrototypes.forEach(linePrototypeIntegerPair -> {
+                    LOG.info("Score: {}", linePrototypeIntegerPair.getSecond());
+                });
+                linePrototypes = newPrototypes.stream().map(kotlin.Pair::getFirst).collect(Collectors.toList());
+                bestScore = newPrototypes.get(0).getSecond();
 
 //                result.add(linePrototype);
 
@@ -107,7 +112,7 @@ public class FitPrototype {
     }
 
 
-    public Prototype addSinglePrototype(boolean inputData[][]) {
+    public List<Prototype> addSinglePrototype(boolean inputData[][]) {
         LinePrototype top = new LinePrototype(Pair.of(0, 0), Pair.of(0, 3));
         LinePrototype right = new LinePrototype(Pair.of(0, 3), Pair.of(3, 3));
         LinePrototype bottom = new LinePrototype(Pair.of(3, 3), Pair.of(3, 0));
@@ -121,28 +126,46 @@ public class FitPrototype {
 
         kotlin.Pair<LinePrototype, Integer> linePrototypeIntegerPair = fitSingleLinePrototype(top, distanceMap, occupiedData, numberOfRows, numberOfColumns);
 
-        computeMovements(top, linePrototypeIntegerPair.getFirst());
+        List<LineMoveOperation> lineMoveOperations = computeMovements(top, linePrototypeIntegerPair.getFirst());
 
-        // TODO
+        List<Segment> prototypeSegments = new ArrayList<>();
+        prototypeSegments.addAll(top.getSegments());
+        prototypeSegments.addAll(right.getSegments());
+        prototypeSegments.addAll(bottom.getSegments());
+        prototypeSegments.addAll(left.getSegments());
 
-        return null;
+        Prototype prototype = new PrototypeImpl(prototypeSegments);
 
+        return applyMoveOperations(prototype, lineMoveOperations);
+    }
 
+    private static List<Prototype> applyMoveOperations(Prototype prototype, Collection<LineMoveOperation> moveOperations) {
+        List<Prototype> moves = new ArrayList<>();
+        moves.add(prototype);
+
+        for (LineMoveOperation lineMoveOperation : moveOperations) {
+            prototype = new PrototypeImpl(prototype.getSegments().stream()
+                    .map(lineMoveOperation::applyToLine)
+                    .collect(Collectors.toList()));
+            moves.add(prototype);
+        }
+
+        return moves;
     }
 
 
-    private static void computeMovements(LinePrototype originalPrototype, LinePrototype processedPrototype) {
+    private static List<LineMoveOperation> computeMovements(LinePrototype originalPrototype, LinePrototype processedPrototype) {
         Pair originalStartPair = originalPrototype.getStartPair();
         Pair processedStartPair = processedPrototype.getStartPair();
 
         MoveOperation moveOperation = new MoveOperation(processedStartPair.getRow() - originalStartPair.getRow(),
-        processedStartPair.getColumn() - originalStartPair.getColumn(),
-        0,
-        // The pivot point is not used in this operation
-        originalStartPair.getRow(),
-        originalStartPair.getColumn());
+                processedStartPair.getColumn() - originalStartPair.getColumn(),
+                0,
+                // The pivot point is not used in this operation
+                originalStartPair.getRow(),
+                originalStartPair.getColumn());
 
-        ScaleOperation scaleOperation = new ScaleOperation(Math.round((float)(processedPrototype.getDistance() - originalPrototype.getDistance())));
+        ScaleOperation scaleOperation = new ScaleOperation(Math.round((float) (processedPrototype.getDistance() - originalPrototype.getDistance())));
 
 
         double rotationAngle = Math.atan2((double) processedStartPair.getColumn() - originalStartPair.getColumn(),
@@ -151,25 +174,20 @@ public class FitPrototype {
 
         MoveOperation rotation = new MoveOperation(0, 0, rotationAngle, processedStartPair.getRow(), processedStartPair.getColumn());
 
-
-        // TODO
-
-
+        return ImmutableList.of(moveOperation, scaleOperation, rotation);
     }
 
 
-
-
-
     private static kotlin.Pair<LinePrototype, Integer> fitSingleLinePrototype(LinePrototype linePrototype, int distanceMap[][],
-                                               boolean occupiedData[][],
-                                               int numberOfRows, int numberOfColumns) {
+                                                                              boolean occupiedData[][],
+                                                                              int numberOfRows, int numberOfColumns) {
+        List<LinePrototype> linePrototypes = Collections.singletonList(linePrototype);
         int scoreUnchanged = 0;
-        int score = computeScore(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
+        int bestScore = computeScore(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
 
         for (int i = 0; i < MAX_ITERATIONS; ++i) {
             // A line prototype only has one segment
-            kotlin.Pair<LinePrototype, Integer> newPrototype = linePrototype.getMovements()
+            List<kotlin.Pair<LinePrototype, Integer>> newPrototypes = linePrototypes.stream()
                     .map(linePrototype1 -> {
                         Segment segment1 = linePrototype1.getSegments().get(0);
                         Pair startPair = segment1.getPairs().get(0);
@@ -187,18 +205,13 @@ public class FitPrototype {
                                         occupiedData));
                     })
                     .filter(Objects::nonNull)
-                    .reduce(new kotlin.Pair<>(new LinePrototype(new Pair(0, 0), new Pair(0, 0)), Integer.MIN_VALUE),
-                            (first, second) -> {
-                                if (first.getSecond().compareTo(second.getSecond()) > 0) {
-                                    return first;
-                                } else {
-                                    return second;
-                                }
-                            });
+                    .sorted(Comparator.comparing(linePrototypeIntegerPair -> -linePrototypeIntegerPair.getSecond()))
+                    .limit(3)
+                    .collect(Collectors.toList());
 
-            if (newPrototype.getSecond() < score) {
+            if (newPrototypes.get(0).getSecond() < bestScore) {
                 break;
-            } else if (newPrototype.getSecond() == score) {
+            } else if (newPrototypes.get(0).getSecond() == bestScore) {
                 if (scoreUnchanged == 5) {
                     break;
                 }
@@ -208,14 +221,21 @@ public class FitPrototype {
             }
 
 
-            linePrototype = newPrototype.getFirst();
-            score = newPrototype.getSecond();
+            LOG.info("Scores:");
+            newPrototypes.forEach(linePrototypeIntegerPair -> {
+                LOG.info("Score: {}", linePrototypeIntegerPair.getSecond());
+            });
+            linePrototypes = newPrototypes.stream().map(kotlin.Pair::getFirst).collect(Collectors.toList());
+            bestScore = newPrototypes.get(0).getSecond();
+
+//                result.add(linePrototype);
+
 
 
 
         }
 
-        return new kotlin.Pair<>(linePrototype, score);
+        return new kotlin.Pair<>(linePrototypes.get(0), bestScore);
     }
 
     private static int computeScore(List<Pair> pairs, int distanceMatrix[][], boolean occupiedMatrix[][]) {
@@ -234,11 +254,6 @@ public class FitPrototype {
                     return score;
                 }).sum();
 
-    }
-
-
-    private static int computeDistance(List<Pair> pairs, int distanceMatrix[][]) {
-        return pairs.stream().mapToInt(pair -> distanceMatrix[pair.getRow()][pair.getColumn()]).sum();
     }
 
     private static boolean validCoordinates(Pair pair, int numberOfRows, int numberOfColumns) {

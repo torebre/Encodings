@@ -1,6 +1,9 @@
 package com.kjipo.raster.attraction;
 
-public class ScaleOperation {
+
+import com.kjipo.raster.segment.Segment;
+
+public class ScaleOperation implements LineMoveOperation{
     private final int scaling;
 
     public ScaleOperation(int scaling) {
@@ -9,5 +12,11 @@ public class ScaleOperation {
 
     public int getScaling() {
         return scaling;
+    }
+
+    @Override
+    public Segment applyToLine(Segment linePrototype) {
+        // TODO
+        return linePrototype;
     }
 }

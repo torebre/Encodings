@@ -56,19 +56,21 @@ public class FitPrototypeTest {
         boolean filteredImage[][] = results.get(results.size() - 1);
 
         FitPrototype fitPrototype = new FitPrototype();
-        Prototype prototype = fitPrototype.addSinglePrototype(filteredImage);
+        List<List<Prototype>> prototypes = fitPrototype.addSinglePrototype(filteredImage).stream()
+                .map(Collections::singletonList)
+                .collect(Collectors.toList());
 
-        showRaster(encodedKanji.getImage(), Collections.singletonList(Collections.singletonList(prototype)));
+        showRaster(filteredImage, prototypes);
 
         Thread.sleep(Long.MAX_VALUE);
 
     }
 
 
-    private void showRaster(boolean encodedKanji[][], List<Collection<Prototype>> prototypeDevelopment) throws InterruptedException {
+    private void showRaster(boolean encodedKanji[][], List<? extends Collection<Prototype>> prototypeDevelopment) throws InterruptedException {
         RasterVisualizer2.showRasterFlow(
                 new RasterRun<ColorCell>() {
-                    private int current = 0;
+                    private int current = -1;
 
                     @Override
                     public boolean[][] getRawInput() {
