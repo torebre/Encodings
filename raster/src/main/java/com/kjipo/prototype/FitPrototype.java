@@ -13,6 +13,7 @@ import com.kjipo.raster.segment.Segment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.security.auth.login.LoginContext;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -124,19 +125,26 @@ public class FitPrototype {
         int[][] distanceMap = MatchDistance.computeDistanceMap(inputData);
         boolean[][] occupiedData = computeOccupied(Collections.singleton(top), numberOfRows, numberOfColumns);
 
-        kotlin.Pair<LinePrototype, Integer> linePrototypeIntegerPair = fitSingleLinePrototype(top, distanceMap, occupiedData, numberOfRows, numberOfColumns);
+        List<kotlin.Pair<LinePrototype, Integer>> linePrototypeIntegerPair = fitSingleLinePrototype(top, distanceMap, occupiedData, numberOfRows, numberOfColumns);
 
-        List<LineMoveOperation> lineMoveOperations = computeMovements(top, linePrototypeIntegerPair.getFirst());
+        List<Prototype> collect = linePrototypeIntegerPair.stream()
+                .map(pair -> {
+                    List<LineMoveOperation> lineMoveOperations = computeMovements(top, pair.getFirst());
+                    List<Segment> prototypeSegments = new ArrayList<>();
+                    prototypeSegments.addAll(top.getSegments());
+                    prototypeSegments.addAll(right.getSegments());
+                    prototypeSegments.addAll(bottom.getSegments());
+                    prototypeSegments.addAll(left.getSegments());
 
-        List<Segment> prototypeSegments = new ArrayList<>();
-        prototypeSegments.addAll(top.getSegments());
-        prototypeSegments.addAll(right.getSegments());
-        prototypeSegments.addAll(bottom.getSegments());
-        prototypeSegments.addAll(left.getSegments());
+                    Prototype prototype = new PrototypeImpl(prototypeSegments);
 
-        Prototype prototype = new PrototypeImpl(prototypeSegments);
+                    List<Prototype> prototypes = applyMoveOperations(prototype, lineMoveOperations);
+                    // Only interested in the last prototype in the sequence here
+                    return prototypes.get(prototypes.size() - 1);
+                })
+                .collect(Collectors.toList());
 
-        return applyMoveOperations(prototype, lineMoveOperations);
+        return collect;
     }
 
     private static List<Prototype> applyMoveOperations(Prototype prototype, Collection<LineMoveOperation> moveOperations) {
@@ -178,16 +186,34 @@ public class FitPrototype {
     }
 
 
-    private static kotlin.Pair<LinePrototype, Integer> fitSingleLinePrototype(LinePrototype linePrototype, int distanceMap[][],
-                                                                              boolean occupiedData[][],
-                                                                              int numberOfRows, int numberOfColumns) {
-        List<LinePrototype> linePrototypes = Collections.singletonList(linePrototype);
+    private static List<kotlin.Pair<LinePrototype, Integer>> fitSingleLinePrototype(LinePrototype linePrototype, int distanceMap[][],
+                                                                                    boolean occupiedData[][],
+                                                                                    int numberOfRows, int numberOfColumns) {
         int scoreUnchanged = 0;
         int bestScore = computeScore(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
+        int previousBestScore = bestScore;
+
+        PriorityQueue<kotlin.Pair<LinePrototype, Integer>> priorityQueue = new PriorityQueue<>(Comparator.comparingInt(pair -> -pair.getSecond()));
+
+        kotlin.Pair<LinePrototype, Integer> firstPair = new kotlin.Pair<>(linePrototype, bestScore);
+        List<kotlin.Pair<LinePrototype, Integer>> bestScorePairs = new ArrayList<>();
+
+        priorityQueue.add(firstPair);
+        bestScorePairs.add(firstPair);
 
         for (int i = 0; i < MAX_ITERATIONS; ++i) {
             // A line prototype only has one segment
-            List<kotlin.Pair<LinePrototype, Integer>> newPrototypes = linePrototypes.stream()
+
+            // TODO Mostly for testing to see if the search is able to find a good fit
+            kotlin.Pair<LinePrototype, Integer> nextPrototype = priorityQueue.poll();
+
+            if (nextPrototype.getSecond() > bestScore) {
+                previousBestScore = bestScore;
+                bestScore = nextPrototype.getSecond();
+                bestScorePairs.add(nextPrototype);
+            }
+
+            nextPrototype.component1().getMovements()
                     .map(linePrototype1 -> {
                         Segment segment1 = linePrototype1.getSegments().get(0);
                         Pair startPair = segment1.getPairs().get(0);
@@ -206,13 +232,11 @@ public class FitPrototype {
                     })
                     .filter(Objects::nonNull)
                     .sorted(Comparator.comparing(linePrototypeIntegerPair -> -linePrototypeIntegerPair.getSecond()))
-                    .limit(3)
-                    .collect(Collectors.toList());
+                    .limit(5)
+                    .forEach(priorityQueue::add);
 
-            if (newPrototypes.get(0).getSecond() < bestScore) {
-                break;
-            } else if (newPrototypes.get(0).getSecond() == bestScore) {
-                if (scoreUnchanged == 5) {
+            if (previousBestScore == bestScore) {
+                if (scoreUnchanged == 50) {
                     break;
                 }
                 ++scoreUnchanged;
@@ -220,22 +244,18 @@ public class FitPrototype {
                 scoreUnchanged = 0;
             }
 
-
-            LOG.info("Scores:");
-            newPrototypes.forEach(linePrototypeIntegerPair -> {
-                LOG.info("Score: {}", linePrototypeIntegerPair.getSecond());
-            });
-            linePrototypes = newPrototypes.stream().map(kotlin.Pair::getFirst).collect(Collectors.toList());
-            bestScore = newPrototypes.get(0).getSecond();
-
-//                result.add(linePrototype);
-
-
-
+//            LOG.info("Scores:");
+//            newPrototypes.forEach(linePrototypeIntegerPair -> {
+//                LOG.info("Score: {}", linePrototypeIntegerPair.getSecond());
+//            });
+//            linePrototypes = newPrototypes.stream().map(kotlin.Pair::getFirst).collect(Collectors.toList());
+//            bestScore = newPrototypes.get(0).getSecond();
 
         }
 
-        return new kotlin.Pair<>(linePrototypes.get(0), bestScore);
+        LOG.info("Best score: {}", bestScore);
+
+        return bestScorePairs;
     }
 
     private static int computeScore(List<Pair> pairs, int distanceMatrix[][], boolean occupiedMatrix[][]) {
