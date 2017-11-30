@@ -65,4 +65,11 @@ public class LinePrototype implements Prototype {
                 + Math.pow(endPair.getColumn() - startPair.getColumn(), 2));
     }
 
+    @Override
+    public String toString() {
+        return "LinePrototype{" +
+                "startPair=" + startPair +
+                ", endPair=" + endPair +
+                '}';
+    }
 }

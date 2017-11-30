@@ -21,7 +21,7 @@ public class BooleanEncodingUtilitiesTest {
 
     @Test
     public void getBorderTest4() {
-        boolean testRaster[][] = BooleanEncodingTestData.getTestRaster4();
+        boolean testRaster[][] = BooleanEncodingTestData.getTestRaster4(5, 15);
         int border[][] = BooleanEncodingUtilities.getBorder(testRaster);
 
         assertThat(border.length).isEqualTo(5);

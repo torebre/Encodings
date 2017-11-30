@@ -53,7 +53,7 @@ public class TestFlow {
     @Test
     public void testFlow() throws InterruptedException {
 //        BooleanEncoding booleanEncoding = new BooleanEncoding(RasterUtilities.setupRaster(getGlyphForCharacter(testCharacter)));
-        boolean rawData[][] = BooleanEncodingTestData.getTestRaster4();
+        boolean rawData[][] = BooleanEncodingTestData.getTestRaster4(5, 20);
         BooleanEncoding booleanEncoding = new BooleanEncoding(rawData,
                 BooleanEncodingUtilities.setupFlowRaster(rawData));
         Complex raster[][] = booleanEncoding.getFlowRaster();

@@ -38,4 +38,12 @@ public class Pair {
         result = 31 * result + column;
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "Pair{" +
+                "row=" + row +
+                ", column=" + column +
+                '}';
+    }
 }

@@ -1,5 +1,7 @@
 package com.kjipo.raster.flow;
 
+import com.google.common.base.Preconditions;
+
 import java.util.stream.IntStream;
 
 
@@ -35,8 +37,9 @@ public final class BooleanEncodingTestData {
         return raster;
     }
 
-    public static boolean[][] getTestRaster4() {
-        boolean raster[][] = new boolean[5][20];
+    public static boolean[][] getTestRaster4(int rows, int columns) {
+        Preconditions.checkArgument(rows >= 5 && columns >= 20);
+        boolean raster[][] = new boolean[rows][columns];
         for (int i = 5; i < 15; ++i) {
             raster[1][i] = true;
         }

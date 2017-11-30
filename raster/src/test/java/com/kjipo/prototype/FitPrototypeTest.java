@@ -3,6 +3,7 @@ package com.kjipo.prototype;
 import com.google.common.collect.ImmutableList;
 import com.kjipo.raster.filter.Filter;
 import com.kjipo.raster.filter.MaskFilter;
+import com.kjipo.raster.flow.BooleanEncodingTestData;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.representation.EncodedKanji;
 import com.kjipo.visualization.segmentation.ColorCell;
@@ -50,6 +51,25 @@ public class FitPrototypeTest {
              ObjectInputStream objectInputStream = new ObjectInputStream(fontStream)) {
             encodedKanji = (EncodedKanji) objectInputStream.readObject();
         }
+
+        Filter maskFilter = new MaskFilter();
+        List<boolean[][]> results = maskFilter.applyFilter(encodedKanji.getImage());
+        boolean filteredImage[][] = results.get(results.size() - 1);
+
+        FitPrototype fitPrototype = new FitPrototype();
+        List<List<Prototype>> prototypes = fitPrototype.addSinglePrototype(filteredImage).stream()
+                .map(Collections::singletonList)
+                .collect(Collectors.toList());
+
+        showRaster(filteredImage, prototypes);
+
+        Thread.sleep(Long.MAX_VALUE);
+
+    }
+
+    @Test
+    public void fitPrototypeTest3() throws IOException, ClassNotFoundException, InterruptedException {
+        EncodedKanji encodedKanji = new EncodedKanji('a', BooleanEncodingTestData.getTestRaster4(50, 50));
 
         Filter maskFilter = new MaskFilter();
         List<boolean[][]> results = maskFilter.applyFilter(encodedKanji.getImage());

@@ -13,9 +13,9 @@ import com.kjipo.raster.segment.Segment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.security.auth.login.LoginContext;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FitPrototype {
 
@@ -53,7 +53,7 @@ public class FitPrototype {
             int scoreUnchanged = 0;
 
 
-            int bestScore = computeScore(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
+            int bestScore = computeScore2(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
 
             for (int i = 0; i < MAX_ITERATIONS; ++i) {
                 // A line prototype only has one segment
@@ -70,7 +70,7 @@ public class FitPrototype {
                             }
 
                             return new kotlin.Pair<>(new LinePrototype(startPair, endPair),
-                                    computeScore(segment1.getPairs(),
+                                    computeScore2(segment1.getPairs(),
                                             distanceMap,
                                             computeOccupied(prototypeDevelopment.get(addPoint),
                                                     inputData.length,
@@ -114,27 +114,35 @@ public class FitPrototype {
 
 
     public List<Prototype> addSinglePrototype(boolean inputData[][]) {
-        LinePrototype top = new LinePrototype(Pair.of(0, 0), Pair.of(0, 3));
-        LinePrototype right = new LinePrototype(Pair.of(0, 3), Pair.of(3, 3));
-        LinePrototype bottom = new LinePrototype(Pair.of(3, 3), Pair.of(3, 0));
-        LinePrototype left = new LinePrototype(Pair.of(3, 0), Pair.of(0, 0));
-
         int numberOfRows = inputData.length;
         int numberOfColumns = inputData[0].length;
 
         int[][] distanceMap = MatchDistance.computeDistanceMap(inputData);
-        boolean[][] occupiedData = computeOccupied(Collections.singleton(top), numberOfRows, numberOfColumns);
+        boolean[][] occupiedData = new boolean[numberOfRows][numberOfColumns];
+
+        Pair startPair = nextStartPair(inputData, occupiedData);
+        kotlin.Pair<LinePrototype, Integer> originalTop = new kotlin.Pair<>(new LinePrototype(Pair.of(0, 0), Pair.of(0, 3)), 0);
+
+        LinePrototype top = new LinePrototype(startPair, Pair.of(startPair.getRow(), startPair.getColumn() + 3));
+
+        computeOccupied(Collections.singleton(top), numberOfRows, numberOfColumns);
 
         List<kotlin.Pair<LinePrototype, Integer>> linePrototypeIntegerPair = fitSingleLinePrototype(top, distanceMap, occupiedData, numberOfRows, numberOfColumns);
 
-        List<Prototype> collect = linePrototypeIntegerPair.stream()
+
+        LinePrototype right = new LinePrototype(Pair.of(0, 3), Pair.of(3, 3));
+        LinePrototype bottom = new LinePrototype(Pair.of(3, 3), Pair.of(3, 0));
+        LinePrototype left = new LinePrototype(Pair.of(3, 0), Pair.of(0, 0));
+
+
+        List<Prototype> collect = Stream.concat(Stream.of(originalTop, new kotlin.Pair<>(top, 0)), linePrototypeIntegerPair.stream())
                 .map(pair -> {
-                    List<LineMoveOperation> lineMoveOperations = computeMovements(top, pair.getFirst());
+                    List<LineMoveOperation> lineMoveOperations = computeMovements(originalTop.getFirst(), pair.getFirst());
                     List<Segment> prototypeSegments = new ArrayList<>();
-                    prototypeSegments.addAll(top.getSegments());
+//                    prototypeSegments.addAll(top.getSegments());
                     prototypeSegments.addAll(right.getSegments());
-                    prototypeSegments.addAll(bottom.getSegments());
-                    prototypeSegments.addAll(left.getSegments());
+//                    prototypeSegments.addAll(bottom.getSegments());
+//                    prototypeSegments.addAll(left.getSegments());
 
                     Prototype prototype = new PrototypeImpl(prototypeSegments);
 
@@ -165,6 +173,7 @@ public class FitPrototype {
     private static List<LineMoveOperation> computeMovements(LinePrototype originalPrototype, LinePrototype processedPrototype) {
         Pair originalStartPair = originalPrototype.getStartPair();
         Pair processedStartPair = processedPrototype.getStartPair();
+        List<LineMoveOperation> moveOperations = new ArrayList<>();
 
         MoveOperation moveOperation = new MoveOperation(processedStartPair.getRow() - originalStartPair.getRow(),
                 processedStartPair.getColumn() - originalStartPair.getColumn(),
@@ -173,16 +182,18 @@ public class FitPrototype {
                 originalStartPair.getRow(),
                 originalStartPair.getColumn());
 
-        ScaleOperation scaleOperation = new ScaleOperation(Math.round((float) (processedPrototype.getDistance() - originalPrototype.getDistance())));
+        moveOperations.add(moveOperation);
 
+        // TODO Comment back in
+//        int deltaDistance = Math.round((float) (processedPrototype.getDistance() - originalPrototype.getDistance()));
+//        moveOperations.add(new ScaleOperation(deltaDistance));
 
         double rotationAngle = Math.atan2((double) processedStartPair.getColumn() - originalStartPair.getColumn(),
                 (double) processedStartPair.getRow() - originalStartPair.getRow());
-
-
         MoveOperation rotation = new MoveOperation(0, 0, rotationAngle, processedStartPair.getRow(), processedStartPair.getColumn());
+        moveOperations.add(rotation);
 
-        return ImmutableList.of(moveOperation, scaleOperation, rotation);
+        return ImmutableList.copyOf(moveOperations);
     }
 
 
@@ -190,7 +201,7 @@ public class FitPrototype {
                                                                                     boolean occupiedData[][],
                                                                                     int numberOfRows, int numberOfColumns) {
         int scoreUnchanged = 0;
-        int bestScore = computeScore(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
+        int bestScore = computeScore2(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
         int previousBestScore = bestScore;
 
         PriorityQueue<kotlin.Pair<LinePrototype, Integer>> priorityQueue = new PriorityQueue<>(Comparator.comparingInt(pair -> -pair.getSecond()));
@@ -207,7 +218,12 @@ public class FitPrototype {
             // TODO Mostly for testing to see if the search is able to find a good fit
             kotlin.Pair<LinePrototype, Integer> nextPrototype = priorityQueue.poll();
 
+            LOG.info("Checking prototype: {}", nextPrototype);
+
             if (nextPrototype.getSecond() > bestScore) {
+
+                LOG.info("New best score: {}", nextPrototype);
+
                 previousBestScore = bestScore;
                 bestScore = nextPrototype.getSecond();
                 bestScorePairs.add(nextPrototype);
@@ -226,7 +242,7 @@ public class FitPrototype {
                         }
 
                         return new kotlin.Pair<>(new LinePrototype(startPair, endPair),
-                                computeScore(segment1.getPairs(),
+                                computeScore2(segment1.getPairs(),
                                         distanceMap,
                                         occupiedData));
                     })
@@ -276,6 +292,40 @@ public class FitPrototype {
 
     }
 
+    private static int computeScore2(List<Pair> pairs, int distanceMatrix[][], boolean occupiedMatrix[][]) {
+        Pair startPair = pairs.get(0);
+        Pair stopPair = pairs.get(pairs.size() - 1);
+
+        int lengthScore = 0;
+        if (distanceMatrix[startPair.getRow()][startPair.getColumn()] == 0
+                && distanceMatrix[stopPair.getRow()][stopPair.getColumn()] == 0) {
+
+            lengthScore = pairs.size();
+
+            LOG.debug("Length score: " + lengthScore);
+        }
+
+        return Stream.of(startPair, stopPair)
+                .mapToInt(pair -> {
+                    int score = 0;
+                    int distance = distanceMatrix[pair.getRow()][pair.getColumn()];
+
+                    LOG.debug("Distance: " + distance);
+
+                    if (distance > 0) {
+                        score += -distance;
+                    } else {
+                        score += 1;
+                    }
+                    if (occupiedMatrix[pair.getRow()][pair.getColumn()]) {
+                        score += -50;
+                    }
+                    return score;
+                }).sum()
+                + lengthScore;
+
+    }
+
     private static boolean validCoordinates(Pair pair, int numberOfRows, int numberOfColumns) {
         return !(pair.getRow() < 0
                 || pair.getRow() >= numberOfRows
@@ -300,6 +350,18 @@ public class FitPrototype {
                 if (inputData[row][column]
                         && !occupiedData[row][column]) {
                     return new LinePrototype(Pair.of(row, column), Pair.of(row, column));
+                }
+            }
+        }
+        return null;
+    }
+
+    private static Pair nextStartPair(boolean inputData[][], boolean occupiedData[][]) {
+        for (int row = 0; row < inputData.length; ++row) {
+            for (int column = 0; column < inputData[0].length; ++column) {
+                if (inputData[row][column]
+                        && !occupiedData[row][column]) {
+                    return Pair.of(row, column);
                 }
             }
         }

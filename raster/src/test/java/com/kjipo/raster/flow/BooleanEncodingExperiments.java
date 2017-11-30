@@ -18,7 +18,7 @@ public class BooleanEncodingExperiments {
 
 
     private static void runExperiment() throws InterruptedException {
-        boolean raster[][] = BooleanEncodingTestData.getTestRaster4();
+        boolean raster[][] = BooleanEncodingTestData.getTestRaster4(5, 20);
         BooleanEncoding encoding = new BooleanEncoding(raster, BooleanEncodingUtilities.setupFlowRaster(raster));
 
         DissipationFunction dissipationFunction = FlowDistribution.createTriangularDissipationFunction(Math.PI / 2);

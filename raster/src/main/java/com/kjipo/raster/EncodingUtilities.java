@@ -168,4 +168,38 @@ public final class EncodingUtilities {
         return null;
     }
 
+    public static FlowDirection computeDirection(Pair first, Pair second) {
+        int rowChange = second.getRow() - first.getRow();
+        int columnChange = second.getColumn() - first.getColumn();
+
+        if (rowChange == 0 && columnChange == 1) {
+            return FlowDirection.EAST;
+        }
+        if (rowChange == -1 && columnChange == 1) {
+            return FlowDirection.NORTH_EAST;
+        }
+        if (rowChange == 1 && columnChange == 1) {
+            return FlowDirection.SOUTH_EAST;
+        }
+
+        if (rowChange == -1 && columnChange == 0) {
+            return FlowDirection.WEST;
+        }
+        if (rowChange == 1 && columnChange == 0) {
+            return FlowDirection.EAST;
+        }
+
+        if (rowChange == 0 && columnChange == -1) {
+            return FlowDirection.NORTH;
+        }
+        if (rowChange == -1 && columnChange == -1) {
+            return FlowDirection.NORTH_WEST;
+        }
+        if (rowChange == 1 && columnChange == -1) {
+            return FlowDirection.SOUTH_WEST;
+        }
+
+        return null;
+
+    }
 }
