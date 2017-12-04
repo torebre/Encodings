@@ -135,32 +135,48 @@ public class FitPrototype {
         LinePrototype left = new LinePrototype(Pair.of(3, 0), Pair.of(0, 0));
 
 
-        List<Prototype> collect = Stream.concat(Stream.of(originalTop, new kotlin.Pair<>(top, 0)), linePrototypeIntegerPair.stream())
-                .map(pair -> {
-                    List<LineMoveOperation> lineMoveOperations = computeMovements(originalTop.getFirst(), pair.getFirst());
-                    List<Segment> prototypeSegments = new ArrayList<>();
+        List<List<LineMoveOperation>> moveOperations = new ArrayList<>();
+        LinePrototype previousPrototype = originalTop.getFirst();
+        for (kotlin.Pair<LinePrototype, Integer> pair : linePrototypeIntegerPair) {
+            moveOperations.add(computeMovements(previousPrototype, pair.getFirst()));
+            previousPrototype = pair.getFirst();
+        }
+
+//        List<List<LineMoveOperation>> moveOperations = Stream.concat(Stream.of(new kotlin.Pair<>(top, 0)),
+//                linePrototypeIntegerPair.stream())
+//                .map(pair -> computeMovements(originalTop.getFirst(), pair.getFirst()))
+//                .collect(Collectors.toList());
+
+        List<Prototype> collect = new ArrayList<>();
+
+        List<Segment> prototypeSegments = new ArrayList<>();
+
 //                    prototypeSegments.addAll(top.getSegments());
-                    prototypeSegments.addAll(right.getSegments());
+        prototypeSegments.addAll(right.getSegments());
 //                    prototypeSegments.addAll(bottom.getSegments());
 //                    prototypeSegments.addAll(left.getSegments());
 
-                    Prototype prototype = new PrototypeImpl(prototypeSegments);
+        Prototype prototype = new PrototypeImpl(prototypeSegments);
 
-                    List<Prototype> prototypes = applyMoveOperations(prototype, lineMoveOperations);
-                    // Only interested in the last prototype in the sequence here
-                    return prototypes.get(prototypes.size() - 1);
-                })
-                .collect(Collectors.toList());
+        Prototype prototypeToApplyMovementsTo = prototype;
+
+        for (List<LineMoveOperation> moveOperation : moveOperations) {
+            List<Prototype> prototypes = applyMoveOperations(prototypeToApplyMovementsTo, moveOperation);
+            // Only interested in the last prototype in the sequence here
+            collect.add(prototypes.get(prototypes.size() - 1));
+
+            prototypeToApplyMovementsTo = prototypes.get(prototypes.size() - 1);
+        }
 
         return collect;
     }
 
-    private static List<Prototype> applyMoveOperations(Prototype prototype, Collection<LineMoveOperation> moveOperations) {
+    public static List<Prototype> applyMoveOperations(Prototype prototype, Collection<LineMoveOperation> moveOperations) {
         List<Prototype> moves = new ArrayList<>();
         moves.add(prototype);
 
         for (LineMoveOperation lineMoveOperation : moveOperations) {
-            prototype = new PrototypeImpl(prototype.getSegments().stream()
+            prototype = new PrototypeImpl(moves.get(moves.size() - 1).getSegments().stream()
                     .map(lineMoveOperation::applyToLine)
                     .collect(Collectors.toList()));
             moves.add(prototype);
@@ -175,8 +191,11 @@ public class FitPrototype {
         Pair processedStartPair = processedPrototype.getStartPair();
         List<LineMoveOperation> moveOperations = new ArrayList<>();
 
-        MoveOperation moveOperation = new MoveOperation(processedStartPair.getRow() - originalStartPair.getRow(),
-                processedStartPair.getColumn() - originalStartPair.getColumn(),
+        int rowShift = processedStartPair.getRow() - originalStartPair.getRow();
+        int columnShift = processedStartPair.getColumn() - originalStartPair.getColumn();
+
+        MoveOperation moveOperation = new MoveOperation(rowShift,
+                columnShift,
                 0,
                 // The pivot point is not used in this operation
                 originalStartPair.getRow(),
@@ -184,13 +203,19 @@ public class FitPrototype {
 
         moveOperations.add(moveOperation);
 
-        // TODO Comment back in
-//        int deltaDistance = Math.round((float) (processedPrototype.getDistance() - originalPrototype.getDistance()));
-//        moveOperations.add(new ScaleOperation(deltaDistance));
+        int deltaDistance = Math.round((float) (processedPrototype.getDistance() - originalPrototype.getDistance()));
+        moveOperations.add(new ScaleOperation(deltaDistance));
 
-        double rotationAngle = Math.atan2((double) processedStartPair.getColumn() - originalStartPair.getColumn(),
-                (double) processedStartPair.getRow() - originalStartPair.getRow());
-        MoveOperation rotation = new MoveOperation(0, 0, rotationAngle, processedStartPair.getRow(), processedStartPair.getColumn());
+        Pair originalEndPair = originalPrototype.getEndPair();
+        Pair processedEndPair = processedPrototype.getEndPair();
+        double rotationAngle = Math.atan2((double) processedEndPair.getRow() - originalEndPair.getRow() - rowShift,
+                (double) processedEndPair.getColumn() - originalEndPair.getColumn() - columnShift);
+
+        LOG.info("Rotation angle: {}", rotationAngle);
+
+        MoveOperation rotation = new MoveOperation(0, 0, rotationAngle,
+                processedStartPair.getRow() + rowShift,
+                processedStartPair.getColumn() + columnShift);
         moveOperations.add(rotation);
 
         return ImmutableList.copyOf(moveOperations);

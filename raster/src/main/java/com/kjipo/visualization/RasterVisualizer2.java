@@ -15,9 +15,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Collection;
 
+import static com.kjipo.raster.RasterConstants.SQUARE_SIDE;
+
 public class RasterVisualizer2 {
     private static final int SLEEP_TIME_MS = 500;
-    private static final int INITIAL_SQUARE_SIZE = 20;
 
     private static final Logger LOG = LoggerFactory.getLogger(RasterVisualizer2.class);
 
@@ -27,15 +28,15 @@ public class RasterVisualizer2 {
             Collection<RasterElementProcessor<T>> rasterElementProcessors)
             throws InterruptedException {
         JFXPanel panel = new JFXPanel();
-        panel.setPreferredSize(new Dimension(rasterRun.getColumns() * INITIAL_SQUARE_SIZE,
-                rasterRun.getRows() * INITIAL_SQUARE_SIZE));
+        panel.setPreferredSize(new Dimension(rasterRun.getColumns() * SQUARE_SIDE,
+                rasterRun.getRows() * SQUARE_SIDE));
         JFrame frame = new JFrame();
         frame.add(panel);
         Group root = new Group();
 
         Platform.runLater(() -> {
-            Scene scene = new Scene(root, rasterRun.getColumns() * INITIAL_SQUARE_SIZE,
-                    rasterRun.getRows() * INITIAL_SQUARE_SIZE, javafx.scene.paint.Color.BLACK);
+            Scene scene = new Scene(root, rasterRun.getColumns() * SQUARE_SIDE,
+                    rasterRun.getRows() * SQUARE_SIDE, javafx.scene.paint.Color.BLACK);
 
             panel.setScene(scene);
         });
@@ -50,7 +51,7 @@ public class RasterVisualizer2 {
 
             LOG.info("Painting element: " + (counter++));
 
-            paintRaster(root, INITIAL_SQUARE_SIZE, rasterRun, border, rasterElementProcessors);
+            paintRaster(root, SQUARE_SIDE, rasterRun, border, rasterElementProcessors);
             rasterRun.next();
 
             Thread.sleep(SLEEP_TIME_MS);
@@ -103,40 +104,40 @@ public class RasterVisualizer2 {
                 if (border[row][column] != 0) {
                     if ((border[row][column] & 1) == 1) {
                         javafx.scene.shape.Line borderLine = new Line(
-                                column * INITIAL_SQUARE_SIZE + INITIAL_SQUARE_SIZE,
-                                row * INITIAL_SQUARE_SIZE,
-                                column * INITIAL_SQUARE_SIZE + INITIAL_SQUARE_SIZE,
-                                row * INITIAL_SQUARE_SIZE + INITIAL_SQUARE_SIZE);
+                                column * SQUARE_SIDE + SQUARE_SIDE,
+                                row * SQUARE_SIDE,
+                                column * SQUARE_SIDE + SQUARE_SIDE,
+                                row * SQUARE_SIDE + SQUARE_SIDE);
                         borderLine.setStroke(javafx.scene.paint.Color.YELLOW);
                         rectangles.getChildren().add(borderLine);
                     }
 
                     if ((border[row][column] & 2) == 2) {
                         javafx.scene.shape.Line borderLine = new Line(
-                                column * INITIAL_SQUARE_SIZE,
-                                row * INITIAL_SQUARE_SIZE,
-                                column * INITIAL_SQUARE_SIZE + INITIAL_SQUARE_SIZE,
-                                row * INITIAL_SQUARE_SIZE);
+                                column * SQUARE_SIDE,
+                                row * SQUARE_SIDE,
+                                column * SQUARE_SIDE + SQUARE_SIDE,
+                                row * SQUARE_SIDE);
                         borderLine.setStroke(javafx.scene.paint.Color.YELLOW);
                         rectangles.getChildren().add(borderLine);
                     }
 
                     if ((border[row][column] & 4) == 4) {
                         javafx.scene.shape.Line borderLine = new Line(
-                                column * INITIAL_SQUARE_SIZE,
-                                row * INITIAL_SQUARE_SIZE,
-                                column * INITIAL_SQUARE_SIZE,
-                                row * INITIAL_SQUARE_SIZE + INITIAL_SQUARE_SIZE);
+                                column * SQUARE_SIDE,
+                                row * SQUARE_SIDE,
+                                column * SQUARE_SIDE,
+                                row * SQUARE_SIDE + SQUARE_SIDE);
                         borderLine.setStroke(javafx.scene.paint.Color.YELLOW);
                         rectangles.getChildren().add(borderLine);
                     }
 
                     if ((border[row][column] & 8) == 8) {
                         javafx.scene.shape.Line borderLine = new Line(
-                                column * INITIAL_SQUARE_SIZE,
-                                row * INITIAL_SQUARE_SIZE + INITIAL_SQUARE_SIZE,
-                                column * INITIAL_SQUARE_SIZE + INITIAL_SQUARE_SIZE,
-                                row * INITIAL_SQUARE_SIZE + INITIAL_SQUARE_SIZE);
+                                column * SQUARE_SIDE,
+                                row * SQUARE_SIDE + SQUARE_SIDE,
+                                column * SQUARE_SIDE + SQUARE_SIDE,
+                                row * SQUARE_SIDE + SQUARE_SIDE);
                         borderLine.setStroke(javafx.scene.paint.Color.YELLOW);
                         rectangles.getChildren().add(borderLine);
                     }

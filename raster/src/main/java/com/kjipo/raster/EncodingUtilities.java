@@ -183,14 +183,14 @@ public final class EncodingUtilities {
         }
 
         if (rowChange == -1 && columnChange == 0) {
-            return FlowDirection.WEST;
+            return FlowDirection.NORTH;
         }
         if (rowChange == 1 && columnChange == 0) {
-            return FlowDirection.EAST;
+            return FlowDirection.SOUTH;
         }
 
         if (rowChange == 0 && columnChange == -1) {
-            return FlowDirection.NORTH;
+            return FlowDirection.WEST;
         }
         if (rowChange == -1 && columnChange == -1) {
             return FlowDirection.NORTH_WEST;
