@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class LinePrototype implements Prototype {
+public class LinePrototype implements AdjustablePrototype {
     private final Pair startPair;
     private final Pair endPair;
 
@@ -45,7 +45,8 @@ public class LinePrototype implements Prototype {
                 new Pair(endPair.getRow() + flowDirection.getRowShift(), endPair.getColumn() + flowDirection.getColumnShift()));
     }
 
-    public Stream<LinePrototype> getMovements() {
+    @Override
+    public Stream<? extends AdjustablePrototype> getMovements() {
         return Arrays.stream(FlowDirection.values())
                 .flatMap(flowDirection ->
                         Stream.of(moveStartPair(flowDirection), moveEndPair(flowDirection)))

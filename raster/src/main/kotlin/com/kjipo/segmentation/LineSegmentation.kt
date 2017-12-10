@@ -199,11 +199,21 @@ fun distance(start: Pair<Int, Int>, stop: Pair<Int, Int>) =
 
 fun computeLine(start: Pair<Int, Int>, stop: Pair<Int, Int>): List<Pair<Int, Int>> {
     if (start.first == stop.first) {
-        // Vertical line
+        // Horizontal line
         return if (start.second < stop.second) {
-            (start.second..(stop.second + 1)).map { Pair(start.first, it) }
+            (start.second..(stop.second)).map { Pair(start.first, it) }
         } else {
-            (stop.second..(start.second + 1)).map { Pair(start.first, it) }
+            (stop.second..(start.second)).map { Pair(start.first, it) }
+        }
+    }
+
+    if(start.second == stop.second) {
+        // Vertical line
+        return if(start.first < stop.first) {
+            (start.first..(stop.first)).map { Pair(it, start.second) }
+        }
+        else {
+            (stop.first..(start.first)).map { Pair(it, start.second)}
         }
     }
 

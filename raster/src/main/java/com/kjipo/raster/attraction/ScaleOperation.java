@@ -39,4 +39,8 @@ public class ScaleOperation implements LineMoveOperation {
         return linePrototype;
 
     }
+
+    public int getScaling() {
+        return scaling;
+    }
 }

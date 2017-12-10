@@ -1,15 +1,14 @@
 package com.kjipo.prototype;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.kjipo.raster.EncodingUtilities;
 import com.kjipo.raster.FlowDirection;
-import com.kjipo.raster.attraction.LineMoveOperation;
-import com.kjipo.raster.attraction.MoveOperation;
-import com.kjipo.raster.attraction.PrototypeImpl;
-import com.kjipo.raster.attraction.ScaleOperation;
+import com.kjipo.raster.attraction.*;
 import com.kjipo.raster.match.MatchDistance;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
+import javafx.scene.transform.Scale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -171,6 +170,103 @@ public class FitPrototype {
         return collect;
     }
 
+    public List<Prototype> addSinglePrototype2(boolean inputData[][]) {
+        int numberOfRows = inputData.length;
+        int numberOfColumns = inputData[0].length;
+
+        int[][] distanceMap = MatchDistance.computeDistanceMap(inputData);
+        boolean[][] occupiedData = new boolean[numberOfRows][numberOfColumns];
+
+        Joint upperLeft = new Joint(Pair.of(0, 0));
+        Joint upperRight = new Joint(Pair.of(0, 3));
+        Joint lowerRight = new Joint(Pair.of(3, 3));
+        Joint lowerLeft = new Joint(Pair.of(3, 0));
+
+        List<Joint> allJoints = Lists.newArrayList(upperLeft, upperRight, lowerRight, lowerLeft);
+//        List<Joint> allJoints = Lists.newArrayList(upperLeft, upperRight);
+
+        JointLine top = new JointLine(upperLeft, upperRight);
+        JointLine right = new JointLine(upperRight, lowerRight);
+        JointLine bottom = new JointLine(lowerRight, lowerLeft);
+        JointLine left = new JointLine(lowerLeft, upperLeft);
+
+        List<JointLine> allJointLines = Lists.newArrayList(top, right, bottom, left);
+//        List<JointLine> allJointLines = Lists.newArrayList(top);
+
+
+        Pair startPair = nextStartPair(inputData, occupiedData);
+        kotlin.Pair<JointLine, Integer> originalTop = new kotlin.Pair<>(new JointLine(upperLeft, upperRight), 0);
+
+//        LinePrototype top = new LinePrototype(startPair, Pair.of(startPair.getRow(), startPair.getColumn() + 3));
+
+        computeOccupied(Collections.singleton(top), numberOfRows, numberOfColumns);
+
+        List<kotlin.Pair<JointLine, Integer>> linePrototypeIntegerPair = fitSingleLinePrototype(top, distanceMap, occupiedData, numberOfRows, numberOfColumns);
+
+
+        List<List<LineMoveOperation>> moveOperations = new ArrayList<>();
+        JointLine previousPrototype = originalTop.getFirst();
+        for (kotlin.Pair<JointLine, Integer> pair : linePrototypeIntegerPair) {
+            moveOperations.add(computeMovements(previousPrototype, pair.getFirst()));
+            previousPrototype = pair.getFirst();
+        }
+
+//        List<List<LineMoveOperation>> moveOperations = Stream.concat(Stream.of(new kotlin.Pair<>(top, 0)),
+//                linePrototypeIntegerPair.stream())
+//                .map(pair -> computeMovements(originalTop.getFirst(), pair.getFirst()))
+//                .collect(Collectors.toList());
+
+        List<Prototype> collect = new ArrayList<>();
+
+//        List<Segment> prototypeSegments = new ArrayList<>();
+//        prototypeSegments.addAll(top.getSegments());
+//        prototypeSegments.addAll(right.getSegments());
+//        prototypeSegments.addAll(bottom.getSegments());
+//        prototypeSegments.addAll(left.getSegments());
+
+//        Prototype prototype = new PrototypeImpl(prototypeSegments);
+
+
+        for (List<LineMoveOperation> moveOperation : moveOperations) {
+            for (LineMoveOperation lineMoveOperation : moveOperation) {
+
+                if (lineMoveOperation instanceof MoveOperation) {
+                    int rowOffset = ((MoveOperation) lineMoveOperation).getRowOffset();
+                    int columnOffset = ((MoveOperation) lineMoveOperation).getColumnOffset();
+
+                    if(rowOffset == 0 && columnOffset == 0) {
+                        continue;
+                    }
+
+                    for (Joint joint : allJoints) {
+                        Pair existingPair = joint.getJoint();
+                        joint.setJoint(new Pair(existingPair.getRow() + rowOffset, existingPair.getColumn() + columnOffset));
+                    }
+
+                    // TODO Also need to handle rotation
+
+                }
+                else if(lineMoveOperation instanceof ScaleOperation) {
+                    for (JointLine jointLine : allJointLines) {
+                        jointLine.stretch(((ScaleOperation)lineMoveOperation).getScaling());
+                    }
+                }
+            }
+
+            collect.add(new PrototypeCollection(allJointLines.stream()
+                    .map(jointLine -> new JointLine(jointLine.getStartPair(), jointLine.getEndPair()))
+                    .collect(Collectors.toList())));
+
+//            List<Prototype> prototypes = applyMoveOperations(prototypeToApplyMovementsTo, moveOperation);
+            // Only interested in the last prototype in the sequence here
+//            collect.add(prototypes.get(prototypes.size() - 1));
+
+//            prototypeToApplyMovementsTo = prototypes.get(prototypes.size() - 1);
+        }
+
+        return collect;
+    }
+
     public static List<Prototype> applyMoveOperations(Prototype prototype, Collection<LineMoveOperation> moveOperations) {
         List<Prototype> moves = new ArrayList<>();
         moves.add(prototype);
@@ -186,9 +282,16 @@ public class FitPrototype {
     }
 
 
-    private static List<LineMoveOperation> computeMovements(LinePrototype originalPrototype, LinePrototype processedPrototype) {
-        Pair originalStartPair = originalPrototype.getStartPair();
-        Pair processedStartPair = processedPrototype.getStartPair();
+    private static List<LineMoveOperation> computeMovements(AdjustablePrototype originalPrototype, AdjustablePrototype processedPrototype) {
+        // TODO An assumption is made here that each prototype only has one segment
+        Pair originalStartPair = originalPrototype.getSegments().get(0).getPairs().get(0);
+        List<Pair> originalPrototypeEndPairs = originalPrototype.getSegments().get(0).getPairs();
+        Pair originalEndPair = originalPrototypeEndPairs.get(originalPrototypeEndPairs.size() - 1);
+
+        Pair processedStartPair = processedPrototype.getSegments().get(0).getPairs().get(0);
+        List<Pair> processedEndPairs = processedPrototype.getSegments().get(0).getPairs();
+        Pair processedEndPair = processedEndPairs.get(processedEndPairs.size() - 1);
+
         List<LineMoveOperation> moveOperations = new ArrayList<>();
 
         int rowShift = processedStartPair.getRow() - originalStartPair.getRow();
@@ -203,11 +306,10 @@ public class FitPrototype {
 
         moveOperations.add(moveOperation);
 
-        int deltaDistance = Math.round((float) (processedPrototype.getDistance() - originalPrototype.getDistance()));
+        int deltaDistance = Math.round((float) (getDistance(processedStartPair, processedEndPair)
+                - getDistance(originalStartPair, originalEndPair)));
         moveOperations.add(new ScaleOperation(deltaDistance));
 
-        Pair originalEndPair = originalPrototype.getEndPair();
-        Pair processedEndPair = processedPrototype.getEndPair();
         double rotationAngle = Math.atan2((double) processedEndPair.getRow() - originalEndPair.getRow() - rowShift,
                 (double) processedEndPair.getColumn() - originalEndPair.getColumn() - columnShift);
 
@@ -222,26 +324,35 @@ public class FitPrototype {
     }
 
 
-    private static List<kotlin.Pair<LinePrototype, Integer>> fitSingleLinePrototype(LinePrototype linePrototype, int distanceMap[][],
-                                                                                    boolean occupiedData[][],
-                                                                                    int numberOfRows, int numberOfColumns) {
+    private static <T extends AdjustablePrototype> List<kotlin.Pair<T, Integer>> fitSingleLinePrototype(T linePrototype, int distanceMap[][],
+                                                                                                        boolean occupiedData[][],
+                                                                                                        int numberOfRows, int numberOfColumns) {
         int scoreUnchanged = 0;
         int bestScore = computeScore2(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
         int previousBestScore = bestScore;
 
-        PriorityQueue<kotlin.Pair<LinePrototype, Integer>> priorityQueue = new PriorityQueue<>(Comparator.comparingInt(pair -> -pair.getSecond()));
+        PriorityQueue<kotlin.Pair<T, Integer>> priorityQueue = new PriorityQueue<>(Comparator.comparingInt(pair -> -pair.getSecond()));
 
-        kotlin.Pair<LinePrototype, Integer> firstPair = new kotlin.Pair<>(linePrototype, bestScore);
-        List<kotlin.Pair<LinePrototype, Integer>> bestScorePairs = new ArrayList<>();
+        kotlin.Pair<T, Integer> firstPair = new kotlin.Pair<>(linePrototype, bestScore);
+        List<kotlin.Pair<T, Integer>> bestScorePairs = new ArrayList<>();
 
         priorityQueue.add(firstPair);
         bestScorePairs.add(firstPair);
+
+        Set<T> tabooSearchSet = new HashSet<>();
 
         for (int i = 0; i < MAX_ITERATIONS; ++i) {
             // A line prototype only has one segment
 
             // TODO Mostly for testing to see if the search is able to find a good fit
-            kotlin.Pair<LinePrototype, Integer> nextPrototype = priorityQueue.poll();
+            kotlin.Pair<T, Integer> nextPrototype = priorityQueue.poll();
+
+            if(tabooSearchSet.contains(nextPrototype.getFirst())) {
+                continue;
+            }
+            else {
+                tabooSearchSet.add(nextPrototype.getFirst());
+            }
 
             LOG.info("Checking prototype: {}", nextPrototype);
 
@@ -260,13 +371,13 @@ public class FitPrototype {
                         Pair startPair = segment1.getPairs().get(0);
                         Pair endPair = segment1.getPairs().get(segment1.getPairs().size() - 1);
 
-                        // If the end points are valid, then all the points in between has to be valid
+                        // If the end points are valid, then all the points in between have to be valid
                         if (!validCoordinates(startPair, numberOfRows, numberOfColumns)
                                 || !validCoordinates(endPair, numberOfRows, numberOfColumns)) {
                             return null;
                         }
 
-                        return new kotlin.Pair<>(new LinePrototype(startPair, endPair),
+                        return new kotlin.Pair<>((T) linePrototype1,
                                 computeScore2(segment1.getPairs(),
                                         distanceMap,
                                         occupiedData));
@@ -340,7 +451,7 @@ public class FitPrototype {
                     if (distance > 0) {
                         score += -distance;
                     } else {
-                        score += 1;
+                        score += 10;
                     }
                     if (occupiedMatrix[pair.getRow()][pair.getColumn()]) {
                         score += -50;
@@ -465,6 +576,12 @@ public class FitPrototype {
                 }
             }
         }
+    }
+
+
+    private static double getDistance(Pair startPair, Pair endPair) {
+        return Math.sqrt(Math.pow(endPair.getRow() - startPair.getRow(), 2)
+                + Math.pow(endPair.getColumn() - startPair.getColumn(), 2));
     }
 
 

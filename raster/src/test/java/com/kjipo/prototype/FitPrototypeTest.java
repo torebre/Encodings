@@ -76,7 +76,7 @@ public class FitPrototypeTest {
         boolean filteredImage[][] = results.get(results.size() - 1);
 
         FitPrototype fitPrototype = new FitPrototype();
-        List<List<Prototype>> prototypes = fitPrototype.addSinglePrototype(filteredImage).stream()
+        List<List<Prototype>> prototypes = fitPrototype.addSinglePrototype2(filteredImage).stream()
                 .map(Collections::singletonList)
                 .collect(Collectors.toList());
 
