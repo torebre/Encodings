@@ -8,11 +8,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PrototypeCollection implements Prototype {
-    private final Collection<Prototype> prototypes;
+public class PrototypeCollection<T extends Prototype> implements Prototype {
+    private final Collection<T> prototypes;
 
 
-    public PrototypeCollection(Collection<Prototype> prototypes) {
+    public PrototypeCollection(Collection<T> prototypes) {
         this.prototypes = prototypes;
     }
 

@@ -68,7 +68,7 @@ public class FitPrototypeTest {
     }
 
     @Test
-    public void fitPrototypeTest3() throws IOException, ClassNotFoundException, InterruptedException {
+    public void fitPrototypeTest3() throws InterruptedException {
         EncodedKanji encodedKanji = new EncodedKanji('a', BooleanEncodingTestData.getTestRaster4(50, 50));
 
         Filter maskFilter = new MaskFilter();

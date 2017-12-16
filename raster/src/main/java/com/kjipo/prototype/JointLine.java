@@ -10,22 +10,26 @@ import com.kjipo.segmentation.LineSegmentationKt;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class JointLine implements AdjustablePrototype {
     private final Joint startJoint;
     private final Joint endJoint;
+    private final boolean shouldScale;
 
 
-    public JointLine(Joint startJoint, Joint endJoint) {
+    public JointLine(Joint startJoint, Joint endJoint, boolean shouldScale) {
         this.startJoint = startJoint;
         this.endJoint = endJoint;
+        this.shouldScale = shouldScale;
     }
 
-    public JointLine(Pair startPair, Pair endPair) {
+    public JointLine(Pair startPair, Pair endPair, boolean shouldScale) {
         startJoint = new Joint(startPair);
         endJoint = new Joint(endPair);
+        this.shouldScale = shouldScale;
     }
 
     @Override
@@ -52,17 +56,21 @@ public class JointLine implements AdjustablePrototype {
     private JointLine moveStartPair(FlowDirection flowDirection) {
         return new JointLine(new Joint(new Pair(startJoint.getJoint().getRow() + flowDirection.getRowShift(),
                 startJoint.getJoint().getColumn() + flowDirection.getColumnShift())),
-                new Joint(new Pair(endJoint.getJoint().getRow(), endJoint.getJoint().getColumn())));
+                new Joint(new Pair(endJoint.getJoint().getRow(), endJoint.getJoint().getColumn())), shouldScale);
     }
 
     private JointLine moveEndPair(FlowDirection flowDirection) {
         return new JointLine(new Joint(new Pair(startJoint.getJoint().getRow(),
                 startJoint.getJoint().getColumn())),
                 new Joint(new Pair(endJoint.getJoint().getRow() + flowDirection.getRowShift(),
-                        endJoint.getJoint().getColumn() + flowDirection.getColumnShift())));
+                        endJoint.getJoint().getColumn() + flowDirection.getColumnShift())), shouldScale);
     }
 
     public void stretch(int scaling) {
+        if(!shouldScale) {
+            return;
+        }
+
         List<Pair> pairs = computeLine(startJoint, endJoint);
 
         // TODO This might not work properly if scaling is large
@@ -106,22 +114,24 @@ public class JointLine implements AdjustablePrototype {
         return endJoint.getJoint();
     }
 
+    public boolean isShouldScale() {
+        return shouldScale;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         JointLine jointLine = (JointLine) o;
-
-        if (startJoint != null ? !startJoint.equals(jointLine.startJoint) : jointLine.startJoint != null) return false;
-        return endJoint != null ? endJoint.equals(jointLine.endJoint) : jointLine.endJoint == null;
+        return shouldScale == jointLine.shouldScale &&
+                Objects.equals(startJoint, jointLine.startJoint) &&
+                Objects.equals(endJoint, jointLine.endJoint);
     }
 
     @Override
     public int hashCode() {
-        int result = startJoint != null ? startJoint.hashCode() : 0;
-        result = 31 * result + (endJoint != null ? endJoint.hashCode() : 0);
-        return result;
+
+        return Objects.hash(startJoint, endJoint, shouldScale);
     }
 
     @Override
@@ -129,6 +139,7 @@ public class JointLine implements AdjustablePrototype {
         return "JointLine{" +
                 "startJoint=" + startJoint +
                 ", endJoint=" + endJoint +
+                ", shouldScale=" + shouldScale +
                 '}';
     }
 }
