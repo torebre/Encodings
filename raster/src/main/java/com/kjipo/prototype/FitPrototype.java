@@ -310,7 +310,7 @@ public class FitPrototype {
 
         Iterator<AngleLine> itrLines2 = allLines.iterator();
         AngleLine firstLine2 = itrLines2.next();
-        while(itrLines2.hasNext()) {
+        while (itrLines2.hasNext()) {
             AngleLine nextLine = itrLines2.next();
             nextLine.setStartPair(firstLine2.getEndPair());
             firstLine2 = nextLine;
@@ -325,25 +325,27 @@ public class FitPrototype {
                     int rowOffset = ((MoveOperation) lineMoveOperation).getRowOffset();
                     int columnOffset = ((MoveOperation) lineMoveOperation).getColumnOffset();
 
-                    if (rowOffset == 0 && columnOffset == 0) {
-                        continue;
-                    }
+//                    System.out.println("Move operation: " + lineMoveOperation);
+
+//                    if (rowOffset == 0 && columnOffset == 0) {
+//                        continue;
+//                    }
 
                     Iterator<AngleLine> itrLines = allLines.iterator();
                     AngleLine firstLine = itrLines.next();
                     firstLine.setStartPair(Pair.of(firstLine.getStartPair().getRow() + rowOffset,
                             firstLine.getStartPair().getColumn() + columnOffset));
-                    firstLine.setAngleOffset(0);
+                    firstLine.setAngleOffset(firstLine.getAngleOffset() + ((MoveOperation) lineMoveOperation).getRotation());
 
-                    while(itrLines.hasNext()) {
+                    while (itrLines.hasNext()) {
                         AngleLine nextLine = itrLines.next();
                         nextLine.setStartPair(firstLine.getEndPair());
                         nextLine.setAngleOffset(firstLine.getAngleOffset() + firstLine.getAngle());
                         firstLine = nextLine;
                     }
 
-
                     // TODO Also need to handle rotation
+
 
                 } else if (lineMoveOperation instanceof ScaleOperation) {
                     int scaling = ((ScaleOperation) lineMoveOperation).getScaling();
@@ -352,7 +354,7 @@ public class FitPrototype {
                     AngleLine firstLine = itrLines.next();
                     firstLine.stretch(scaling);
 
-                    while(itrLines.hasNext()) {
+                    while (itrLines.hasNext()) {
                         AngleLine nextLine = itrLines.next();
                         nextLine.setStartPair(firstLine.getEndPair());
                         nextLine.stretch(scaling);
@@ -363,8 +365,12 @@ public class FitPrototype {
 
             List<AngleLine> linesToAdd = allLines.stream().map(AngleLine::new).collect(Collectors.toList());
 
-//            System.out.println("Prototypes:");
-//            linesToAdd.forEach(System.out::println);
+            System.out.println("Prototypes:");
+            for (AngleLine angleLine : linesToAdd) {
+                System.out.println("Angle line: " +angleLine +". Segments: " +angleLine.getSegments());
+
+            }
+
 
             collect.add(new PrototypeCollection(linesToAdd));
         }

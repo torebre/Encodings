@@ -108,8 +108,10 @@ fun segmentKanji2() {
 
 
 fun computeLineTest() {
-    computeLine(Pair(0, 3), Pair(0, 1)).forEach(System.out::println)
-
+    println("Line 1:")
+    computeLine(Pair(8, 4), Pair(7, 1)).forEach(System.out::println)
+    println("Line 2:")
+    computeLine(Pair(1, 4), Pair(0, 8)).forEach(System.out::println)
 }
 
 

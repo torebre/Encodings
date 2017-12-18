@@ -65,4 +65,14 @@ public final class BooleanEncodingTestData {
     }
 
 
+    public static boolean[][] getTestRaster6(int rows, int columns) {
+        Preconditions.checkArgument(rows >= 5 && columns >= 20);
+        boolean raster[][] = new boolean[rows][columns];
+        for (int i = 5; i < 9; ++i) {
+            raster[i][i] = true;
+        }
+        return raster;
+    }
+
+
 }

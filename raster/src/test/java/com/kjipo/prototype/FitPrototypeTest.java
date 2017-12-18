@@ -69,7 +69,7 @@ public class FitPrototypeTest {
 
     @Test
     public void fitPrototypeTest3() throws InterruptedException {
-        EncodedKanji encodedKanji = new EncodedKanji('a', BooleanEncodingTestData.getTestRaster4(50, 50));
+        EncodedKanji encodedKanji = new EncodedKanji('a', BooleanEncodingTestData.getTestRaster6(50, 50));
 
         Filter maskFilter = new MaskFilter();
         List<boolean[][]> results = maskFilter.applyFilter(encodedKanji.getImage());

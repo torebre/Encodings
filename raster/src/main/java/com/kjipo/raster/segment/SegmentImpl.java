@@ -25,4 +25,11 @@ public class SegmentImpl implements Segment {
     public List<Pair> getPairs() {
         return pairs;
     }
+
+    @Override
+    public String toString() {
+        return "SegmentImpl{" +
+                "pairs=" + pairs +
+                '}';
+    }
 }

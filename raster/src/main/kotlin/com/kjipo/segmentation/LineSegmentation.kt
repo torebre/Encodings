@@ -207,13 +207,12 @@ fun computeLine(start: Pair<Int, Int>, stop: Pair<Int, Int>): List<Pair<Int, Int
         }
     }
 
-    if(start.second == stop.second) {
+    if (start.second == stop.second) {
         // Vertical line
-        return if(start.first < stop.first) {
+        return if (start.first < stop.first) {
             (start.first..(stop.first)).map { Pair(it, start.second) }
-        }
-        else {
-            (stop.first..(start.first)).map { Pair(it, start.second)}
+        } else {
+            (stop.first..(start.first)).map { Pair(it, start.second) }
         }
     }
 
@@ -231,17 +230,35 @@ fun computeLine(start: Pair<Int, Int>, stop: Pair<Int, Int>): List<Pair<Int, Int
     val xDelta = stopPair.first.minus(startPair.first).toDouble()
     val yDelta = stopPair.second.minus(startPair.second).toDouble()
     val deltaError = Math.abs(yDelta / xDelta)
+    val signYDelta = if (yDelta < 0) -1 else 1
 
-    var error = deltaError - 0.5
+
+    var error = 0.0 //deltaError - 0.5
     var y = startPair.second
 
     val segment = mutableListOf<Pair<Int, Int>>()
 
+    var newY = y
     for (x in startPair.first..stopPair.first) {
-        segment.add(Pair(x, y))
+        if (y != newY) {
+            if (signYDelta < 0) {
+                for (incY in (newY..y).reversed()) {
+                    segment.add(Pair(x, incY))
+                }
+            } else {
+                for (incY in (y..newY).reversed()) {
+                    segment.add(Pair(x, incY))
+                }
+            }
+        }
+        else {
+            segment.add(Pair(x, y))
+        }
+        y = newY
+
         error += deltaError
-        if (error >= 0.5) {
-            y += 1
+        while (error >= 0.5) {
+            newY += signYDelta * 1
             error -= 1.0
         }
     }
