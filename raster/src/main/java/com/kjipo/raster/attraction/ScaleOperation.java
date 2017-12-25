@@ -43,4 +43,11 @@ public class ScaleOperation implements LineMoveOperation {
     public int getScaling() {
         return scaling;
     }
+
+    @Override
+    public String toString() {
+        return "ScaleOperation{" +
+                "scaling=" + scaling +
+                '}';
+    }
 }

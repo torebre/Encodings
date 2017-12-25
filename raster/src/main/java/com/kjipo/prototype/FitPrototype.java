@@ -1,5 +1,6 @@
 package com.kjipo.prototype;
 
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.kjipo.raster.EncodingUtilities;
@@ -284,15 +285,23 @@ public class FitPrototype {
         boolean[][] occupiedData = new boolean[numberOfRows][numberOfColumns];
 
         Pair topPair = Pair.of(0, 0);
-        AngleLine top = new AngleLine(topPair, 3.0, 0);
+        int topId = 1;
+        AngleLine top = new AngleLine(topId, topPair, 3.0, 0);
+        int rightId = 2;
+        AngleLine right = new AngleLine(rightId, null, 3.0, 0.5 * Math.PI);
+        top.addConnectedTo(rightId);
 
-        AngleLine right = new AngleLine(null, 3.0, 0.5 * Math.PI);
-        AngleLine bottom = new AngleLine(null, 3.0, 0.5 * Math.PI);
-        AngleLine left = new AngleLine(null, 3.0, 0.5 * Math.PI);
+        int bottomId = 3;
+        AngleLine bottom = new AngleLine(bottomId, null, 3.0, 0.5 * Math.PI);
+        right.addConnectedTo(bottomId);
+
+        int leftId = 4;
+        AngleLine left = new AngleLine(leftId, null, 3.0, 0.5 * Math.PI);
+        bottom.addConnectedTo(leftId);
 
         List<AngleLine> allLines = Lists.newArrayList(top, right, bottom, left);
 
-        kotlin.Pair<AngleLine, Integer> originalTop = new kotlin.Pair<>(new AngleLine(topPair, 3.0, 0), 0);
+        kotlin.Pair<AngleLine, Integer> originalTop = new kotlin.Pair<>(new AngleLine(topId, topPair, 3.0, 0), 0);
 
         computeOccupied(Collections.singleton(top), numberOfRows, numberOfColumns);
 
@@ -306,17 +315,69 @@ public class FitPrototype {
             previousPrototype = pair.getFirst();
         }
 
-        List<Prototype> collect = new ArrayList<>();
 
-        Iterator<AngleLine> itrLines2 = allLines.iterator();
-        AngleLine firstLine2 = itrLines2.next();
-        while (itrLines2.hasNext()) {
-            AngleLine nextLine = itrLines2.next();
-            nextLine.setStartPair(firstLine2.getEndPair());
-            firstLine2 = nextLine;
-        }
+        List<Prototype> collect = new ArrayList<>();
+//        Iterator<AngleLine> itrLines2 = allLines.iterator();
+//        AngleLine firstLine2 = itrLines2.next();
+//        while (itrLines2.hasNext()) {
+//            AngleLine nextLine = itrLines2.next();
+//            nextLine.setStartPair(firstLine2.getEndPair());
+//            firstLine2 = nextLine;
+//        }
         collect.add(new PrototypeCollection(allLines.stream().map(AngleLine::new).collect(Collectors.toList())));
 
+
+        List<Integer> processedLines = new ArrayList<>();
+        while (processedLines.size() < allLines.size()) {
+            for (AngleLine angleLine : allLines) {
+                if (!processedLines.contains(angleLine.getId())
+                        && processedLines.containsAll(angleLine.getConnectedTo())) {
+                    processedLines.add(angleLine.getId());
+                }
+            }
+        }
+
+
+        System.out.println("Move operations:");
+        moveOperations.forEach(System.out::println);
+
+//        // Add lines to list in an order of the number of other lines they are connected to
+//        List<AngleLine> firstSetup = new ArrayList<>();
+//        for(int i = 0; i < allLines.size(); ++i) {
+//            for (AngleLine line : allLines) {
+//                if(line.getConnectedTo().size() == i) {
+//                    firstSetup.add(line);
+//                }
+//            }
+//            if(firstSetup.size() == allLines.size()) {
+//                break;
+//            }
+//        }
+//
+//        List<Integer> iterationOrder = new ArrayList<>();
+//        for (AngleLine angleLine : firstSetup) {
+//            int position = iterationOrder.isEmpty() ? 0 : iterationOrder.size() - 1;
+//            for(int connectedTo : angleLine.getConnectedTo()) {
+//                int index = iterationOrder.indexOf(connectedTo);
+//                if(index == -1) {
+//                    throw new IllegalStateException("Expect that ID is already present in list");
+//                }
+//                position = Math.max(index, position);
+//            }
+//            iterationOrder.add(position, angleLine.getId());
+//        }
+
+
+        List<AngleLine> iterationOrder = processedLines.stream()
+                .map(id -> allLines.stream()
+                        .filter(line -> line.getId() == id)
+                        .findAny()
+                        .orElseThrow(IllegalStateException::new))
+                .collect(Collectors.toList());
+        Collections.reverse(iterationOrder);
+
+        Map<Integer, AngleLine> idLineMap = allLines.stream()
+                .collect(Collectors.toMap(AngleLine::getId, line -> line));
 
         // Apply move operations to all segments in prototype
         for (List<LineMoveOperation> moveOperation : moveOperations) {
@@ -331,35 +392,74 @@ public class FitPrototype {
 //                        continue;
 //                    }
 
-                    Iterator<AngleLine> itrLines = allLines.iterator();
-                    AngleLine firstLine = itrLines.next();
-                    firstLine.setStartPair(Pair.of(firstLine.getStartPair().getRow() + rowOffset,
-                            firstLine.getStartPair().getColumn() + columnOffset));
-                    firstLine.setAngleOffset(firstLine.getAngleOffset() + ((MoveOperation) lineMoveOperation).getRotation());
-
-                    while (itrLines.hasNext()) {
-                        AngleLine nextLine = itrLines.next();
-                        nextLine.setStartPair(firstLine.getEndPair());
-                        nextLine.setAngleOffset(firstLine.getAngleOffset() + firstLine.getAngle());
-                        firstLine = nextLine;
+                    Queue<AngleLine> processQueue = new ArrayDeque<>();
+                    List<AngleLine> notProcessed = new ArrayList<>(iterationOrder);
+                    while (!notProcessed.isEmpty()) {
+                        AngleLine nextLine = notProcessed.remove(0);
+                        processQueue.add(nextLine);
+                        nextLine.setStartPair(Pair.of(nextLine.getStartPair().getRow() + rowOffset,
+                                nextLine.getStartPair().getColumn() + columnOffset));
+                        nextLine.setAngleOffset(nextLine.getAngleOffset() + ((MoveOperation) lineMoveOperation).getRotation());
+                        while (!processQueue.isEmpty()) {
+                            AngleLine lineToProcess = processQueue.poll();
+                            lineToProcess.getConnectedTo().stream()
+                                    .map(idLineMap::get)
+                                    .peek(line -> {
+                                        line.setStartPair(lineToProcess.getEndPair());
+                                        line.setAngleOffset(lineToProcess.getAngleOffset() + lineToProcess.getAngle());
+                                    })
+                                    .peek(notProcessed::remove)
+                                    .forEach(processQueue::add);
+                        }
                     }
 
-                    // TODO Also need to handle rotation
+
+//                    Iterator<AngleLine> itrLines = iterationOrder.iterator();
+//                    AngleLine firstLine = itrLines.next();
+//                    firstLine.setStartPair(Pair.of(firstLine.getStartPair().getRow() + rowOffset,
+//                            firstLine.getStartPair().getColumn() + columnOffset));
+//                    firstLine.setAngleOffset(firstLine.getAngleOffset() + ((MoveOperation) lineMoveOperation).getRotation());
+//
+//                    while (itrLines.hasNext()) {
+//                        AngleLine nextLine = itrLines.next();
+//                        nextLine.setStartPair(firstLine.getEndPair());
+//                        nextLine.setAngleOffset(firstLine.getAngleOffset() + firstLine.getAngle());
+//                        firstLine = nextLine;
+//                    }
 
 
                 } else if (lineMoveOperation instanceof ScaleOperation) {
                     int scaling = ((ScaleOperation) lineMoveOperation).getScaling();
 
-                    Iterator<AngleLine> itrLines = allLines.iterator();
-                    AngleLine firstLine = itrLines.next();
-                    firstLine.stretch(scaling);
-
-                    while (itrLines.hasNext()) {
-                        AngleLine nextLine = itrLines.next();
-                        nextLine.setStartPair(firstLine.getEndPair());
+                    Queue<AngleLine> processQueue = new ArrayDeque<>();
+                    List<AngleLine> notProcessed = new ArrayList<>(iterationOrder);
+                    while (!notProcessed.isEmpty()) {
+                        AngleLine nextLine = notProcessed.remove(0);
+                        processQueue.add(nextLine);
                         nextLine.stretch(scaling);
-                        firstLine = nextLine;
+
+                        while (!processQueue.isEmpty()) {
+                            AngleLine lineToProcess = processQueue.poll();
+                            lineToProcess.getConnectedTo().stream()
+                                    .map(idLineMap::get)
+                                    .peek(line -> {
+                                        line.setStartPair(lineToProcess.getEndPair());
+                                        line.stretch(scaling);
+                                    })
+                                    .peek(notProcessed::remove)
+                                    .forEach(processQueue::add);
+                        }
                     }
+
+//                    Iterator<AngleLine> itrLines = allLines.iterator();
+//                    AngleLine firstLine = itrLines.next();
+//                    firstLine.stretch(scaling);
+//                    while (itrLines.hasNext()) {
+//                        AngleLine nextLine = itrLines.next();
+//                        nextLine.setStartPair(firstLine.getEndPair());
+//                        nextLine.stretch(scaling);
+//                        firstLine = nextLine;
+//                    }
                 }
             }
 
@@ -367,7 +467,7 @@ public class FitPrototype {
 
             System.out.println("Prototypes:");
             for (AngleLine angleLine : linesToAdd) {
-                System.out.println("Angle line: " +angleLine +". Segments: " +angleLine.getSegments());
+                System.out.println("Angle line: " + angleLine + ". Segments: " + angleLine.getSegments());
 
             }
 
@@ -393,7 +493,8 @@ public class FitPrototype {
     }
 
 
-    private static List<LineMoveOperation> computeMovements(AdjustablePrototype originalPrototype, AdjustablePrototype processedPrototype) {
+    private static List<LineMoveOperation> computeMovements(AdjustablePrototype originalPrototype,
+                                                            AdjustablePrototype processedPrototype) {
         // TODO An assumption is made here that each prototype only has one segment
         Pair originalStartPair = originalPrototype.getSegments().get(0).getPairs().get(0);
         List<Pair> originalPrototypeEndPairs = originalPrototype.getSegments().get(0).getPairs();
@@ -421,8 +522,15 @@ public class FitPrototype {
                 - getDistance(originalStartPair, originalEndPair)));
         moveOperations.add(new ScaleOperation(deltaDistance));
 
-        double rotationAngle = Math.atan2((double) processedEndPair.getRow() - originalEndPair.getRow() - rowShift,
-                (double) processedEndPair.getColumn() - originalEndPair.getColumn() - columnShift);
+        double rotationAngle;
+
+        if (originalPrototype instanceof AngleLine && processedPrototype instanceof AngleLine) {
+            rotationAngle = ((AngleLine) processedPrototype).getAngle() - ((AngleLine) originalPrototype).getAngle();
+        } else {
+            rotationAngle = Math.atan2((double) processedEndPair.getRow() - originalEndPair.getRow() - rowShift,
+                    (double) processedEndPair.getColumn() - originalEndPair.getColumn() - columnShift);
+        }
+
 
         LOG.info("Rotation angle: {}", rotationAngle);
 

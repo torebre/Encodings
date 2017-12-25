@@ -6,27 +6,33 @@ import com.kjipo.raster.segment.Segment;
 import com.kjipo.raster.segment.SegmentImpl;
 import com.kjipo.segmentation.LineSegmentationKt;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class AngleLine implements AdjustablePrototype {
+    private final int id;
     private Pair startPair;
     private double length;
     private double angle;
     private double angleOffset;
+    private final Collection<Integer> connectedTo = new HashSet<>();
 
 
-    public AngleLine(Pair startPair, double length, double angle) {
+    public AngleLine(int id, Pair startPair, double length, double angle, Collection<Integer> connectedTo) {
+        this.id = id;
         this.startPair = startPair;
         this.length = length;
         this.angle = angle;
+        this.connectedTo.addAll(connectedTo);
     }
 
-    public AngleLine(Pair startPair, Pair endPair) {
+    public AngleLine(int id, Pair startPair, double length, double angle) {
+        this(id, startPair, length, angle, Collections.emptySet());
+    }
+
+    public AngleLine(int id, Pair startPair, Pair endPair) {
+        this.id = id;
         int xDelta = endPair.getColumn() - startPair.getColumn();
         int yDelta = endPair.getRow() - startPair.getRow();
 
@@ -36,10 +42,12 @@ public class AngleLine implements AdjustablePrototype {
     }
 
     public AngleLine(AngleLine angleLine) {
+        this.id = angleLine.id;
         this.startPair = angleLine.startPair;
         this.length = angleLine.length;
         this.angle = angleLine.angle;
         this.angleOffset = angleLine.angleOffset;
+        this.connectedTo.addAll(angleLine.connectedTo);
     }
 
     @Override
@@ -65,6 +73,10 @@ public class AngleLine implements AdjustablePrototype {
         return Collections.singletonList(new SegmentImpl(linePairs.stream()
                 .map(kotlinPair -> new Pair(kotlinPair.component1(), kotlinPair.component2()))
                 .collect(Collectors.toList())));
+    }
+
+    public int getId() {
+        return id;
     }
 
 
@@ -103,14 +115,23 @@ public class AngleLine implements AdjustablePrototype {
         this.angleOffset = angleOffset;
     }
 
+    public Collection<Integer> getConnectedTo() {
+        return connectedTo;
+    }
+
+    public void addConnectedTo(int id) {
+        connectedTo.add(id);
+    }
+
     private AngleLine movePair(FlowDirection flowDirection, Pair startPair, Pair endPair, boolean moveStartPair) {
         if (moveStartPair) {
             return new AngleLine(
+                    id,
                     Pair.of(startPair.getRow() + flowDirection.getRowShift(),
                             startPair.getColumn() + flowDirection.getColumnShift()),
                     endPair);
         }
-        return new AngleLine(startPair,
+        return new AngleLine(id, startPair,
                 Pair.of(endPair.getRow() + flowDirection.getRowShift(),
                         endPair.getColumn() + flowDirection.getColumnShift()));
     }
@@ -120,23 +141,29 @@ public class AngleLine implements AdjustablePrototype {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AngleLine angleLine = (AngleLine) o;
-        return Double.compare(angleLine.length, length) == 0 &&
+        return id == angleLine.id &&
+                Double.compare(angleLine.length, length) == 0 &&
                 Double.compare(angleLine.angle, angle) == 0 &&
-                Objects.equals(startPair, angleLine.startPair);
+                Double.compare(angleLine.angleOffset, angleOffset) == 0 &&
+                Objects.equals(startPair, angleLine.startPair) &&
+                Objects.equals(connectedTo, angleLine.connectedTo);
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(startPair, length, angle);
+        return Objects.hash(id, startPair, length, angle, angleOffset, connectedTo);
     }
 
     @Override
     public String toString() {
         return "AngleLine{" +
-                "startPair=" + startPair +
+                "id=" + id +
+                ", startPair=" + startPair +
                 ", length=" + length +
                 ", angle=" + angle +
-                "}, End pair: " + getEndPair();
+                ", angleOffset=" + angleOffset +
+                ", connectedTo=" + connectedTo +
+                '}';
     }
 }
