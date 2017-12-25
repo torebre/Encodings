@@ -299,7 +299,16 @@ public class FitPrototype {
         AngleLine left = new AngleLine(leftId, null, 3.0, 0.5 * Math.PI);
         bottom.addConnectedTo(leftId);
 
-        List<AngleLine> allLines = Lists.newArrayList(top, right, bottom, left);
+        int connectorId = 5;
+        AngleLine connector = new AngleLine(connectorId, null, 3.0, -0.5 * Math.PI);
+        bottom.addConnectedTo(connectorId);
+
+        int underId = 6;
+        AngleLine underLine = new AngleLine(underId, null, 3.0, -0.5 * Math.PI);
+        connector.addConnectedTo(underId);
+
+
+        List<AngleLine> allLines = Lists.newArrayList(top, right, bottom, left, connector, underLine);
 
         kotlin.Pair<AngleLine, Integer> originalTop = new kotlin.Pair<>(new AngleLine(topId, topPair, 3.0, 0), 0);
 
@@ -368,16 +377,14 @@ public class FitPrototype {
 //        }
 
 
-        List<AngleLine> iterationOrder = processedLines.stream()
-                .map(id -> allLines.stream()
-                        .filter(line -> line.getId() == id)
-                        .findAny()
-                        .orElseThrow(IllegalStateException::new))
-                .collect(Collectors.toList());
-        Collections.reverse(iterationOrder);
-
         Map<Integer, AngleLine> idLineMap = allLines.stream()
                 .collect(Collectors.toMap(AngleLine::getId, line -> line));
+
+
+        List<AngleLine> iterationOrder = processedLines.stream()
+                .map(idLineMap::get)
+                .collect(Collectors.toList());
+        Collections.reverse(iterationOrder);
 
         // Apply move operations to all segments in prototype
         for (List<LineMoveOperation> moveOperation : moveOperations) {
