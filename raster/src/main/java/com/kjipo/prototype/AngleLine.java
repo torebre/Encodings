@@ -80,15 +80,14 @@ public class AngleLine implements AdjustablePrototype {
     }
 
 
-    public void stretch(int scaling) {
-        length += scaling;
-    }
-
     public Pair getEndPair() {
         double xDelta = length * Math.cos(angle + angleOffset);
         double yDelta = length * Math.sin(angle + angleOffset);
-        return Pair.of((int) Math.round(startPair.getRow() + yDelta),
-                (int) Math.round(startPair.getColumn() + xDelta));
+
+        // TODO The max row and column should not be hardcoded here
+
+        return Pair.of(Math.min(44, Math.max(0, (int) Math.round(startPair.getRow() + yDelta))),
+                Math.min(44, Math.max(0, (int) Math.round(startPair.getColumn() + xDelta))));
     }
 
     public Pair getStartPair() {
@@ -105,6 +104,10 @@ public class AngleLine implements AdjustablePrototype {
 
     public double getLength() {
         return length;
+    }
+
+    public void setLength(double length) {
+        this.length = length;
     }
 
     public double getAngleOffset() {

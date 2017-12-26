@@ -57,9 +57,9 @@ public final class EncodingUtilities {
                     stringBuilder.append(booleanEncoding[row][column] ? 0 : 1).append(",");
                 }
             }
+            stringBuilder.delete(stringBuilder.length() - 1, stringBuilder.length());
+            stringBuilder.append("\n");
         }
-        stringBuilder.delete(stringBuilder.length() - 1, stringBuilder.length());
-        stringBuilder.append("\n");
         return stringBuilder.toString();
     }
 

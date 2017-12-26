@@ -1,6 +1,7 @@
 package com.kjipo.prototype;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.kjipo.raster.filter.Filter;
 import com.kjipo.raster.filter.MaskFilter;
 import com.kjipo.raster.flow.BooleanEncodingTestData;
@@ -43,9 +44,56 @@ public class FitPrototypeTest {
         Thread.sleep(Long.MAX_VALUE);
     }
 
+    @Test
+    public void fitPrototypeTest3() throws InterruptedException {
+        EncodedKanji encodedKanji = new EncodedKanji('a', BooleanEncodingTestData.getTestRaster6(50, 50));
+
+        Filter maskFilter = new MaskFilter();
+        List<boolean[][]> results = maskFilter.applyFilter(encodedKanji.getImage());
+        boolean filteredImage[][] = results.get(results.size() - 1);
+
+
+        Pair topPair = Pair.of(0, 0);
+        int topId = 1;
+        AngleLine top = new AngleLine(topId, topPair, 3.0, 0);
+
+        int rightId = 2;
+        AngleLine right = new AngleLine(rightId, null, 3.0, 0.5 * Math.PI);
+        top.addConnectedTo(rightId);
+
+        int bottomId = 3;
+        AngleLine bottom = new AngleLine(bottomId, null, 3.0, 0.5 * Math.PI);
+        right.addConnectedTo(bottomId);
+
+        int leftId = 4;
+        AngleLine left = new AngleLine(leftId, null, 3.0, 0.5 * Math.PI);
+        bottom.addConnectedTo(leftId);
+
+        int connectorId = 5;
+        AngleLine connector = new AngleLine(connectorId, null, 3.0, -0.5 * Math.PI);
+        bottom.addConnectedTo(connectorId);
+
+        int underId = 6;
+        AngleLine underLine = new AngleLine(underId, null, 3.0, -0.5 * Math.PI);
+        connector.addConnectedTo(underId);
+
+        List<AngleLine> allLines = Lists.newArrayList(top);  //, right, bottom, left); //, connector, underLine);
+
+
+        FitPrototype fitPrototype = new FitPrototype();
+        List<List<Prototype>> prototypes = fitPrototype.addSinglePrototype2(filteredImage, allLines, 0, 0).stream()
+                .map(Collections::singletonList)
+                .collect(Collectors.toList());
+
+        showRaster(filteredImage, prototypes);
+
+        Thread.sleep(Long.MAX_VALUE);
+
+    }
+
 
     @Test
-    public void fitPrototypeTest2() throws IOException, ClassNotFoundException, InterruptedException {
+    public void fitPrototypeTest4() throws InterruptedException, IOException, ClassNotFoundException {
         EncodedKanji encodedKanji;
         try (InputStream fontStream = new FileInputStream(Paths.get("/home/student/test_kanji.xml").toFile());
              ObjectInputStream objectInputStream = new ObjectInputStream(fontStream)) {
@@ -56,27 +104,38 @@ public class FitPrototypeTest {
         List<boolean[][]> results = maskFilter.applyFilter(encodedKanji.getImage());
         boolean filteredImage[][] = results.get(results.size() - 1);
 
+
+        Pair topPair = Pair.of(0, 0);
+        int topId = 1;
+        AngleLine top = new AngleLine(topId, topPair, 3.0, 0);
+
+//        int rightId = 2;
+//        AngleLine right = new AngleLine(rightId, null, 3.0, 0.5 * Math.PI);
+//        top.addConnectedTo(rightId);
+//
+//        int bottomId = 3;
+//        AngleLine bottom = new AngleLine(bottomId, null, 3.0, 0.5 * Math.PI);
+//        right.addConnectedTo(bottomId);
+//
+//        int leftId = 4;
+//        AngleLine left = new AngleLine(leftId, null, 3.0, 0.5 * Math.PI);
+//        bottom.addConnectedTo(leftId);
+//
+//        int connectorId = 5;
+//        AngleLine connector = new AngleLine(connectorId, null, 3.0, -0.5 * Math.PI);
+//        bottom.addConnectedTo(connectorId);
+//
+//        int underId = 6;
+//        AngleLine underLine = new AngleLine(underId, null, 3.0, -0.5 * Math.PI);
+//        connector.addConnectedTo(underId);
+
+        List<AngleLine> allLines = Lists.newArrayList(top);  //, right, bottom, left); //, connector, underLine);
+
+
+
         FitPrototype fitPrototype = new FitPrototype();
-        List<List<Prototype>> prototypes = fitPrototype.addSinglePrototype(filteredImage).stream()
-                .map(Collections::singletonList)
-                .collect(Collectors.toList());
-
-        showRaster(filteredImage, prototypes);
-
-        Thread.sleep(Long.MAX_VALUE);
-
-    }
-
-    @Test
-    public void fitPrototypeTest3() throws InterruptedException {
-        EncodedKanji encodedKanji = new EncodedKanji('a', BooleanEncodingTestData.getTestRaster6(50, 50));
-
-        Filter maskFilter = new MaskFilter();
-        List<boolean[][]> results = maskFilter.applyFilter(encodedKanji.getImage());
-        boolean filteredImage[][] = results.get(results.size() - 1);
-
-        FitPrototype fitPrototype = new FitPrototype();
-        List<List<Prototype>> prototypes = fitPrototype.addSinglePrototype2(filteredImage).stream()
+//        List<List<Prototype>> prototypes = fitPrototype.addSinglePrototype2(filteredImage, allLines).stream()
+        List<List<Prototype>> prototypes = fitPrototype.addPrototypes(filteredImage, allLines).stream()
                 .map(Collections::singletonList)
                 .collect(Collectors.toList());
 

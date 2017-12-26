@@ -1,7 +1,5 @@
 package com.kjipo.prototype;
 
-import com.google.common.base.Functions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.kjipo.raster.EncodingUtilities;
 import com.kjipo.raster.FlowDirection;
@@ -9,13 +7,11 @@ import com.kjipo.raster.attraction.*;
 import com.kjipo.raster.match.MatchDistance;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
-import javafx.scene.transform.Scale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class FitPrototype {
 
@@ -27,14 +23,10 @@ public class FitPrototype {
     public List<Collection<Prototype>> fit(boolean inputData[][]) {
         int numberOfRows = inputData.length;
         int numberOfColumns = inputData[0].length;
-
         int[][] distanceMap = MatchDistance.computeDistanceMap(inputData);
 
         List<Collection<Prototype>> prototypeDevelopment = new ArrayList<>();
         prototypeDevelopment.add(Collections.emptyList());
-
-//        Random random = new Random();
-
         int[][] disjunctRegions = findDisjointRegions(inputData);
 
         for (int j = 1; j < 10; ++j) {
@@ -51,8 +43,6 @@ public class FitPrototype {
 
             List<LinePrototype> linePrototypes = Collections.singletonList(linePrototype);
             int scoreUnchanged = 0;
-
-
             int bestScore = computeScore2(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
 
             for (int i = 0; i < MAX_ITERATIONS; ++i) {
@@ -113,232 +103,75 @@ public class FitPrototype {
     }
 
 
-    public List<Prototype> addSinglePrototype(boolean inputData[][]) {
-        int numberOfRows = inputData.length;
-        int numberOfColumns = inputData[0].length;
+    public List<Prototype> addPrototypes(boolean inputData[][], Collection<AngleLine> prototype) {
+        int[][] disjunctRegions = findDisjointRegions(inputData);
+        int current = 1;
+        List<Prototype> result = new ArrayList<>();
 
-        int[][] distanceMap = MatchDistance.computeDistanceMap(inputData);
-        boolean[][] occupiedData = new boolean[numberOfRows][numberOfColumns];
+        while (true) {
+            int startRow = -1;
+            int startColumn = -1;
 
-        Pair startPair = nextStartPair(inputData, occupiedData);
-        kotlin.Pair<LinePrototype, Integer> originalTop = new kotlin.Pair<>(new LinePrototype(Pair.of(0, 0), Pair.of(0, 3)), 0);
+            for (int row = 0; row < disjunctRegions.length; ++row) {
+                for (int column = 0; column < disjunctRegions[0].length; ++column) {
+                    if (disjunctRegions[row][column] == current) {
+                        startRow = row;
+                        startColumn = column;
+                        break;
+                    }
+                }
+                if (startRow != -1) {
+                    break;
+                }
+            }
 
-        LinePrototype top = new LinePrototype(startPair, Pair.of(startPair.getRow(), startPair.getColumn() + 3));
+            if (startRow == -1) {
+                return result;
+            }
 
-        computeOccupied(Collections.singleton(top), numberOfRows, numberOfColumns);
-
-        List<kotlin.Pair<LinePrototype, Integer>> linePrototypeIntegerPair = fitSingleLinePrototype(top, distanceMap, occupiedData, numberOfRows, numberOfColumns);
-
-
-        LinePrototype right = new LinePrototype(Pair.of(0, 3), Pair.of(3, 3));
-        LinePrototype bottom = new LinePrototype(Pair.of(3, 3), Pair.of(3, 0));
-        LinePrototype left = new LinePrototype(Pair.of(3, 0), Pair.of(0, 0));
-
-
-        List<List<LineMoveOperation>> moveOperations = new ArrayList<>();
-        LinePrototype previousPrototype = originalTop.getFirst();
-        for (kotlin.Pair<LinePrototype, Integer> pair : linePrototypeIntegerPair) {
-            moveOperations.add(computeMovements(previousPrototype, pair.getFirst()));
-            previousPrototype = pair.getFirst();
+            if (result.isEmpty()) {
+                result.addAll(addSinglePrototype2(inputData, prototype, startRow, startColumn));
+            } else {
+                Prototype previousResult = result.get(result.size() - 1);
+                addSinglePrototype2(inputData, prototype, startRow, startColumn)
+                        .forEach(prototype1 -> result.add(new PrototypeCollection<>(Lists.newArrayList(previousResult, prototype1))));
+            }
+            ++current;
         }
-
-//        List<List<LineMoveOperation>> moveOperations = Stream.concat(Stream.of(new kotlin.Pair<>(top, 0)),
-//                linePrototypeIntegerPair.stream())
-//                .map(pair -> computeMovements(originalTop.getFirst(), pair.getFirst()))
-//                .collect(Collectors.toList());
-
-        List<Prototype> collect = new ArrayList<>();
-
-        List<Segment> prototypeSegments = new ArrayList<>();
-
-//                    prototypeSegments.addAll(top.getSegments());
-        prototypeSegments.addAll(right.getSegments());
-//                    prototypeSegments.addAll(bottom.getSegments());
-//                    prototypeSegments.addAll(left.getSegments());
-
-        Prototype prototype = new PrototypeImpl(prototypeSegments);
-
-        Prototype prototypeToApplyMovementsTo = prototype;
-
-        for (List<LineMoveOperation> moveOperation : moveOperations) {
-            List<Prototype> prototypes = applyMoveOperations(prototypeToApplyMovementsTo, moveOperation);
-            // Only interested in the last prototype in the sequence here
-            collect.add(prototypes.get(prototypes.size() - 1));
-
-            prototypeToApplyMovementsTo = prototypes.get(prototypes.size() - 1);
-        }
-
-        return collect;
     }
 
-//    public List<Prototype> addSinglePrototype2(boolean inputData[][]) {
-//        int numberOfRows = inputData.length;
-//        int numberOfColumns = inputData[0].length;
-//
-//        int[][] distanceMap = MatchDistance.computeDistanceMap(inputData);
-//        boolean[][] occupiedData = new boolean[numberOfRows][numberOfColumns];
-//
-//        Joint upperLeft = new Joint(Pair.of(0, 0));
-//        Joint upperRight = new Joint(Pair.of(0, 3));
-//        Joint lowerRight = new Joint(Pair.of(3, 3));
-//        Joint lowerLeft = new Joint(Pair.of(3, 0));
-//
-////        List<Joint> allJoints = Lists.newArrayList(upperLeft, upperRight, lowerRight, lowerLeft);
-//        List<Joint> allJoints = Lists.newArrayList(upperLeft, upperRight, lowerRight, lowerLeft);
-//
-//        JointLine top = new JointLine(upperLeft, upperRight, true);
-//        JointLine right = new JointLine(upperRight, lowerRight, true);
-//        JointLine bottom = new JointLine(lowerRight, lowerLeft, true);
-//        JointLine left = new JointLine(lowerLeft, upperLeft, false);
-//
-////        List<JointLine> allJointLines = Lists.newArrayList(top, right, bottom, left);
-//        List<JointLine> allJointLines = Lists.newArrayList(top, right, bottom);
-//
-//
-//        Pair startPair = nextStartPair(inputData, occupiedData);
-//        kotlin.Pair<JointLine, Integer> originalTop = new kotlin.Pair<>(new JointLine(upperLeft, upperRight, true), 0);
-//
-////        LinePrototype top = new LinePrototype(startPair, Pair.of(startPair.getRow(), startPair.getColumn() + 3));
-//
-//        computeOccupied(Collections.singleton(top), numberOfRows, numberOfColumns);
-//
-//        // Fit line segment in prototype
-//        List<kotlin.Pair<JointLine, Integer>> linePrototypeIntegerPair = fitSingleLinePrototype(top, distanceMap, occupiedData, numberOfRows, numberOfColumns);
-//
-//
-//        List<List<LineMoveOperation>> moveOperations = new ArrayList<>();
-//        JointLine previousPrototype = originalTop.getFirst();
-//        for (kotlin.Pair<JointLine, Integer> pair : linePrototypeIntegerPair) {
-//            moveOperations.add(computeMovements(previousPrototype, pair.getFirst()));
-//            previousPrototype = pair.getFirst();
-//        }
-//
-////        List<List<LineMoveOperation>> moveOperations = Stream.concat(Stream.of(new kotlin.Pair<>(top, 0)),
-////                linePrototypeIntegerPair.stream())
-////                .map(pair -> computeMovements(originalTop.getFirst(), pair.getFirst()))
-////                .collect(Collectors.toList());
-//
-//        List<Prototype> collect = new ArrayList<>();
-//
-////        List<Segment> prototypeSegments = new ArrayList<>();
-////        prototypeSegments.addAll(top.getSegments());
-////        prototypeSegments.addAll(right.getSegments());
-////        prototypeSegments.addAll(bottom.getSegments());
-////        prototypeSegments.addAll(left.getSegments());
-//
-////        Prototype prototype = new PrototypeImpl(prototypeSegments);
-//
-//
-//        // Apply move operations to all segments in prototype
-//        for (List<LineMoveOperation> moveOperation : moveOperations) {
-//            for (LineMoveOperation lineMoveOperation : moveOperation) {
-//
-//                if (lineMoveOperation instanceof MoveOperation) {
-//                    int rowOffset = ((MoveOperation) lineMoveOperation).getRowOffset();
-//                    int columnOffset = ((MoveOperation) lineMoveOperation).getColumnOffset();
-//
-//                    if(rowOffset == 0 && columnOffset == 0) {
-//                        continue;
-//                    }
-//
-//                    for (Joint joint : allJoints) {
-//                        Pair existingPair = joint.getJoint();
-//                        joint.setJoint(new Pair(existingPair.getRow() + rowOffset, existingPair.getColumn() + columnOffset));
-//                    }
-//
-//                    // TODO Also need to handle rotation
-//
-//                }
-//                else if(lineMoveOperation instanceof ScaleOperation) {
-//                    for (JointLine jointLine : allJointLines) {
-//                        jointLine.stretch(((ScaleOperation)lineMoveOperation).getScaling());
-//                    }
-//                }
-//
-//                System.out.println("Joints:");
-//                allJoints.forEach(System.out::println);
-//
-//                System.out.println("Joint line:");
-//                allJointLines.forEach(System.out::println);
-//            }
-//
-//            collect.add(new PrototypeCollection(allJointLines.stream()
-//                    .map(jointLine -> new JointLine(jointLine.getStartPair(), jointLine.getEndPair(), jointLine.isShouldScale()))
-//                    .collect(Collectors.toList())));
-//
-////            List<Prototype> prototypes = applyMoveOperations(prototypeToApplyMovementsTo, moveOperation);
-//            // Only interested in the last prototype in the sequence here
-////            collect.add(prototypes.get(prototypes.size() - 1));
-//
-////            prototypeToApplyMovementsTo = prototypes.get(prototypes.size() - 1);
-//        }
-//
-//        return collect;
-//    }
 
-
-    public List<Prototype> addSinglePrototype2(boolean inputData[][]) {
+    public List<Prototype> addSinglePrototype2(boolean inputData[][], Collection<AngleLine> prototype, int initialRowOffset, int initialColumnOffset) {
         int numberOfRows = inputData.length;
         int numberOfColumns = inputData[0].length;
-
         int[][] distanceMap = MatchDistance.computeDistanceMap(inputData);
         boolean[][] occupiedData = new boolean[numberOfRows][numberOfColumns];
+        AngleLine originalFirst = new AngleLine(prototype.iterator().next());
 
-        Pair topPair = Pair.of(0, 0);
-        int topId = 1;
-        AngleLine top = new AngleLine(topId, topPair, 3.0, 0);
-        int rightId = 2;
-        AngleLine right = new AngleLine(rightId, null, 3.0, 0.5 * Math.PI);
-        top.addConnectedTo(rightId);
-
-        int bottomId = 3;
-        AngleLine bottom = new AngleLine(bottomId, null, 3.0, 0.5 * Math.PI);
-        right.addConnectedTo(bottomId);
-
-        int leftId = 4;
-        AngleLine left = new AngleLine(leftId, null, 3.0, 0.5 * Math.PI);
-        bottom.addConnectedTo(leftId);
-
-        int connectorId = 5;
-        AngleLine connector = new AngleLine(connectorId, null, 3.0, -0.5 * Math.PI);
-        bottom.addConnectedTo(connectorId);
-
-        int underId = 6;
-        AngleLine underLine = new AngleLine(underId, null, 3.0, -0.5 * Math.PI);
-        connector.addConnectedTo(underId);
+        AngleLine shiftedFirst = new AngleLine(originalFirst);
+        shiftedFirst.setStartPair(Pair.of(originalFirst.getStartPair().getRow() + initialRowOffset,
+                originalFirst.getStartPair().getColumn() + initialColumnOffset));
 
 
-        List<AngleLine> allLines = Lists.newArrayList(top, right, bottom, left, connector, underLine);
-
-        kotlin.Pair<AngleLine, Integer> originalTop = new kotlin.Pair<>(new AngleLine(topId, topPair, 3.0, 0), 0);
-
-        computeOccupied(Collections.singleton(top), numberOfRows, numberOfColumns);
+//        computeOccupied(Collections.singleton(originalFirst), numberOfRows, numberOfColumns);
 
         // Fit line segment in prototype
-        List<kotlin.Pair<AngleLine, Integer>> linePrototypeIntegerPair = fitSingleLinePrototype(top, distanceMap, occupiedData, numberOfRows, numberOfColumns);
+        List<kotlin.Pair<AngleLine, Integer>> linePrototypeIntegerPair = fitSingleLinePrototype(shiftedFirst, distanceMap, occupiedData, numberOfRows, numberOfColumns);
+        linePrototypeIntegerPair.add(0, new kotlin.Pair<>(shiftedFirst, 0));
 
-        List<List<LineMoveOperation>> moveOperations = new ArrayList<>();
-        AngleLine previousPrototype = originalTop.getFirst();
+        List<List<AngleLineMoveOperation>> moveOperations = new ArrayList<>();
+        AngleLine previousPrototype = new AngleLine(originalFirst);
         for (kotlin.Pair<AngleLine, Integer> pair : linePrototypeIntegerPair) {
             moveOperations.add(computeMovements(previousPrototype, pair.getFirst()));
             previousPrototype = pair.getFirst();
         }
 
-
         List<Prototype> collect = new ArrayList<>();
-//        Iterator<AngleLine> itrLines2 = allLines.iterator();
-//        AngleLine firstLine2 = itrLines2.next();
-//        while (itrLines2.hasNext()) {
-//            AngleLine nextLine = itrLines2.next();
-//            nextLine.setStartPair(firstLine2.getEndPair());
-//            firstLine2 = nextLine;
-//        }
-        collect.add(new PrototypeCollection(allLines.stream().map(AngleLine::new).collect(Collectors.toList())));
-
+        collect.add(new PrototypeCollection(prototype.stream().map(AngleLine::new).collect(Collectors.toList())));
 
         List<Integer> processedLines = new ArrayList<>();
-        while (processedLines.size() < allLines.size()) {
-            for (AngleLine angleLine : allLines) {
+        while (processedLines.size() < prototype.size()) {
+            for (AngleLine angleLine : prototype) {
                 if (!processedLines.contains(angleLine.getId())
                         && processedLines.containsAll(angleLine.getConnectedTo())) {
                     processedLines.add(angleLine.getId());
@@ -346,39 +179,20 @@ public class FitPrototype {
             }
         }
 
-
-        System.out.println("Move operations:");
-        moveOperations.forEach(System.out::println);
-
-//        // Add lines to list in an order of the number of other lines they are connected to
-//        List<AngleLine> firstSetup = new ArrayList<>();
-//        for(int i = 0; i < allLines.size(); ++i) {
-//            for (AngleLine line : allLines) {
-//                if(line.getConnectedTo().size() == i) {
-//                    firstSetup.add(line);
-//                }
-//            }
-//            if(firstSetup.size() == allLines.size()) {
-//                break;
-//            }
-//        }
-//
-//        List<Integer> iterationOrder = new ArrayList<>();
-//        for (AngleLine angleLine : firstSetup) {
-//            int position = iterationOrder.isEmpty() ? 0 : iterationOrder.size() - 1;
-//            for(int connectedTo : angleLine.getConnectedTo()) {
-//                int index = iterationOrder.indexOf(connectedTo);
-//                if(index == -1) {
-//                    throw new IllegalStateException("Expect that ID is already present in list");
-//                }
-//                position = Math.max(index, position);
-//            }
-//            iterationOrder.add(position, angleLine.getId());
+//        if (LOG.isDebugEnabled()) {
+//            LOG.debug("Move operations: {}",
+//                    moveOperations.stream()
+//                            .map(Object::toString)
+//                            .collect(Collectors.joining("\n")));
 //        }
 
+        System.out.println("Move operations: "
+                + moveOperations.stream()
+                .map(Object::toString)
+                .collect(Collectors.joining("\n")));
 
-        Map<Integer, AngleLine> idLineMap = allLines.stream()
-                .collect(Collectors.toMap(AngleLine::getId, line -> line));
+        Map<Integer, AngleLine> idLineMap = prototype.stream()
+                .collect(Collectors.toMap(AngleLine::getId, AngleLine::new));
 
 
         List<AngleLine> iterationOrder = processedLines.stream()
@@ -387,97 +201,33 @@ public class FitPrototype {
         Collections.reverse(iterationOrder);
 
         // Apply move operations to all segments in prototype
-        for (List<LineMoveOperation> moveOperation : moveOperations) {
-            for (LineMoveOperation lineMoveOperation : moveOperation) {
-                if (lineMoveOperation instanceof MoveOperation) {
-                    int rowOffset = ((MoveOperation) lineMoveOperation).getRowOffset();
-                    int columnOffset = ((MoveOperation) lineMoveOperation).getColumnOffset();
+        for (List<AngleLineMoveOperation> moveOperation : moveOperations) {
+            for (AngleLineMoveOperation lineMoveOperation : moveOperation) {
+                Queue<AngleLine> processQueue = new ArrayDeque<>();
+                List<AngleLine> notProcessed = new ArrayList<>(iterationOrder);
+                while (!notProcessed.isEmpty()) {
+                    AngleLine nextLine = notProcessed.remove(0);
+                    processQueue.add(nextLine);
+                    lineMoveOperation.apply(nextLine);
 
-//                    System.out.println("Move operation: " + lineMoveOperation);
-
-//                    if (rowOffset == 0 && columnOffset == 0) {
-//                        continue;
-//                    }
-
-                    Queue<AngleLine> processQueue = new ArrayDeque<>();
-                    List<AngleLine> notProcessed = new ArrayList<>(iterationOrder);
-                    while (!notProcessed.isEmpty()) {
-                        AngleLine nextLine = notProcessed.remove(0);
-                        processQueue.add(nextLine);
-                        nextLine.setStartPair(Pair.of(nextLine.getStartPair().getRow() + rowOffset,
-                                nextLine.getStartPair().getColumn() + columnOffset));
-                        nextLine.setAngleOffset(nextLine.getAngleOffset() + ((MoveOperation) lineMoveOperation).getRotation());
-                        while (!processQueue.isEmpty()) {
-                            AngleLine lineToProcess = processQueue.poll();
-                            lineToProcess.getConnectedTo().stream()
-                                    .map(idLineMap::get)
-                                    .peek(line -> {
-                                        line.setStartPair(lineToProcess.getEndPair());
-                                        line.setAngleOffset(lineToProcess.getAngleOffset() + lineToProcess.getAngle());
-                                    })
-                                    .peek(notProcessed::remove)
-                                    .forEach(processQueue::add);
-                        }
+                    while (!processQueue.isEmpty()) {
+                        AngleLine lineToProcess = processQueue.poll();
+                        lineToProcess.getConnectedTo().stream()
+                                .map(idLineMap::get)
+                                .peek(lineMoveOperation::apply)
+                                .peek(notProcessed::remove)
+                                .forEach(processQueue::add);
                     }
-
-
-//                    Iterator<AngleLine> itrLines = iterationOrder.iterator();
-//                    AngleLine firstLine = itrLines.next();
-//                    firstLine.setStartPair(Pair.of(firstLine.getStartPair().getRow() + rowOffset,
-//                            firstLine.getStartPair().getColumn() + columnOffset));
-//                    firstLine.setAngleOffset(firstLine.getAngleOffset() + ((MoveOperation) lineMoveOperation).getRotation());
-//
-//                    while (itrLines.hasNext()) {
-//                        AngleLine nextLine = itrLines.next();
-//                        nextLine.setStartPair(firstLine.getEndPair());
-//                        nextLine.setAngleOffset(firstLine.getAngleOffset() + firstLine.getAngle());
-//                        firstLine = nextLine;
-//                    }
-
-
-                } else if (lineMoveOperation instanceof ScaleOperation) {
-                    int scaling = ((ScaleOperation) lineMoveOperation).getScaling();
-
-                    Queue<AngleLine> processQueue = new ArrayDeque<>();
-                    List<AngleLine> notProcessed = new ArrayList<>(iterationOrder);
-                    while (!notProcessed.isEmpty()) {
-                        AngleLine nextLine = notProcessed.remove(0);
-                        processQueue.add(nextLine);
-                        nextLine.stretch(scaling);
-
-                        while (!processQueue.isEmpty()) {
-                            AngleLine lineToProcess = processQueue.poll();
-                            lineToProcess.getConnectedTo().stream()
-                                    .map(idLineMap::get)
-                                    .peek(line -> {
-                                        line.setStartPair(lineToProcess.getEndPair());
-                                        line.stretch(scaling);
-                                    })
-                                    .peek(notProcessed::remove)
-                                    .forEach(processQueue::add);
-                        }
-                    }
-
-//                    Iterator<AngleLine> itrLines = allLines.iterator();
-//                    AngleLine firstLine = itrLines.next();
-//                    firstLine.stretch(scaling);
-//                    while (itrLines.hasNext()) {
-//                        AngleLine nextLine = itrLines.next();
-//                        nextLine.setStartPair(firstLine.getEndPair());
-//                        nextLine.stretch(scaling);
-//                        firstLine = nextLine;
-//                    }
                 }
+
             }
 
-            List<AngleLine> linesToAdd = allLines.stream().map(AngleLine::new).collect(Collectors.toList());
+            List<AngleLine> linesToAdd = iterationOrder.stream().map(AngleLine::new).collect(Collectors.toList());
 
             System.out.println("Prototypes:");
             for (AngleLine angleLine : linesToAdd) {
                 System.out.println("Angle line: " + angleLine + ". Segments: " + angleLine.getSegments());
-
             }
-
 
             collect.add(new PrototypeCollection(linesToAdd));
         }
@@ -500,53 +250,22 @@ public class FitPrototype {
     }
 
 
-    private static List<LineMoveOperation> computeMovements(AdjustablePrototype originalPrototype,
-                                                            AdjustablePrototype processedPrototype) {
+    private static List<AngleLineMoveOperation> computeMovements(AngleLine originalPrototype,
+                                                                 AngleLine processedPrototype) {
         // TODO An assumption is made here that each prototype only has one segment
         Pair originalStartPair = originalPrototype.getSegments().get(0).getPairs().get(0);
-        List<Pair> originalPrototypeEndPairs = originalPrototype.getSegments().get(0).getPairs();
-        Pair originalEndPair = originalPrototypeEndPairs.get(originalPrototypeEndPairs.size() - 1);
-
         Pair processedStartPair = processedPrototype.getSegments().get(0).getPairs().get(0);
-        List<Pair> processedEndPairs = processedPrototype.getSegments().get(0).getPairs();
-        Pair processedEndPair = processedEndPairs.get(processedEndPairs.size() - 1);
 
-        List<LineMoveOperation> moveOperations = new ArrayList<>();
 
         int rowShift = processedStartPair.getRow() - originalStartPair.getRow();
         int columnShift = processedStartPair.getColumn() - originalStartPair.getColumn();
 
-        MoveOperation moveOperation = new MoveOperation(rowShift,
-                columnShift,
-                0,
-                // The pivot point is not used in this operation
-                originalStartPair.getRow(),
-                originalStartPair.getColumn());
-
-        moveOperations.add(moveOperation);
-
-        int deltaDistance = Math.round((float) (getDistance(processedStartPair, processedEndPair)
-                - getDistance(originalStartPair, originalEndPair)));
-        moveOperations.add(new ScaleOperation(deltaDistance));
-
-        double rotationAngle;
-
-        if (originalPrototype instanceof AngleLine && processedPrototype instanceof AngleLine) {
-            rotationAngle = ((AngleLine) processedPrototype).getAngle() - ((AngleLine) originalPrototype).getAngle();
-        } else {
-            rotationAngle = Math.atan2((double) processedEndPair.getRow() - originalEndPair.getRow() - rowShift,
-                    (double) processedEndPair.getColumn() - originalEndPair.getColumn() - columnShift);
-        }
-
+        double deltaLength = processedPrototype.getLength() - originalPrototype.getLength();
+        double rotationAngle = processedPrototype.getAngle() - originalPrototype.getAngle();
 
         LOG.info("Rotation angle: {}", rotationAngle);
 
-        MoveOperation rotation = new MoveOperation(0, 0, rotationAngle,
-                processedStartPair.getRow() + rowShift,
-                processedStartPair.getColumn() + columnShift);
-        moveOperations.add(rotation);
-
-        return ImmutableList.copyOf(moveOperations);
+        return Collections.singletonList(new AngleLineMoveOperationImpl(rowShift, columnShift, deltaLength, rotationAngle));
     }
 
 
@@ -666,7 +385,7 @@ public class FitPrototype {
             LOG.debug("Length score: " + lengthScore);
         }
 
-        return Stream.of(startPair, stopPair)
+        return pairs.stream()
                 .mapToInt(pair -> {
                     int score = 0;
                     int distance = distanceMatrix[pair.getRow()][pair.getColumn()];
@@ -801,12 +520,6 @@ public class FitPrototype {
                 }
             }
         }
-    }
-
-
-    private static double getDistance(Pair startPair, Pair endPair) {
-        return Math.sqrt(Math.pow(endPair.getRow() - startPair.getRow(), 2)
-                + Math.pow(endPair.getColumn() - startPair.getColumn(), 2));
     }
 
 
