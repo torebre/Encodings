@@ -24,12 +24,6 @@ public class AngleLineMoveOperationImpl implements AngleLineMoveOperation {
                 angleLine.getStartPair().getColumn() + columnOffset));
         angleLine.setLength(angleLine.getLength() + deltaLength);
         angleLine.setAngleOffset(angleLine.getAngleOffset() + deltaAngle);
-
-//        return new AngleLine(angleLine.getId(),
-//                Pair.of(angleLine.getStartPair().getRow() + rowOffset,
-//                        angleLine.getStartPair().getColumn() + columnOffset),
-//                angleLine.getLength() + deltaAngle,
-//                angleLine.getAngle() + deltaAngle);
     }
 
     public int getRowOffset() {
