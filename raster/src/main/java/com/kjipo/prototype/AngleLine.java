@@ -19,7 +19,7 @@ public class AngleLine implements AdjustablePrototype {
     private final Collection<Integer> connectedTo = new HashSet<>();
 
 
-    public AngleLine(int id, Pair startPair, double length, double angle, Collection<Integer> connectedTo) {
+    private AngleLine(int id, Pair startPair, double length, double angle, Collection<Integer> connectedTo) {
         this.id = id;
         this.startPair = startPair;
         this.length = length;
@@ -31,7 +31,8 @@ public class AngleLine implements AdjustablePrototype {
         this(id, startPair, length, angle, Collections.emptySet());
     }
 
-    public AngleLine(int id, Pair startPair, Pair endPair) {
+    private AngleLine(int id, Pair startPair, Pair endPair) {
+        Objects.requireNonNull(startPair);
         this.id = id;
         int xDelta = endPair.getColumn() - startPair.getColumn();
         int yDelta = endPair.getRow() - startPair.getRow();
@@ -67,7 +68,6 @@ public class AngleLine implements AdjustablePrototype {
         kotlin.Pair newStartPair = new kotlin.Pair<>(startPair.getRow(), startPair.getColumn());
         Pair endPair = getEndPair();
         kotlin.Pair newEndPair = new kotlin.Pair<>(endPair.getRow(), endPair.getColumn());
-
         List<kotlin.Pair<Integer, Integer>> linePairs = LineSegmentationKt.computeLine(newStartPair, newEndPair);
 
         return Collections.singletonList(new SegmentImpl(linePairs.stream()
@@ -84,10 +84,7 @@ public class AngleLine implements AdjustablePrototype {
         double xDelta = length * Math.cos(angle + angleOffset);
         double yDelta = length * Math.sin(angle + angleOffset);
 
-        // TODO The max row and column should not be hardcoded here
-
-        return Pair.of(Math.min(44, Math.max(0, (int) Math.round(startPair.getRow() + yDelta))),
-                Math.min(44, Math.max(0, (int) Math.round(startPair.getColumn() + xDelta))));
+        return Pair.of((int) Math.round(startPair.getRow() + yDelta), (int) Math.round(startPair.getColumn() + xDelta));
     }
 
     public Pair getStartPair() {
@@ -95,6 +92,7 @@ public class AngleLine implements AdjustablePrototype {
     }
 
     public void setStartPair(Pair startPair) {
+        Objects.requireNonNull(startPair);
         this.startPair = startPair;
     }
 
@@ -116,6 +114,10 @@ public class AngleLine implements AdjustablePrototype {
 
     public void setAngleOffset(double angleOffset) {
         this.angleOffset = angleOffset;
+    }
+
+    public void addAngleOffset(double angleOffset) {
+        this.angleOffset += angleOffset;
     }
 
     public Collection<Integer> getConnectedTo() {

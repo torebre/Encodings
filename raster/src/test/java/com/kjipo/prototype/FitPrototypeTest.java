@@ -55,33 +55,33 @@ public class FitPrototypeTest {
 
         Pair topPair = Pair.of(0, 0);
         int topId = 1;
-        AngleLine top = new AngleLine(topId, topPair, 3.0, 0);
+        AngleLine top = new AngleLine(topId, topPair, 5.0, 0);
 
         int rightId = 2;
-        AngleLine right = new AngleLine(rightId, null, 3.0, 0.5 * Math.PI);
+        AngleLine right = new AngleLine(rightId, null, 5.0, 0.5 * Math.PI);
         top.addConnectedTo(rightId);
 
         int bottomId = 3;
-        AngleLine bottom = new AngleLine(bottomId, null, 3.0, 0.5 * Math.PI);
+        AngleLine bottom = new AngleLine(bottomId, null, 5.0, 0.5 * Math.PI);
         right.addConnectedTo(bottomId);
 
         int leftId = 4;
-        AngleLine left = new AngleLine(leftId, null, 3.0, 0.5 * Math.PI);
+        AngleLine left = new AngleLine(leftId, null, 5.0, 0.5 * Math.PI);
         bottom.addConnectedTo(leftId);
 
         int connectorId = 5;
-        AngleLine connector = new AngleLine(connectorId, null, 3.0, -0.5 * Math.PI);
+        AngleLine connector = new AngleLine(connectorId, null, 10.0, -0.5 * Math.PI);
         bottom.addConnectedTo(connectorId);
 
         int underId = 6;
         AngleLine underLine = new AngleLine(underId, null, 3.0, -0.5 * Math.PI);
         connector.addConnectedTo(underId);
 
-        List<AngleLine> allLines = Lists.newArrayList(top);  //, right, bottom, left); //, connector, underLine);
+        List<AngleLine> allLines = Lists.newArrayList(top, right, bottom, left, connector, underLine);
 
 
         FitPrototype fitPrototype = new FitPrototype();
-        List<List<Prototype>> prototypes = fitPrototype.addSinglePrototype2(filteredImage, allLines, 0, 0).stream()
+        List<List<Prototype>> prototypes = fitPrototype.addSinglePrototype2(filteredImage, allLines, 5, 5).stream()
                 .map(Collections::singletonList)
                 .collect(Collectors.toList());
 
@@ -109,28 +109,27 @@ public class FitPrototypeTest {
         int topId = 1;
         AngleLine top = new AngleLine(topId, topPair, 3.0, 0);
 
-//        int rightId = 2;
-//        AngleLine right = new AngleLine(rightId, null, 3.0, 0.5 * Math.PI);
-//        top.addConnectedTo(rightId);
-//
-//        int bottomId = 3;
-//        AngleLine bottom = new AngleLine(bottomId, null, 3.0, 0.5 * Math.PI);
-//        right.addConnectedTo(bottomId);
-//
-//        int leftId = 4;
-//        AngleLine left = new AngleLine(leftId, null, 3.0, 0.5 * Math.PI);
-//        bottom.addConnectedTo(leftId);
-//
-//        int connectorId = 5;
-//        AngleLine connector = new AngleLine(connectorId, null, 3.0, -0.5 * Math.PI);
-//        bottom.addConnectedTo(connectorId);
-//
-//        int underId = 6;
-//        AngleLine underLine = new AngleLine(underId, null, 3.0, -0.5 * Math.PI);
-//        connector.addConnectedTo(underId);
+        int rightId = 2;
+        AngleLine right = new AngleLine(rightId, null, 3.0, 0.5 * Math.PI);
+        top.addConnectedTo(rightId);
 
-        List<AngleLine> allLines = Lists.newArrayList(top);  //, right, bottom, left); //, connector, underLine);
+        int bottomId = 3;
+        AngleLine bottom = new AngleLine(bottomId, null, 3.0, 0.5 * Math.PI);
+        right.addConnectedTo(bottomId);
 
+        int leftId = 4;
+        AngleLine left = new AngleLine(leftId, null, 3.0, 0.5 * Math.PI);
+        bottom.addConnectedTo(leftId);
+
+        int connectorId = 5;
+        AngleLine connector = new AngleLine(connectorId, null, 3.0, 1.5 * Math.PI);
+        bottom.addConnectedTo(connectorId);
+
+        int underId = 6;
+        AngleLine underLine = new AngleLine(underId, null, 3.0, 0);
+        connector.addConnectedTo(underId);
+
+        List<AngleLine> allLines = Lists.newArrayList(top, right, bottom, left, connector, underLine);
 
 
         FitPrototype fitPrototype = new FitPrototype();

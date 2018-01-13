@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class FitPrototype {
@@ -152,13 +153,11 @@ public class FitPrototype {
         shiftedFirst.setStartPair(Pair.of(originalFirst.getStartPair().getRow() + initialRowOffset,
                 originalFirst.getStartPair().getColumn() + initialColumnOffset));
 
-
-//        computeOccupied(Collections.singleton(originalFirst), numberOfRows, numberOfColumns);
-
         // Fit line segment in prototype
         List<kotlin.Pair<AngleLine, Integer>> linePrototypeIntegerPair = fitSingleLinePrototype(shiftedFirst, distanceMap, occupiedData, numberOfRows, numberOfColumns);
         linePrototypeIntegerPair.add(0, new kotlin.Pair<>(shiftedFirst, 0));
 
+        // Move the line into position
         List<List<AngleLineMoveOperation>> moveOperations = new ArrayList<>();
         AngleLine previousPrototype = new AngleLine(originalFirst);
         for (kotlin.Pair<AngleLine, Integer> pair : linePrototypeIntegerPair) {
@@ -166,9 +165,9 @@ public class FitPrototype {
             previousPrototype = pair.getFirst();
         }
 
-        List<Prototype> collect = new ArrayList<>();
-        collect.add(new PrototypeCollection(prototype.stream().map(AngleLine::new).collect(Collectors.toList())));
-
+        // Add the lines in the prototype to a list in the
+        // order they need to be processed by looking at
+        // which lines are connected
         List<Integer> processedLines = new ArrayList<>();
         while (processedLines.size() < prototype.size()) {
             for (AngleLine angleLine : prototype) {
@@ -179,57 +178,50 @@ public class FitPrototype {
             }
         }
 
-//        if (LOG.isDebugEnabled()) {
-//            LOG.debug("Move operations: {}",
-//                    moveOperations.stream()
-//                            .map(Object::toString)
-//                            .collect(Collectors.joining("\n")));
-//        }
-
-        System.out.println("Move operations: "
-                + moveOperations.stream()
-                .map(Object::toString)
-                .collect(Collectors.joining("\n")));
-
+        // Create a mapping between the ID of the lines and the lines in the prototype
         Map<Integer, AngleLine> idLineMap = prototype.stream()
-                .collect(Collectors.toMap(AngleLine::getId, AngleLine::new));
-
+                .collect(Collectors.toMap(AngleLine::getId, Function.identity()));
 
         List<AngleLine> iterationOrder = processedLines.stream()
                 .map(idLineMap::get)
                 .collect(Collectors.toList());
         Collections.reverse(iterationOrder);
 
+        iterationOrder.forEach(angleLine -> angleLine.getConnectedTo().stream()
+                .map(idLineMap::get)
+                .forEach(connectedTo -> {
+                    connectedTo.setStartPair(angleLine.getEndPair());
+                    connectedTo.addAngleOffset(angleLine.getAngle() + angleLine.getAngleOffset());
+                }));
+
+
+        // Make a copy of the prototype
+        List<Prototype> collect = new ArrayList<>();
+        List<AngleLine> originalConfiguration = iterationOrder.stream().map(AngleLine::new).collect(Collectors.toList());
+        collect.add(new PrototypeCollection<>(originalConfiguration));
+
         // Apply move operations to all segments in prototype
         for (List<AngleLineMoveOperation> moveOperation : moveOperations) {
             for (AngleLineMoveOperation lineMoveOperation : moveOperation) {
-                Queue<AngleLine> processQueue = new ArrayDeque<>();
-                List<AngleLine> notProcessed = new ArrayList<>(iterationOrder);
-                while (!notProcessed.isEmpty()) {
-                    AngleLine nextLine = notProcessed.remove(0);
-                    processQueue.add(nextLine);
-                    lineMoveOperation.apply(nextLine);
-
-                    while (!processQueue.isEmpty()) {
-                        AngleLine lineToProcess = processQueue.poll();
-                        lineToProcess.getConnectedTo().stream()
-                                .map(idLineMap::get)
-                                .peek(lineMoveOperation::apply)
-                                .peek(notProcessed::remove)
-                                .forEach(processQueue::add);
+                boolean first = true;
+                for (AngleLine angleLine : iterationOrder) {
+                    if (first) {
+                        lineMoveOperation.apply(angleLine);
+                        first = false;
+                    } else {
+                        lineMoveOperation.applyStretching(angleLine);
                     }
+                    angleLine.getConnectedTo().stream()
+                            .map(idLineMap::get)
+                            .forEach(angleLine1 -> {
+                                angleLine1.setStartPair(angleLine.getEndPair());
+                                angleLine1.addAngleOffset(lineMoveOperation.getRotation());
+                            });
                 }
-
             }
 
             List<AngleLine> linesToAdd = iterationOrder.stream().map(AngleLine::new).collect(Collectors.toList());
-
-            System.out.println("Prototypes:");
-            for (AngleLine angleLine : linesToAdd) {
-                System.out.println("Angle line: " + angleLine + ". Segments: " + angleLine.getSegments());
-            }
-
-            collect.add(new PrototypeCollection(linesToAdd));
+            collect.add(new PrototypeCollection<>(linesToAdd));
         }
 
         return collect;
@@ -288,9 +280,13 @@ public class FitPrototype {
 
         for (int i = 0; i < MAX_ITERATIONS; ++i) {
             // A line prototype only has one segment
+            if (priorityQueue.isEmpty()) {
+                break;
+            }
 
             // TODO Mostly for testing to see if the search is able to find a good fit
             kotlin.Pair<T, Integer> nextPrototype = priorityQueue.poll();
+
 
             if (tabooSearchSet.contains(nextPrototype.getFirst())) {
                 continue;
@@ -375,6 +371,11 @@ public class FitPrototype {
     private static int computeScore2(List<Pair> pairs, int distanceMatrix[][], boolean occupiedMatrix[][]) {
         Pair startPair = pairs.get(0);
         Pair stopPair = pairs.get(pairs.size() - 1);
+
+        if (startPair.getRow() < 0 || startPair.getColumn() >= distanceMatrix[0].length
+                || stopPair.getRow() < 0 || stopPair.getColumn() >= distanceMatrix[0].length) {
+            return Integer.MIN_VALUE;
+        }
 
         int lengthScore = 0;
         if (distanceMatrix[startPair.getRow()][startPair.getColumn()] == 0

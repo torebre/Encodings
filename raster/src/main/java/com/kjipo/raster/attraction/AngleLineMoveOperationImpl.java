@@ -26,6 +26,21 @@ public class AngleLineMoveOperationImpl implements AngleLineMoveOperation {
         angleLine.setAngleOffset(angleLine.getAngleOffset() + deltaAngle);
     }
 
+    @Override
+    public void applyStretching(AngleLine angleLine) {
+        angleLine.setLength(angleLine.getLength() + deltaLength);
+    }
+
+    @Override
+    public void applyRotation(AngleLine angleLine) {
+        angleLine.setAngleOffset(angleLine.getAngleOffset() + deltaAngle);
+    }
+
+    @Override
+    public double getRotation() {
+        return deltaAngle;
+    }
+
     public int getRowOffset() {
         return rowOffset;
     }
@@ -40,5 +55,15 @@ public class AngleLineMoveOperationImpl implements AngleLineMoveOperation {
 
     public double getDeltaAngle() {
         return deltaAngle;
+    }
+
+    @Override
+    public String toString() {
+        return "AngleLineMoveOperationImpl{" +
+                "rowOffset=" + rowOffset +
+                ", columnOffset=" + columnOffset +
+                ", deltaLength=" + deltaLength +
+                ", deltaAngle=" + deltaAngle +
+                '}';
     }
 }
