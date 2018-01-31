@@ -1,3 +1,5 @@
+apply plugin: 'java'
+
 description = ''
 
 dependencies {
@@ -6,3 +8,9 @@ dependencies {
     compile group: 'com.google.guava', name: 'guava', version:'17.0'
     compile group: 'org.apache.commons', name: 'commons-math3', version:'3.3'
 }
+
+
+repositories {
+    mavenCentral()
+}
+

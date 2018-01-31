@@ -23,6 +23,9 @@ public class RasterVisualizer2 {
     private static final Logger LOG = LoggerFactory.getLogger(RasterVisualizer2.class);
 
 
+
+
+
     public static <T extends CellType> void showRasterFlow(
             RasterRun<T> rasterRun,
             Collection<RasterElementProcessor<T>> rasterElementProcessors)
@@ -56,6 +59,51 @@ public class RasterVisualizer2 {
 
             Thread.sleep(SLEEP_TIME_MS);
         }
+    }
+
+
+    public static void paintRaster(boolean raster[][]) {
+        JFXPanel panel = new JFXPanel();
+        panel.setPreferredSize(new Dimension(raster[0].length * SQUARE_SIDE,
+                raster.length * SQUARE_SIDE));
+        JFrame frame = new JFrame();
+        frame.add(panel);
+        Group root = new Group();
+
+        Platform.runLater(() -> {
+            Scene scene = new Scene(root, raster[0].length * SQUARE_SIDE,
+                    raster.length * SQUARE_SIDE, javafx.scene.paint.Color.BLACK);
+
+            panel.setScene(scene);
+        });
+
+        frame.pack();
+        frame.setVisible(true);
+
+        int border[][] = BooleanEncodingUtilities.getBorder(raster);
+
+        Platform.runLater(() -> {
+            root.getChildren().clear();
+            Group rectangles = new Group();
+            ObservableList<Node> children = rectangles.getChildren();
+
+            for (int row = 0; row < raster.length; ++row) {
+                for (int column = 0; column < raster[0].length; ++column) {
+                    javafx.scene.shape.Rectangle rectangle = new javafx.scene.shape.Rectangle(
+                            column * SQUARE_SIDE,
+                            row * SQUARE_SIDE,
+                            SQUARE_SIDE,
+                            SQUARE_SIDE);
+
+                    children.add(rectangle);
+                }
+            }
+
+            paintBorder(rectangles, border);
+
+            root.getChildren().add(rectangles);
+        });
+
     }
 
 
