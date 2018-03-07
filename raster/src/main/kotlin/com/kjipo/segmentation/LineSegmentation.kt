@@ -11,7 +11,8 @@ fun expandLine(raster: Array<BooleanArray>): List<Pair<Int, Int>> {
     var axis: FlowDirection? = null
 
     while (axis == null) {
-        matrix.forEachIndexed { x, y, b ->
+        matrix.
+                forEachIndexed { x, y, b ->
             if (b && !seenCells[x, y]) {
                 start = Pair(x, y)
                 seenCells[x, y] = true
@@ -155,7 +156,7 @@ fun addSingleSegment(matrix: Matrix<Boolean>, seenCells: Matrix<Boolean>, start:
             val upperCandidate = Pair(upperEndpoint.first + FlowDirection.values()[it].rowShift,
                     upperEndpoint.second + FlowDirection.values()[it].columnShift)
             if (EncodingUtilities.validCoordinates(upperCandidate.first, upperCandidate.second,
-                    matrix.numberOfRows, matrix.numberOfColumns)
+                            matrix.numberOfRows, matrix.numberOfColumns)
                     && !seenCells[upperCandidate.first, upperCandidate.second]
                     && matrix[upperCandidate.first, upperCandidate.second]) {
                 seenCells[upperCandidate.first, upperCandidate.second] = true
@@ -173,7 +174,7 @@ fun addSingleSegment(matrix: Matrix<Boolean>, seenCells: Matrix<Boolean>, start:
             val lowerCandidate = Pair(lowerEndpoint.first + FlowDirection.values()[it].rowShift,
                     lowerEndpoint.second + FlowDirection.values()[it].columnShift)
             if (EncodingUtilities.validCoordinates(lowerCandidate.first, lowerCandidate.second,
-                    matrix.numberOfRows, matrix.numberOfColumns)
+                            matrix.numberOfRows, matrix.numberOfColumns)
                     && !seenCells[lowerCandidate.first, lowerCandidate.second]
                     && matrix[lowerCandidate.first, lowerCandidate.second]) {
                 seenCells[lowerCandidate.first, lowerCandidate.second] = true
@@ -250,8 +251,7 @@ fun computeLine(start: Pair<Int, Int>, stop: Pair<Int, Int>): List<Pair<Int, Int
                     segment.add(Pair(x, incY))
                 }
             }
-        }
-        else {
+        } else {
             segment.add(Pair(x, y))
         }
         y = newY

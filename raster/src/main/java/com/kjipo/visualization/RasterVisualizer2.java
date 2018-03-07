@@ -7,6 +7,7 @@ import javafx.embed.swing.JFXPanel;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,6 +106,48 @@ public class RasterVisualizer2 {
         });
 
     }
+
+
+    public static void paintRaster(Color colorRaster[][]) {
+        JFXPanel panel = new JFXPanel();
+        panel.setPreferredSize(new Dimension(colorRaster[0].length * SQUARE_SIDE,
+                colorRaster.length * SQUARE_SIDE));
+        JFrame frame = new JFrame();
+        frame.add(panel);
+        Group root = new Group();
+
+        Platform.runLater(() -> {
+            Scene scene = new Scene(root, colorRaster[0].length * SQUARE_SIDE,
+                    colorRaster.length * SQUARE_SIDE, javafx.scene.paint.Color.BLACK);
+            panel.setScene(scene);
+        });
+
+        frame.pack();
+        frame.setVisible(true);
+
+        Platform.runLater(() -> {
+            root.getChildren().clear();
+            Group rectangles = new Group();
+            ObservableList<Node> children = rectangles.getChildren();
+
+            for (int row = 0; row < colorRaster.length; ++row) {
+                for (int column = 0; column < colorRaster[0].length; ++column) {
+                    javafx.scene.shape.Rectangle rectangle = new javafx.scene.shape.Rectangle(
+                            column * SQUARE_SIDE,
+                            row * SQUARE_SIDE,
+                            SQUARE_SIDE,
+                            SQUARE_SIDE);
+
+                    rectangle.setFill(colorRaster[row][column]);
+                    children.add(rectangle);
+                }
+            }
+
+            root.getChildren().add(rectangles);
+        });
+
+    }
+
 
 
     private static <T extends CellType> void paintRaster(

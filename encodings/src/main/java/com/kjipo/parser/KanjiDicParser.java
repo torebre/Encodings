@@ -12,21 +12,21 @@ import java.util.stream.Stream;
 public class KanjiDicParser {
 
     public static Stream<KanjiDicEntry> parseKanjidicFile(Path file) throws IOException {
-        return Files.lines(file, Parsers.JAPANESE_CHARSET).map(line -> {
-            String[] splitLine = line.split("/");
+        return parseKanjidicFile(file, Integer.MAX_VALUE);
+    }
 
 
-            List<String> meanings = Arrays.asList(splitLine).subList(1, splitLine.length - 2);
-//            Arrays.stream(line.split(" "))
-//                    .filter(line2 -> line2.startsWith("{"))
-//                    .map(line3 -> line3.substring(1, line3.length() - 1))
-//                    .collect(Collectors.toList());
-            String identifier = splitLine[splitLine.length - 1];
-
-            return new KanjiDicEntry(splitLine[0],
-                    meanings,
-                    identifier);
-        });
+    public static Stream<KanjiDicEntry> parseKanjidicFile(Path file, int maxLinesToRead) throws IOException {
+        return Files.lines(file, Parsers.JAPANESE_CHARSET)
+                .limit(maxLinesToRead)
+                .map(line -> {
+                    String[] splitLine = line.split("/");
+                    List<String> meanings = Arrays.asList(splitLine).subList(1, splitLine.length - 2);
+                    String identifier = splitLine[splitLine.length - 1];
+                    return new KanjiDicEntry(splitLine[0],
+                            meanings,
+                            identifier);
+                });
     }
 
 
@@ -71,7 +71,7 @@ public class KanjiDicParser {
 //        entries.forEach(System.out::println);
 
         KanjiDicEntry next = entries.iterator().next();
-        System.out.println("Length: " +next.getKanji().length() +". Characters: " +next.getKanji().getBytes());
+        System.out.println("Length: " + next.getKanji().length() + ". Characters: " + next.getKanji().getBytes());
 
 
     }

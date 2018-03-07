@@ -16,6 +16,10 @@ public class PrototypeCollection<T extends Prototype> implements Prototype {
         this.prototypes = prototypes;
     }
 
+    public Collection<T> getPrototypes() {
+        return prototypes;
+    }
+
     @Override
     public List<Segment> getSegments() {
         return prototypes.stream()

@@ -42,7 +42,8 @@ public class FitPrototype {
                 break;
             }
 
-            List<LinePrototype> linePrototypes = Collections.singletonList(linePrototype);
+            List<LinePrototype> linePrototypes = new ArrayList<>();
+            linePrototypes.add(linePrototype);
             int scoreUnchanged = 0;
             int bestScore = computeScore2(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
 
@@ -105,6 +106,10 @@ public class FitPrototype {
 
 
     public List<Prototype> addPrototypes(boolean inputData[][], Collection<AngleLine> prototype) {
+        return addPrototypes(inputData, prototype, true);
+    }
+
+    public List<Prototype> addPrototypes(boolean inputData[][], Collection<AngleLine> prototype, boolean includeHistory) {
         int[][] disjunctRegions = findDisjointRegions(inputData);
         int current = 1;
         List<Prototype> result = new ArrayList<>();
@@ -130,7 +135,7 @@ public class FitPrototype {
                 return result;
             }
 
-            if (result.isEmpty()) {
+            if (!includeHistory || result.isEmpty()) {
                 result.addAll(addSinglePrototype2(inputData, prototype, startRow, startColumn));
             } else {
                 Prototype previousResult = result.get(result.size() - 1);
@@ -389,6 +394,12 @@ public class FitPrototype {
         return pairs.stream()
                 .mapToInt(pair -> {
                     int score = 0;
+
+                    if(pair.getRow() >= distanceMatrix.length || pair.getColumn() >= distanceMatrix[0].length) {
+                        LOG.warn("Point is outside matrix. Distance matrix dimensions: " +distanceMatrix.length +", " +distanceMatrix[0].length +". Pair: " +pair);
+                        return Integer.MIN_VALUE;
+                    }
+
                     int distance = distanceMatrix[pair.getRow()][pair.getColumn()];
 
                     LOG.debug("Distance: " + distance);
