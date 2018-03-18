@@ -16,6 +16,14 @@ class Matrix<T>(val numberOfRows: Int, val numberOfColumns: Int, val array: Arra
             })
             return Matrix(xWidth, yWidth, array)
         }
+
+        inline fun <reified T> copy(matrix: Matrix<T>): Matrix<T> {
+            return Matrix(matrix.numberOfRows, matrix.numberOfColumns, { row, column ->
+                matrix.get(row, column)
+            })
+        }
+
+
     }
 
     operator fun get(x: Int, y: Int): T {
@@ -33,4 +41,6 @@ class Matrix<T>(val numberOfRows: Int, val numberOfColumns: Int, val array: Arra
     inline fun forEachIndexed(operation: (x: Int, y: Int, T) -> Unit) {
         array.forEachIndexed { x, p -> p.forEachIndexed { y, t -> operation.invoke(x, y, t) } }
     }
+
+
 }
