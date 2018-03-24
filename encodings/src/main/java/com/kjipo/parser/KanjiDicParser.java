@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -67,6 +68,8 @@ public class KanjiDicParser {
 
     public static void main(String args[]) throws IOException {
         List<KanjiDicEntry> entries = parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).collect(Collectors.toList());
+
+        Map<String, KanjiDicEntry> collect = parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).collect(Collectors.toMap(KanjiDicEntry::getIdentifier, entry -> entry));
 
 //        entries.forEach(System.out::println);
 

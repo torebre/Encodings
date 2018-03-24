@@ -39,6 +39,30 @@ public class FontFileParser {
                 .collect(Collectors.toList());
     }
 
+    public static Collection<EncodedKanji> parseFontFileUsingUnicodeInput(Collection<Integer> characters, InputStream trueTypeFontData) throws IOException, FontFormatException {
+        return parseFontFileUsingUnicodeInput(characters, trueTypeFontData, NUMBER_OF_ROWS, NUMBER_OF_COLUMNS);
+    }
+
+    public static Collection<EncodedKanji> parseFontFileUsingUnicodeInput(Collection<Integer> unicode, InputStream trueTypeFontData, int numberOfRows, int numberOfColumns) throws IOException, FontFormatException {
+        Font font = Font.createFont(Font.TRUETYPE_FONT, trueTypeFontData);
+        FontRenderContext renderContext = new FontRenderContext(null, false, false);
+
+        return unicode.stream()
+                .map(character -> {
+                    GlyphVector glyphVector = font.createGlyphVector(renderContext, new String(Character.toChars(character)));
+                    if (glyphVector.getNumGlyphs() > 1) {
+                        logger.warn("Skipping character: " + character);
+                        return null;
+                    }
+
+
+
+                    return new EncodedKanji((char) character.intValue(), paintOnRaster(glyphVector, NUMBER_OF_ROWS, NUMBER_OF_COLUMNS), character);
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
 
     public static boolean[][] setupRaster(GlyphVector glyphVector, int height, int width) throws IllegalArgumentException {
         assertOnlyOneGlyphInGlyphVector(glyphVector);
@@ -74,7 +98,7 @@ public class FontFileParser {
         Shape finalShape = transform.createTransformedShape(transformedShape);
         boolean raster[][] = new boolean[rows][columns];
         IntStream.range(0, rows).forEach(i -> IntStream.range(0, columns).forEach(j -> raster[i][j] = finalShape.contains(j, i)));
-        return trimRaster(raster);
+        return scaleRaster(trimRaster(raster), rows, columns);
     }
 
     private static boolean[][] trimRaster(boolean raster[][]) {
@@ -117,6 +141,28 @@ public class FontFileParser {
         IntStream.range(minRow, maxRow + 1)
                 .forEach(row -> IntStream.range(minCol2, maxCol2 + 1)
                         .forEach(column -> result[row - minRow2][column - minCol2] = raster[row][column]));
+        return result;
+    }
+
+
+    private static boolean[][] scaleRaster(boolean raster[][], int newNumberOfRows, int newNumberOfColumns) {
+        if(raster.length == 0) {
+            logger.error("Invalid dimensions for raster: {}", raster.length);
+            return new boolean[newNumberOfRows][newNumberOfColumns];
+        }
+
+        double scaleRow = raster.length / (double) newNumberOfRows;
+        double scaleColumn = raster[0].length / (double) newNumberOfColumns;
+        boolean result[][] = new boolean[newNumberOfRows][newNumberOfColumns];
+
+        for (int row = 0; row < newNumberOfRows; ++row) {
+            for (int column = 0; column < newNumberOfColumns; ++column) {
+                int lookupRow = (int) Math.floor(row * scaleRow);
+                int lookupColumn = (int) Math.floor(column * scaleColumn);
+                result[row][column] = raster[lookupRow][lookupColumn];
+            }
+        }
+
         return result;
     }
 

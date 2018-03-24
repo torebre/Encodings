@@ -114,6 +114,7 @@ public class FitPrototype {
         int current = 1;
         List<Prototype> result = new ArrayList<>();
 
+
         while (true) {
             int startRow = -1;
             int startColumn = -1;
@@ -135,12 +136,17 @@ public class FitPrototype {
                 return result;
             }
 
-            if (!includeHistory || result.isEmpty()) {
+            if (includeHistory ) { // || result.isEmpty()) {
                 result.addAll(addSinglePrototype2(inputData, prototype, startRow, startColumn));
             } else {
-                Prototype previousResult = result.get(result.size() - 1);
-                addSinglePrototype2(inputData, prototype, startRow, startColumn)
-                        .forEach(prototype1 -> result.add(new PrototypeCollection<>(Lists.newArrayList(previousResult, prototype1))));
+                if(result.isEmpty()) {
+                    List<Prototype> stepsInAddingPrototype = addSinglePrototype2(inputData, prototype, startRow, startColumn);
+                    result.add(stepsInAddingPrototype.get(stepsInAddingPrototype.size() - 1));
+                }
+                else {
+//                    Prototype previousResult = result.get(result.size() - 1);
+                    result.addAll(addSinglePrototype2(inputData, prototype, startRow, startColumn));
+                }
             }
             ++current;
         }
@@ -185,7 +191,7 @@ public class FitPrototype {
 
         // Create a mapping between the ID of the lines and the lines in the prototype
         Map<Integer, AngleLine> idLineMap = prototype.stream()
-                .collect(Collectors.toMap(AngleLine::getId, Function.identity()));
+                .collect(Collectors.toMap(AngleLine::getId, AngleLine::new));
 
         List<AngleLine> iterationOrder = processedLines.stream()
                 .map(idLineMap::get)

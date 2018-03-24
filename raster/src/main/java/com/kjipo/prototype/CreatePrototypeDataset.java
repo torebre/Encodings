@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
+import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.kjipo.parser.FontFileParser;
 import com.kjipo.parser.KanjiDicParser;
@@ -55,6 +56,8 @@ public class CreatePrototypeDataset {
 
         try (InputStream fontStream = new FileInputStream(Parsers.FONT_FILE_LOCATION.toFile())) {
             Collection<EncodedKanji> encodedKanjis = FontFileParser.parseFontFile(charactersFoundInFile, fontStream);
+
+
             for (EncodedKanji encodedKanji : encodedKanjis) {
                 List<Collection<Prototype>> fit = fitPrototype.fit(encodedKanji.getImage());
                 Collection<Prototype> finalConfiguration = fit.get(fit.size() - 1);
@@ -74,8 +77,10 @@ public class CreatePrototypeDataset {
         prepareOutputDirectory(outputDirectory);
 
         // TODO Put back parsing of all characters
-        java.util.List<KanjiDicParser.KanjiDicEntry> entries = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).collect(Collectors.toList());
-        Set<Character> charactersFoundInFile = extractCharacters(entries);
+        java.util.List<KanjiDicParser.KanjiDicEntry> entries = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).collect(Collectors.toList()).stream()
+                .limit(5)
+                .collect(Collectors.toList());
+        Set<Integer> charactersFoundInFile = extractCharacters2(entries);
 
         FitPrototype fitPrototype = new FitPrototype();
 
@@ -83,22 +88,25 @@ public class CreatePrototypeDataset {
 //        JAXBContext jaxbContext = JAXBContext.newInstance(AngleLine.class, ArrayList.class, PrototypeCollection.class);
 //        Marshaller marshaller = jaxbContext.createMarshaller();
 
-        Pair topPair = Pair.of(0, 0);
-        int topId = 1;
-        AngleLine top = new AngleLine(topId, topPair, 3.0, 0);
-
-        List<AngleLine> allLines = Lists.newArrayList(top);
 
         try (InputStream fontStream = new FileInputStream(Parsers.FONT_FILE_LOCATION.toFile())) {
 
             // TODO Put back parsing of all characters
-            Collection<EncodedKanji> encodedKanjis = new ArrayList<>(FontFileParser.parseFontFile(charactersFoundInFile, fontStream));
+            Collection<EncodedKanji> encodedKanjis = new ArrayList<>(FontFileParser.parseFontFileUsingUnicodeInput(charactersFoundInFile, fontStream));
 
             for (EncodedKanji encodedKanji : encodedKanjis) {
                 try {
+
+                    Pair topPair = Pair.of(0, 0);
+                    int topId = 1;
+                    AngleLine top = new AngleLine(topId, topPair, 3.0, 0);
+
+                    List<AngleLine> allLines = Lists.newArrayList(top);
+
+
                     List<Prototype> prototypes = fitPrototype.addPrototypes(encodedKanji.getImage(), allLines, false);
 
-                    Path outputFile = outputDirectory.resolve((int) encodedKanji.getCharacter() + ".json");
+                    Path outputFile = outputDirectory.resolve(encodedKanji.getUnicode() + ".json");
 
                     serializerFunction.accept(outputFile, prototypes.get(prototypes.size() - 1));
 
@@ -118,7 +126,7 @@ public class CreatePrototypeDataset {
     }
 
 
-    private static Set<Character> extractCharacters(java.util.List<KanjiDicParser.KanjiDicEntry> entries) {
+    public static Set<Character> extractCharacters(java.util.List<KanjiDicParser.KanjiDicEntry> entries) {
         // See http://www.rikai.com/library/kanjitables/kanji_codes.unicode.shtml for a list of unicode ranges for Japanese characters
         Set<Character> charactersFoundInFile = new HashSet<>();
         for (KanjiDicParser.KanjiDicEntry entry : entries) {
@@ -132,6 +140,20 @@ public class CreatePrototypeDataset {
         }
         return charactersFoundInFile;
     }
+
+
+    public static Set<Integer> extractCharacters2(java.util.List<KanjiDicParser.KanjiDicEntry> entries) {
+        // See http://www.rikai.com/library/kanjitables/kanji_codes.unicode.shtml for a list of unicode ranges for Japanese characters
+        Set<Integer> charactersFoundInFile = new HashSet<>();
+        for (KanjiDicParser.KanjiDicEntry entry : entries) {
+            for(int i = 0; i < entry.getKanji().length(); ++i) {
+                int unicode = Character.codePointAt(entry.getKanji(), i);
+                charactersFoundInFile.add(unicode);
+            }
+        }
+        return charactersFoundInFile;
+    }
+
 
 
     private static void prepareOutputDirectory(Path outputDirectory) throws IOException {
@@ -156,8 +178,18 @@ public class CreatePrototypeDataset {
         gsonBuilder.registerTypeAdapter(AngleLine.class, new AngleLinePrototypeDeserializer());
 
         Gson gson = new Gson();
-        try (InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
-            AngleLine angleLine = gson.fromJson(inputStreamReader, AngleLine.class);
+        try (InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+             JsonReader jsonReader = new JsonReader(inputStreamReader)) {
+
+            jsonReader.beginArray();
+
+            jsonReader.beginArray();
+
+
+
+
+
+            AngleLine angleLine = gson.fromJson(jsonReader, AngleLine.class);
 
             return angleLine;
 
@@ -192,7 +224,7 @@ public class CreatePrototypeDataset {
             } else if (!(prototype1 instanceof AngleLine)) {
                 throw new IllegalArgumentException("Only AngleLine supported for JSON serializing. Class: " + prototype1.getClass());
             }
-            jsonWriter.value(gson.toJson(prototype1));
+            jsonWriter.jsonValue(gson.toJson(prototype1));
         }
         jsonWriter.endArray();
 
@@ -212,9 +244,9 @@ public class CreatePrototypeDataset {
     }
 
 
-    public static void main(String args[]) throws IOException, FontFormatException, JAXBException {
+    public static void main(String args[]) throws IOException, FontFormatException {
         CreatePrototypeDataset createPrototypeDataset = new CreatePrototypeDataset();
-        createPrototypeDataset.fitPrototypes2(Paths.get("fittedPrototypes2"), getSerializer());
+        createPrototypeDataset.fitPrototypes2(Paths.get("fittedPrototypes3"), getSerializer());
 
 //        try (FileInputStream fs = new FileInputStream(Paths.get("fittedPrototypes/12406.dat").toFile())) {
 //            readPrototype(fs);

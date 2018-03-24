@@ -24,9 +24,6 @@ public class RasterVisualizer2 {
     private static final Logger LOG = LoggerFactory.getLogger(RasterVisualizer2.class);
 
 
-
-
-
     public static <T extends CellType> void showRasterFlow(
             RasterRun<T> rasterRun,
             Collection<RasterElementProcessor<T>> rasterElementProcessors)
@@ -147,7 +144,6 @@ public class RasterVisualizer2 {
         });
 
     }
-
 
 
     private static <T extends CellType> void paintRaster(

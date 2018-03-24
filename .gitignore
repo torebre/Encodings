@@ -2,4 +2,5 @@
 .gradle
 .settings
 **/build
+**/out
 kanji_output

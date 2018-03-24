@@ -3,3 +3,5 @@ rootProject.name = 'KanjiRecognizer'
 include 'raster'
 include 'encodings'
 include 'tensorflow'
+include 'visualization'
+

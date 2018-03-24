@@ -21,7 +21,7 @@ public class AngleLine implements AdjustablePrototype {
 
     private AngleLine(int id, Pair startPair, double length, double angle, Collection<Integer> connectedTo) {
         this.id = id;
-        this.startPair = startPair;
+        this.startPair = Pair.of(startPair.getRow(), startPair.getColumn());
         this.length = length;
         this.angle = angle;
         this.connectedTo.addAll(connectedTo);
@@ -37,14 +37,14 @@ public class AngleLine implements AdjustablePrototype {
         int xDelta = endPair.getColumn() - startPair.getColumn();
         int yDelta = endPair.getRow() - startPair.getRow();
 
-        this.startPair = startPair;
+        this.startPair = Pair.of(startPair.getRow(), startPair.getColumn());
         this.angle = Math.atan2(yDelta, xDelta);
         this.length = Math.sqrt(Math.pow(xDelta, 2) + Math.pow(yDelta, 2));
     }
 
     public AngleLine(AngleLine angleLine) {
         this.id = angleLine.id;
-        this.startPair = angleLine.startPair;
+        this.startPair = Pair.of(angleLine.startPair.getRow(), angleLine.startPair.getColumn());
         this.length = angleLine.length;
         this.angle = angleLine.angle;
         this.angleOffset = angleLine.angleOffset;
@@ -88,12 +88,12 @@ public class AngleLine implements AdjustablePrototype {
     }
 
     public Pair getStartPair() {
-        return startPair;
+        return Pair.of(startPair.getRow(), startPair.getColumn());
     }
 
     public void setStartPair(Pair startPair) {
         Objects.requireNonNull(startPair);
-        this.startPair = startPair;
+        this.startPair = Pair.of(startPair.getRow(), startPair.getColumn());
     }
 
     public double getAngle() {
@@ -121,7 +121,7 @@ public class AngleLine implements AdjustablePrototype {
     }
 
     public Collection<Integer> getConnectedTo() {
-        return connectedTo;
+        return new HashSet<>(connectedTo);
     }
 
     public void addConnectedTo(int id) {
