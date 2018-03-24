@@ -78,7 +78,7 @@ public class CreatePrototypeDataset {
 
         // TODO Put back parsing of all characters
         java.util.List<KanjiDicParser.KanjiDicEntry> entries = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).collect(Collectors.toList()).stream()
-                .limit(5)
+                .limit(20)
                 .collect(Collectors.toList());
         Set<Integer> charactersFoundInFile = extractCharacters2(entries);
 

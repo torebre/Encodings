@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class FontFileParser {
-    public static final int NUMBER_OF_ROWS = 100;
-    public static final int NUMBER_OF_COLUMNS = 100;
+    public static final int NUMBER_OF_ROWS = 200;
+    public static final int NUMBER_OF_COLUMNS = 200;
 
     private static final Logger logger = LoggerFactory.getLogger(FontFileParser.class);
 

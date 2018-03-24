@@ -3,10 +3,13 @@ package com.kjipo.visualization
 import javafx.collections.ObservableList
 import javafx.scene.Group
 import javafx.scene.Node
+import javafx.scene.canvas.Canvas
+import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import javafx.scene.text.Text
 import tornadofx.*
+import javafx.scene.canvas.GraphicsContext
 
 
 class KanjiView : View("Kanji overview") {
@@ -42,7 +45,7 @@ class KanjiView : View("Kanji overview") {
 
         rasters.forEach {
 
-            if(texts.isNotEmpty()) {
+            if (texts.isNotEmpty()) {
                 val text = Text(currentColumn.toDouble() * firstRaster[0].size * squareSize, currentRow.toDouble() * firstRaster.size * squareSize, texts[rasterCounter])
                 text.font = Font(20.0)
                 text.fill = Color.BLUE
@@ -50,20 +53,22 @@ class KanjiView : View("Kanji overview") {
                 rectangles.add(text)
             }
 
+            val canvas = Canvas(firstRaster[0].size.toDouble() * squareSize, firstRaster.size.toDouble() * squareSize)
+            val gc = canvas.getGraphicsContext2D()
+
+            canvas.layoutX = currentColumn * firstRaster[0].size.toDouble() * squareSize
+            canvas.layoutY = currentRow * firstRaster.size.toDouble() * squareSize
+
             for (row in it.indices) {
                 for (column in 0 until it[0].size) {
-                    val rectangle = javafx.scene.shape.Rectangle(
-                            (column * squareSize).toDouble() + currentColumn * firstRaster[0].size * squareSize,
-                            (row * squareSize).toDouble() + currentRow * firstRaster.size * squareSize,
+                    gc.setFill(it[row][column])
+                    gc.fillRect(column * squareSize.toDouble(),
+                            row * squareSize.toDouble(),
                             squareSize.toDouble(),
                             squareSize.toDouble())
-
-                    rectangle.fill = it[row][column]
-                    rectangles.add(rectangle)
-
-                    rectangles.add(rectangle)
                 }
             }
+            rectangles.add(canvas)
 
             ++currentColumn
             if (currentColumn == rastersPerLine) {
