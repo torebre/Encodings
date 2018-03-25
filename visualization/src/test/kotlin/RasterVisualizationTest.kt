@@ -20,8 +20,9 @@ class RasterVisualizationTest {
 
     @Test
     fun visualizationTest() {
-        val fittedPrototypes = Files.walk(Paths.get("fittedPrototypes3"))
+        val fittedPrototypes = Files.walk(Paths.get("fittedPrototypes4"))
                 .filter { path -> Files.isRegularFile(path) }
+                .limit(100)
                 .collect(Collectors.toMap<Path, Int, Prototype>({
                     val fileName = it.fileName.toString()
                     Integer.valueOf(fileName.substring(0, fileName.indexOf('.')))

@@ -76,27 +76,19 @@ public class CreatePrototypeDataset {
     public void fitPrototypes2(Path outputDirectory, BiConsumer<Path, Prototype> serializerFunction) throws IOException, FontFormatException {
         prepareOutputDirectory(outputDirectory);
 
-        // TODO Put back parsing of all characters
         java.util.List<KanjiDicParser.KanjiDicEntry> entries = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).collect(Collectors.toList()).stream()
-                .limit(20)
+//                .limit(20)
                 .collect(Collectors.toList());
         Set<Integer> charactersFoundInFile = extractCharacters2(entries);
 
         FitPrototype fitPrototype = new FitPrototype();
 
-
-//        JAXBContext jaxbContext = JAXBContext.newInstance(AngleLine.class, ArrayList.class, PrototypeCollection.class);
-//        Marshaller marshaller = jaxbContext.createMarshaller();
-
-
         try (InputStream fontStream = new FileInputStream(Parsers.FONT_FILE_LOCATION.toFile())) {
 
-            // TODO Put back parsing of all characters
             Collection<EncodedKanji> encodedKanjis = new ArrayList<>(FontFileParser.parseFontFileUsingUnicodeInput(charactersFoundInFile, fontStream));
 
             for (EncodedKanji encodedKanji : encodedKanjis) {
                 try {
-
                     Pair topPair = Pair.of(0, 0);
                     int topId = 1;
                     AngleLine top = new AngleLine(topId, topPair, 3.0, 0);
@@ -104,17 +96,14 @@ public class CreatePrototypeDataset {
                     List<AngleLine> allLines = Lists.newArrayList(top);
 
 
+
+
+
+
                     List<Prototype> prototypes = fitPrototype.addPrototypes(encodedKanji.getImage(), allLines, false);
-
                     Path outputFile = outputDirectory.resolve(encodedKanji.getUnicode() + ".json");
-
                     serializerFunction.accept(outputFile, prototypes.get(prototypes.size() - 1));
 
-//                    try (BufferedWriter bufferedWriter = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8)) {
-//                        marshaller.marshal(prototypeCollection, bufferedWriter);
-//                    }
-
-//                    Files.write(outputFile, gson.toJson(prototypes1).getBytes(StandardCharsets.UTF_8));
                 } catch (RuntimeException e) {
                     logger.error("Skipping character because of exception: {}", encodedKanji.getCharacter(), e);
                 }
@@ -246,7 +235,7 @@ public class CreatePrototypeDataset {
 
     public static void main(String args[]) throws IOException, FontFormatException {
         CreatePrototypeDataset createPrototypeDataset = new CreatePrototypeDataset();
-        createPrototypeDataset.fitPrototypes2(Paths.get("fittedPrototypes3"), getSerializer());
+        createPrototypeDataset.fitPrototypes2(Paths.get("fittedPrototypes4"), getSerializer());
 
 //        try (FileInputStream fs = new FileInputStream(Paths.get("fittedPrototypes/12406.dat").toFile())) {
 //            readPrototype(fs);

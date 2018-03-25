@@ -1,21 +1,119 @@
 package com.kjipo.skeleton
 
 import com.kjipo.raster.EncodingUtilities
+import com.kjipo.raster.FlowDirection
 import com.kjipo.segmentation.Matrix
 import kotlin.math.min
 
 
 fun extractSkeleton(image: Matrix<Boolean>) {
-
-    makeThin(image)
+    val thinImage = makeThin(image)
+    extractJunctions(thinImage)
 
     // TODO
 
 
 }
 
+fun extractJunctions(thinImage: Matrix<Boolean>) {
+    // TODO
 
-fun makeThin(image: Matrix<Boolean>) = thin(binaryFillHoles(image))
+
+}
+
+
+fun bwmorphEndpoints(image: Matrix<Boolean>): Matrix<Boolean> {
+    val result = Matrix(image.numberOfRows, image.numberOfColumns, { row, column -> false })
+
+    for (row in 0 until image.numberOfRows) {
+        for (column in 0 until image.numberOfColumns) {
+            result[row, column] = isEnd(row, column, image)
+        }
+    }
+
+    return result
+}
+
+fun isEnd(row: Int, column: Int, image: Matrix<Boolean>): Boolean {
+    if (!image[row, column]) {
+        return false
+    }
+
+    return pixelsFilled(row, column, image) == 2
+
+}
+
+fun pixelsFilled(row: Int, column: Int, image: Matrix<Boolean>): Int {
+    var pixels = 0
+
+    if (row > 0) {
+        if (column > 0) {
+            if (image[row - 1, column - 1]) {
+                ++pixels
+            }
+        }
+        if (column < image.numberOfColumns - 1) {
+            if (image[row - 1, column + 1]) {
+                ++pixels
+            }
+        }
+        if (image[row - 1, column]) {
+            ++pixels
+        }
+    }
+
+    if (row < image.numberOfRows - 1) {
+        if (column > 0) {
+            if (image[row + 1, column - 1]) {
+                ++pixels
+            }
+        }
+        if (column < image.numberOfColumns - 1) {
+            if (image[row + 1, column + 1]) {
+                ++pixels
+            }
+        }
+        if (image[row + 1, column]) {
+            ++pixels
+        }
+    }
+
+    if (column > 0) {
+        if (image[row, column - 1]) {
+            ++pixels
+        }
+    }
+    if (column < image.numberOfColumns - 1) {
+        if (image[row, column + 1]) {
+            ++pixels
+        }
+    }
+
+    if (image[row, column]) {
+        ++pixels
+    }
+
+    return pixels
+}
+
+
+fun makeThin(image: Matrix<Boolean>) = thin(fillIsolatedHoles(image))
+
+
+fun fillIsolatedHoles(image: Matrix<Boolean>): Matrix<Boolean> {
+    val result = Matrix.copy(image)
+
+    for (row in 0 until image.numberOfRows) {
+        for (column in 0 until image.numberOfColumns) {
+            if (result[row, column]) {
+                continue
+            }
+            result[row, column] = pixelsFilled(row, column, image) == 8
+        }
+    }
+
+    return result
+}
 
 
 fun binaryFillHoles(image: Matrix<Boolean>): Matrix<Boolean> {
@@ -257,7 +355,117 @@ fun thin(image: Matrix<Boolean>): Matrix<Boolean> {
 
 
     return result
+}
 
+
+val lookup1 = booleanArrayOf(false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,true,true,false,false,true,true,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,false,false,true,true,false,false,false,false,false,false,false,true,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,true,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,false,true,false,false,false,true,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,false,true,true,false,false,false,false,false,false,false,true,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,true,false,true,true,false,false,false,false,false,false,false,false,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,true,false,true,false,false,false,true,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,true,false,true,true,true,true,false,false,true,true,false,false)
+
+val lookup2 = booleanArrayOf(true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,true,true,true,false,true,false,true,true,false,false,false,false,true,false,
+        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,false,true,true,false,false,false,false,false,true,true,false,false,true,false,
+        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,false,false,false,true,true,true,true,false,false,false,true,true,false,true,
+        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,false,true,true,true,false,true,false,true,
+        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,false,false,false,true,false,true,false,false,true,true,true,true,true,true,
+        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,true,true,false,false,true,true,false,true,
+        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,false,true,true,false,true,false,false,true,false,true,true,false,true,
+        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,false,true,false,true,true,true,false,true,false,true,false,true,
+        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,true,false,true,false,true,false,true,true,true,true,true,true,true,
+        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,true,false,true,false,false,true,false,true,true,true,true,
+        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,
+        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,
+        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,false,true,false,true,false,false,true,false,true,true,true,true,
+        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,
+        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,
+        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true)
+
+
+
+fun thin2(image: Matrix<Boolean>): Matrix<Boolean> {
+    var previous = image
+    var result: Matrix<Boolean>
+    while(true) {
+        result = Matrix(image.numberOfRows, image.numberOfColumns, {row, column -> false})
+        applyLookup(applyLookup(previous, lookup1), lookup2).forEachIndexed({row, column, value ->
+            result[row, column] = previous[row, column] && value
+        })
+
+        var changed = false
+        result.forEachIndexed({row, column, value ->
+            if(value != previous[row, column]) {
+                changed = true
+                return@forEachIndexed
+            }
+        })
+
+        if(changed) {
+            previous = result
+        }
+        else {
+            return result
+        }
+    }
+
+//    morph = @(x) x & applylut (applylut (x, lut1), lut2);
+
+
+
+
+}
+
+
+
+fun applyLookup(image:Matrix<Boolean>, lookup:BooleanArray): Matrix<Boolean> {
+    val result = Matrix.copy(image)
+    image.forEachIndexed({ row, column, value ->
+        run {
+            // https://se.mathworks.com/help/images/ref/applylut.html
+            var index = if (value) {
+                16
+            } else {
+                0
+            }
+            FlowDirection.values().forEach { value2 ->
+                index += if (EncodingUtilities.validCell(row, column, value2, image.numberOfRows, image.numberOfColumns)) {
+                    if (!result[row + value2.rowShift, column + value2.columnShift]) {
+                        0
+                    }
+                    else {
+                        when (value2) {
+                            FlowDirection.EAST -> 2
+                            FlowDirection.NORTH_EAST -> 4
+                            FlowDirection.NORTH -> 32
+                            FlowDirection.NORTH_WEST -> 256
+                            FlowDirection.WEST -> 128
+                            FlowDirection.SOUTH_WEST -> 64
+                            FlowDirection.SOUTH -> 8
+                            FlowDirection.SOUTH_EAST -> 1
+                        }
+                    }
+                } else {
+                    0
+                }
+            }
+
+//            println("Index: $index")
+            result[row, column] = lookup[index]
+        }
+
+    })
+            return result
 
 }
 

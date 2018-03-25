@@ -61,16 +61,20 @@ public class RasterVisualizer2 {
 
 
     public static void paintRaster(boolean raster[][]) {
+        paintRaster(raster, SQUARE_SIDE);
+    }
+
+    public static void paintRaster(boolean raster[][], int squareSize) {
         JFXPanel panel = new JFXPanel();
-        panel.setPreferredSize(new Dimension(raster[0].length * SQUARE_SIDE,
-                raster.length * SQUARE_SIDE));
+        panel.setPreferredSize(new Dimension(raster[0].length * squareSize,
+                raster.length * squareSize));
         JFrame frame = new JFrame();
         frame.add(panel);
         Group root = new Group();
 
         Platform.runLater(() -> {
-            Scene scene = new Scene(root, raster[0].length * SQUARE_SIDE,
-                    raster.length * SQUARE_SIDE, javafx.scene.paint.Color.BLACK);
+            Scene scene = new Scene(root, raster[0].length * squareSize,
+                    raster.length * squareSize, javafx.scene.paint.Color.BLACK);
 
             panel.setScene(scene);
         });
@@ -88,10 +92,10 @@ public class RasterVisualizer2 {
             for (int row = 0; row < raster.length; ++row) {
                 for (int column = 0; column < raster[0].length; ++column) {
                     javafx.scene.shape.Rectangle rectangle = new javafx.scene.shape.Rectangle(
-                            column * SQUARE_SIDE,
-                            row * SQUARE_SIDE,
-                            SQUARE_SIDE,
-                            SQUARE_SIDE);
+                            column * squareSize,
+                            row * squareSize,
+                            squareSize,
+                            squareSize);
 
                     children.add(rectangle);
                 }
@@ -106,16 +110,20 @@ public class RasterVisualizer2 {
 
 
     public static void paintRaster(Color colorRaster[][]) {
+        paintRaster(colorRaster, SQUARE_SIDE);
+    }
+
+    public static void paintRaster(Color colorRaster[][], int squareSide) {
         JFXPanel panel = new JFXPanel();
-        panel.setPreferredSize(new Dimension(colorRaster[0].length * SQUARE_SIDE,
-                colorRaster.length * SQUARE_SIDE));
+        panel.setPreferredSize(new Dimension(colorRaster[0].length * squareSide,
+                colorRaster.length * squareSide));
         JFrame frame = new JFrame();
         frame.add(panel);
         Group root = new Group();
 
         Platform.runLater(() -> {
-            Scene scene = new Scene(root, colorRaster[0].length * SQUARE_SIDE,
-                    colorRaster.length * SQUARE_SIDE, javafx.scene.paint.Color.BLACK);
+            Scene scene = new Scene(root, colorRaster[0].length * squareSide,
+                    colorRaster.length * squareSide, javafx.scene.paint.Color.BLACK);
             panel.setScene(scene);
         });
 
@@ -130,10 +138,10 @@ public class RasterVisualizer2 {
             for (int row = 0; row < colorRaster.length; ++row) {
                 for (int column = 0; column < colorRaster[0].length; ++column) {
                     javafx.scene.shape.Rectangle rectangle = new javafx.scene.shape.Rectangle(
-                            column * SQUARE_SIDE,
-                            row * SQUARE_SIDE,
-                            SQUARE_SIDE,
-                            SQUARE_SIDE);
+                            column * squareSide,
+                            row * squareSide,
+                            squareSide,
+                            squareSide);
 
                     rectangle.setFill(colorRaster[row][column]);
                     children.add(rectangle);
