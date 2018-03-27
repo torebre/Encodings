@@ -10,6 +10,7 @@ import java.io.ObjectInputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.coroutines.experimental.suspendCoroutine
 
 
 class BwmethodsTest {
@@ -162,6 +163,52 @@ class BwmethodsTest {
 
         Thread.sleep(Long.MAX_VALUE)
 
+    }
+
+
+    @Test
+    fun testThin3() {
+        val image = Matrix<Boolean>(2, 2, {row, column -> false})
+
+        val colorImage = Array(2, { row ->
+            Array(2, { column ->
+                if(row == 0 || (row == 1 && column == 1)) {
+                    image[row, column] = true
+                    Color.RED
+                } else {
+                    image[row, column] = false
+                    Color.BLACK
+                }
+            })
+        })
+
+        println("Lookup1: ${lookup1.size}. Lookup2: ${lookup2.size}")
+
+        RasterVisualizer2.paintRaster(colorImage, 50)
+
+        val previous = Matrix.copy(image)
+        val result = Matrix.copy(image)
+//        applyLookup(applyLookup(previous, lookup1), lookup2).forEachIndexed({row, column, value ->
+//            result[row, column] = previous[row, column] && value
+//        })
+        applyLookup(previous, lookup1).forEachIndexed({row, column, value ->
+            result[row, column] = value
+        })
+
+        val colorImage2 = Array(2, { row ->
+            Array(2, { column ->
+                if(row == 0 || (row == 1 && column == 1)) {
+                    image[row, column] = true
+                    Color.RED
+                } else {
+                    image[row, column] = false
+                    Color.BLACK
+                }
+            })
+        })
+        RasterVisualizer2.paintRaster(colorImage2, 50)
+
+        Thread.sleep(Long.MAX_VALUE)
     }
 
 

@@ -429,6 +429,82 @@ fun thin2(image: Matrix<Boolean>): Matrix<Boolean> {
 
 
 fun applyLookup(image:Matrix<Boolean>, lookup:BooleanArray): Matrix<Boolean> {
+    if(image.numberOfRows != image.numberOfColumns) {
+        throw IllegalArgumentException("Only square matrices supported")
+    }
+
+    if(image.numberOfRows == 3) {
+        return applyLookup3(image, lookup)
+    }
+    else if(image.numberOfRows == 2) {
+        return applyLookup2(image, lookup)
+    }
+    throw IllegalArgumentException("Unsupported matrix dimension: ${image.numberOfRows}")
+}
+
+
+fun applyLookup2(image:Matrix<Boolean>, lookup:BooleanArray): Matrix<Boolean> {
+    val result = Matrix.copy(image)
+    image.forEachIndexed({ row, column, value ->
+        run {
+
+            println("Current cell: $row, $column")
+
+            // https://se.mathworks.com/help/images/ref/applylut.html
+            var index = if (value) {
+                8
+            } else {
+                0
+            }
+            FlowDirection.values().forEach { value2 ->
+
+
+
+                index += if (EncodingUtilities.validCell(row, column, value2, image.numberOfRows, image.numberOfColumns)) {
+                    if (!result[row + value2.rowShift, column + value2.columnShift]) {
+                        0
+                    }
+                    else {
+                        println("Row: $row. Column: $column. Value: $value2")
+                        when (value2) {
+                            FlowDirection.EAST -> 2
+//                            FlowDirection.NORTH_EAST -> 4
+//                            FlowDirection.NORTH -> 32
+//                            FlowDirection.NORTH_WEST -> 256
+//                            FlowDirection.WEST -> 128
+//                            FlowDirection.SOUTH_WEST -> 64
+                            FlowDirection.SOUTH -> 4
+                            FlowDirection.SOUTH_EAST -> 1
+                            else -> 0
+
+
+//                            FlowDirection.WEST -> 2
+//                            FlowDirection.NORTH_WEST -> 4
+//                            FlowDirection.NORTH -> 32
+//                            FlowDirection.NORTH_EAST -> 256
+//                            FlowDirection.EAST -> 128
+//                            FlowDirection.SOUTH_EAST -> 64
+//                            FlowDirection.SOUTH -> 8
+//                            FlowDirection.SOUTH_WEST -> 1
+                        }
+                    }
+                } else {
+                    0
+                }
+            }
+
+            println("Index: $index")
+            result[row, column] = lookup[index]
+        }
+
+    })
+    return result
+
+}
+
+
+
+fun applyLookup3(image:Matrix<Boolean>, lookup:BooleanArray): Matrix<Boolean> {
     val result = Matrix.copy(image)
     image.forEachIndexed({ row, column, value ->
         run {
@@ -453,6 +529,16 @@ fun applyLookup(image:Matrix<Boolean>, lookup:BooleanArray): Matrix<Boolean> {
                             FlowDirection.SOUTH_WEST -> 64
                             FlowDirection.SOUTH -> 8
                             FlowDirection.SOUTH_EAST -> 1
+
+
+//                            FlowDirection.WEST -> 2
+//                            FlowDirection.NORTH_WEST -> 4
+//                            FlowDirection.NORTH -> 32
+//                            FlowDirection.NORTH_EAST -> 256
+//                            FlowDirection.EAST -> 128
+//                            FlowDirection.SOUTH_EAST -> 64
+//                            FlowDirection.SOUTH -> 8
+//                            FlowDirection.SOUTH_WEST -> 1
                         }
                     }
                 } else {
@@ -460,13 +546,12 @@ fun applyLookup(image:Matrix<Boolean>, lookup:BooleanArray): Matrix<Boolean> {
                 }
             }
 
-//            println("Index: $index")
+            println("Index: $index")
             result[row, column] = lookup[index]
         }
 
     })
-            return result
-
+    return result
 }
 
 
