@@ -289,7 +289,11 @@ fun getN2(row: Int, column: Int, result: Matrix<Boolean>): Int {
     return sum
 }
 
-fun thin(image: Matrix<Boolean>): Matrix<Boolean> {
+
+/**
+ * TODO This method does not work as it should
+ */
+fun thinNotWorking(image: Matrix<Boolean>): Matrix<Boolean> {
     val result = Matrix.copy(image)
     var first = true
     var deletion = true
@@ -358,153 +362,75 @@ fun thin(image: Matrix<Boolean>): Matrix<Boolean> {
 }
 
 
-val lookup1 = booleanArrayOf(false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,true,true,false,false,true,true,
-        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,false,false,true,true,false,false,false,false,false,false,false,true,
-        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,true,false,false,false,true,
-        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,
-        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,
-        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,
-        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,false,true,false,false,false,true,
-        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false,false,false,false,
-        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,
-        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,false,true,true,false,false,false,false,false,false,false,true,
-        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,
-        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,
-        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,
-        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,true,false,true,true,false,false,false,false,false,false,false,false,
-        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,true,false,true,false,false,false,true,
-        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false,false,true,false,true,true,true,true,false,false,true,true,false,false)
+internal val lookup1 = booleanArrayOf(false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, true, true, false, false, true, true,
+        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, false, true, true, false, false, false, false, false, false, false, true,
+        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, true, false, false, false, true,
+        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true,
+        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, true, false, false, false, true,
+        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, false, true, true, false, false, false, false, false, false, false, true,
+        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true,
+        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, true, false, true, true, false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, true, false, true, false, false, false, true,
+        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, true, false, true, true, true, true, false, false, true, true, false, false)
 
-val lookup2 = booleanArrayOf(true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,true,true,true,false,true,false,true,true,false,false,false,false,true,false,
-        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,false,true,true,false,false,false,false,false,true,true,false,false,true,false,
-        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,false,false,false,true,true,true,true,false,false,false,true,true,false,true,
-        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,false,true,true,true,false,true,false,true,
-        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,false,false,false,true,false,true,false,false,true,true,true,true,true,true,
-        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,true,true,false,false,true,true,false,true,
-        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,false,true,true,false,true,false,false,true,false,true,true,false,true,
-        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,false,true,false,true,true,true,false,true,false,true,false,true,
-        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,true,false,true,false,true,false,true,true,true,true,true,true,true,
-        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,true,false,true,false,false,true,false,true,true,true,true,
-        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,
-        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,
-        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,false,true,false,true,false,false,true,false,true,true,true,true,
-        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,
-        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,
-        true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true)
+internal val lookup2 = booleanArrayOf(true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, true, true, true, false, true, false, true, true, false, false, false, false, true, false,
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, true, true, false, false, false, false, false, true, true, false, false, true, false,
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, true, true, true, true, false, false, false, true, true, false, true,
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, false, true, true, true, false, true, false, true,
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, true, false, true, false, false, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, true, true, false, false, true, true, false, true,
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, true, true, false, true, false, false, true, false, true, true, false, true,
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, false, true, false, true, true, true, false, true, false, true, false, true,
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, true, false, true, false, true, false, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, true, false, true, false, false, true, false, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, true, false, true, false, false, true, false, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true)
 
 
-
-fun thin2(image: Matrix<Boolean>): Matrix<Boolean> {
+fun thin(image: Matrix<Boolean>): Matrix<Boolean> {
     var previous = image
     var result: Matrix<Boolean>
-    while(true) {
-        result = Matrix(image.numberOfRows, image.numberOfColumns, {row, column -> false})
-        applyLookup(applyLookup(previous, lookup1), lookup2).forEachIndexed({row, column, value ->
+    while (true) {
+        result = Matrix(image.numberOfRows, image.numberOfColumns, { row, column -> false })
+        applyLookup(applyLookup(previous, lookup1), lookup2).forEachIndexed({ row, column, value ->
             result[row, column] = previous[row, column] && value
         })
 
         var changed = false
-        result.forEachIndexed({row, column, value ->
-            if(value != previous[row, column]) {
+        result.forEachIndexed({ row, column, value ->
+            if (value != previous[row, column]) {
                 changed = true
                 return@forEachIndexed
             }
         })
 
-        if(changed) {
+        if (changed) {
             previous = result
-        }
-        else {
+        } else {
             return result
         }
     }
-
-//    morph = @(x) x & applylut (applylut (x, lut1), lut2);
-
-
-
-
 }
 
 
-
-fun applyLookup(image:Matrix<Boolean>, lookup:BooleanArray): Matrix<Boolean> {
-    if(image.numberOfRows != image.numberOfColumns) {
+fun applyLookup(image: Matrix<Boolean>, lookup: BooleanArray): Matrix<Boolean> {
+    if (image.numberOfRows != image.numberOfColumns) {
         throw IllegalArgumentException("Only square matrices supported")
     }
-
-    if(image.numberOfRows == 3) {
-        return applyLookup3(image, lookup)
-    }
-    else if(image.numberOfRows == 2) {
-        return applyLookup2(image, lookup)
-    }
-    throw IllegalArgumentException("Unsupported matrix dimension: ${image.numberOfRows}")
+    return applyLookup3(image, lookup)
 }
 
-
-fun applyLookup2(image:Matrix<Boolean>, lookup:BooleanArray): Matrix<Boolean> {
-    val result = Matrix.copy(image)
-    image.forEachIndexed({ row, column, value ->
-        run {
-
-            println("Current cell: $row, $column")
-
-            // https://se.mathworks.com/help/images/ref/applylut.html
-            var index = if (value) {
-                8
-            } else {
-                0
-            }
-            FlowDirection.values().forEach { value2 ->
-
-
-
-                index += if (EncodingUtilities.validCell(row, column, value2, image.numberOfRows, image.numberOfColumns)) {
-                    if (!result[row + value2.rowShift, column + value2.columnShift]) {
-                        0
-                    }
-                    else {
-                        println("Row: $row. Column: $column. Value: $value2")
-                        when (value2) {
-                            FlowDirection.EAST -> 2
-//                            FlowDirection.NORTH_EAST -> 4
-//                            FlowDirection.NORTH -> 32
-//                            FlowDirection.NORTH_WEST -> 256
-//                            FlowDirection.WEST -> 128
-//                            FlowDirection.SOUTH_WEST -> 64
-                            FlowDirection.SOUTH -> 4
-                            FlowDirection.SOUTH_EAST -> 1
-                            else -> 0
-
-
-//                            FlowDirection.WEST -> 2
-//                            FlowDirection.NORTH_WEST -> 4
-//                            FlowDirection.NORTH -> 32
-//                            FlowDirection.NORTH_EAST -> 256
-//                            FlowDirection.EAST -> 128
-//                            FlowDirection.SOUTH_EAST -> 64
-//                            FlowDirection.SOUTH -> 8
-//                            FlowDirection.SOUTH_WEST -> 1
-                        }
-                    }
-                } else {
-                    0
-                }
-            }
-
-            println("Index: $index")
-            result[row, column] = lookup[index]
-        }
-
-    })
-    return result
-
-}
-
-
-
-fun applyLookup3(image:Matrix<Boolean>, lookup:BooleanArray): Matrix<Boolean> {
+fun applyLookup3(image: Matrix<Boolean>, lookup: BooleanArray): Matrix<Boolean> {
     val result = Matrix.copy(image)
     image.forEachIndexed({ row, column, value ->
         run {
@@ -516,10 +442,9 @@ fun applyLookup3(image:Matrix<Boolean>, lookup:BooleanArray): Matrix<Boolean> {
             }
             FlowDirection.values().forEach { value2 ->
                 index += if (EncodingUtilities.validCell(row, column, value2, image.numberOfRows, image.numberOfColumns)) {
-                    if (!result[row + value2.rowShift, column + value2.columnShift]) {
+                    if (!image[row + value2.rowShift, column + value2.columnShift]) {
                         0
-                    }
-                    else {
+                    } else {
                         when (value2) {
                             FlowDirection.EAST -> 2
                             FlowDirection.NORTH_EAST -> 4
@@ -529,24 +454,12 @@ fun applyLookup3(image:Matrix<Boolean>, lookup:BooleanArray): Matrix<Boolean> {
                             FlowDirection.SOUTH_WEST -> 64
                             FlowDirection.SOUTH -> 8
                             FlowDirection.SOUTH_EAST -> 1
-
-
-//                            FlowDirection.WEST -> 2
-//                            FlowDirection.NORTH_WEST -> 4
-//                            FlowDirection.NORTH -> 32
-//                            FlowDirection.NORTH_EAST -> 256
-//                            FlowDirection.EAST -> 128
-//                            FlowDirection.SOUTH_EAST -> 64
-//                            FlowDirection.SOUTH -> 8
-//                            FlowDirection.SOUTH_WEST -> 1
                         }
                     }
                 } else {
                     0
                 }
             }
-
-            println("Index: $index")
             result[row, column] = lookup[index]
         }
 

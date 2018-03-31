@@ -28,16 +28,23 @@ public class RasterVisualizer2 {
             RasterRun<T> rasterRun,
             Collection<RasterElementProcessor<T>> rasterElementProcessors)
             throws InterruptedException {
+        showRasterFlow(rasterRun, rasterElementProcessors, SQUARE_SIDE);
+    }
+
+    public static <T extends CellType> void showRasterFlow(
+            RasterRun<T> rasterRun,
+            Collection<RasterElementProcessor<T>> rasterElementProcessors, int squareSide)
+            throws InterruptedException {
         JFXPanel panel = new JFXPanel();
-        panel.setPreferredSize(new Dimension(rasterRun.getColumns() * SQUARE_SIDE,
-                rasterRun.getRows() * SQUARE_SIDE));
+        panel.setPreferredSize(new Dimension(rasterRun.getColumns() * squareSide,
+                rasterRun.getRows() * squareSide));
         JFrame frame = new JFrame();
         frame.add(panel);
         Group root = new Group();
 
         Platform.runLater(() -> {
-            Scene scene = new Scene(root, rasterRun.getColumns() * SQUARE_SIDE,
-                    rasterRun.getRows() * SQUARE_SIDE, javafx.scene.paint.Color.BLACK);
+            Scene scene = new Scene(root, rasterRun.getColumns() * squareSide,
+                    rasterRun.getRows() * squareSide, javafx.scene.paint.Color.BLACK);
 
             panel.setScene(scene);
         });
@@ -52,7 +59,7 @@ public class RasterVisualizer2 {
 
             LOG.info("Painting element: " + (counter++));
 
-            paintRaster(root, SQUARE_SIDE, rasterRun, border, rasterElementProcessors);
+            paintRaster(root, squareSide, rasterRun, border, rasterElementProcessors);
             rasterRun.next();
 
             Thread.sleep(SLEEP_TIME_MS);
