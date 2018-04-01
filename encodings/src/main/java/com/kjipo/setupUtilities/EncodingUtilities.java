@@ -45,7 +45,10 @@ public final class EncodingUtilities {
     }
 
     public static String transformKanjiData(EncodedKanji encodedKanji, int maxRow, int maxColumn) {
-        boolean booleanEncoding[][] = encodedKanji.getImage();
+        return transformKanjiData(encodedKanji.getImage(), maxRow, maxColumn);
+    }
+
+    public static String transformKanjiData(boolean booleanEncoding[][], int maxRow, int maxColumn) {
         StringBuilder stringBuilder = new StringBuilder();
 
         for (int row = 0; row < maxRow; ++row) {

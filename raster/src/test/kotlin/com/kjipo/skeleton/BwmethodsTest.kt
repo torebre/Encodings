@@ -29,7 +29,6 @@ class BwmethodsTest {
 
         val outputImage = binaryFillHoles(image)
 
-
         val colorImage = Array(encodedKanji.image.size, { row ->
             Array(encodedKanji.image[0].size, { column ->
 

@@ -11,19 +11,20 @@ import org.slf4j.LoggerFactory
 import tornadofx.*
 import java.io.FileInputStream
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.*
 import java.util.stream.Collectors
+import kotlin.streams.toList
 
 
 class RasterOverviewApplication : App() {
     override val primaryView = KanjiView::class
 
 
-
 }
 
 val log = LoggerFactory.getLogger(RasterOverviewApplication::class.java)
-
 
 
 fun displayKanjis(encodedKanjis: Collection<EncodedKanji>) {
@@ -51,13 +52,12 @@ fun displayKanjis(encodedKanjis: Collection<EncodedKanji>) {
     FX.runAndWait { kanjiView.loadRasters(colourRasters, characters) }
 }
 
-fun displayRasters(colourRasters: Collection<Array<Array<Color>>>, texts:List<String> = emptyList()) {
+fun displayRasters(colourRasters: Collection<Array<Array<Color>>>, texts: List<String> = emptyList()) {
     val startThread = Thread {
         try {
             Application.launch(RasterOverviewApplication::class.java)
-        }
-        catch(e:IllegalStateException) {
-            if(log.isDebugEnabled) {
+        } catch (e: IllegalStateException) {
+            if (log.isDebugEnabled) {
                 log.debug(e.message, e)
             }
         }
@@ -79,20 +79,47 @@ fun loadTestData() {
 }
 
 
+fun loadKanjisFromDirectory(path: Path, limit: Long = Long.MAX_VALUE): List<EncodedKanji> {
+    return Files.list(path)
+            .limit(limit)
+            .map {
+                val fileName = it.fileName.toString()
+
+                EncodedKanji(Character.valueOf(' '),
+                        Files.readAllLines(it).map {
+                            it.map {
+                                if (it.equals('1')) {
+                                    true
+                                } else if (it.equals('0')) {
+                                    false
+                                } else {
+                                    null
+                                }
+                            }
+                                    .filterNotNull()
+                                    .toBooleanArray()
+                        }.toTypedArray(),
+                        fileName.substring(0, fileName.indexOf('.')).toInt())
+            }.toList()
+}
+
+
 fun main(args: Array<String>) {
-    val entries = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).collect(Collectors.toList<KanjiDicParser.KanjiDicEntry>())
-    val charactersFoundInFile = extractCharacters(entries)
+//    val entries = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).collect(Collectors.toList<KanjiDicParser.KanjiDicEntry>())
+//    val charactersFoundInFile = extractCharacters(entries)
+//
+//    val encodedKanjis = FileInputStream(Parsers.FONT_FILE_LOCATION.toFile()).use({ fontStream ->
+//        FontFileParser.parseFontFile(charactersFoundInFile, fontStream).stream().limit(1)
+//    }).collect(Collectors.toList())
+//
+//    encodedKanjis.forEach {
+//        it.printKanji()
+//
+//    }
+//
+//    displayKanjis(encodedKanjis)
 
-    val encodedKanjis = FileInputStream(Parsers.FONT_FILE_LOCATION.toFile()).use({ fontStream ->
-        FontFileParser.parseFontFile(charactersFoundInFile, fontStream).stream().limit(1)
-    }).collect(Collectors.toList())
-
-    encodedKanjis.forEach {
-        it.printKanji()
-
-    }
-
-    displayKanjis(encodedKanjis)
+    displayKanjis(loadKanjisFromDirectory(Paths.get("kanji_output2"), 50))
 
 
 }

@@ -97,8 +97,9 @@ fun pixelsFilled(row: Int, column: Int, image: Matrix<Boolean>): Int {
 }
 
 
-fun makeThin(image: Matrix<Boolean>) = thin(fillIsolatedHoles(image))
+fun makeThin(image: Array<BooleanArray>): Matrix<Boolean> = makeThin(Matrix(image.size, image[0].size, { row, column -> image[row][column] }))
 
+fun makeThin(image: Matrix<Boolean>) = thin(fillIsolatedHoles(image))
 
 fun fillIsolatedHoles(image: Matrix<Boolean>): Matrix<Boolean> {
     val result = Matrix.copy(image)
