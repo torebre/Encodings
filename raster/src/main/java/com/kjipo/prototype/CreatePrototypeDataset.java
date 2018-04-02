@@ -12,6 +12,8 @@ import com.kjipo.parser.Parsers;
 import com.kjipo.raster.attraction.PrototypeCollection;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.representation.EncodedKanji;
+import com.kjipo.segmentation.Matrix;
+import com.kjipo.skeleton.BwmethodsKt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,40 +46,11 @@ public class CreatePrototypeDataset {
     private static final Logger logger = LoggerFactory.getLogger(CreatePrototypeDataset.class);
 
 
-    public void fitPrototypes(Path outputDirectory) throws IOException, FontFormatException {
-        prepareOutputDirectory(outputDirectory);
-
-        java.util.List<KanjiDicParser.KanjiDicEntry> entries = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).collect(Collectors.toList());
-        Set<Character> charactersFoundInFile = extractCharacters(entries);
-
-        FitPrototype fitPrototype = new FitPrototype();
-
-        Gson gson = new Gson();
-
-        try (InputStream fontStream = new FileInputStream(Parsers.FONT_FILE_LOCATION.toFile())) {
-            Collection<EncodedKanji> encodedKanjis = FontFileParser.parseFontFile(charactersFoundInFile, fontStream);
-
-
-            for (EncodedKanji encodedKanji : encodedKanjis) {
-                List<Collection<Prototype>> fit = fitPrototype.fit(encodedKanji.getImage());
-                Collection<Prototype> finalConfiguration = fit.get(fit.size() - 1);
-
-                logger.info("Fit size: {}", fit.size());
-
-                Path outputFile = outputDirectory.resolve((int) encodedKanji.getCharacter() + ".dat");
-                Files.write(outputFile, gson.toJson(finalConfiguration).getBytes(StandardCharsets.UTF_8));
-            }
-        }
-
-
-    }
-
-
     public void fitPrototypes2(Path outputDirectory, BiConsumer<Path, Prototype> serializerFunction) throws IOException, FontFormatException {
         prepareOutputDirectory(outputDirectory);
 
         java.util.List<KanjiDicParser.KanjiDicEntry> entries = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).collect(Collectors.toList()).stream()
-//                .limit(20)
+                .limit(20)
                 .collect(Collectors.toList());
         Set<Integer> charactersFoundInFile = extractCharacters2(entries);
 
@@ -95,12 +68,9 @@ public class CreatePrototypeDataset {
 
                     List<AngleLine> allLines = Lists.newArrayList(top);
 
+                    boolean[][] processedImage = BwmethodsKt.transformToArrays(BwmethodsKt.makeThin(encodedKanji.getImage()));
 
-
-
-
-
-                    List<Prototype> prototypes = fitPrototype.addPrototypes(encodedKanji.getImage(), allLines, false);
+                    List<Prototype> prototypes = fitPrototype.addPrototypes(processedImage, allLines, false);
                     Path outputFile = outputDirectory.resolve(encodedKanji.getUnicode() + ".json");
                     serializerFunction.accept(outputFile, prototypes.get(prototypes.size() - 1));
 
@@ -135,14 +105,13 @@ public class CreatePrototypeDataset {
         // See http://www.rikai.com/library/kanjitables/kanji_codes.unicode.shtml for a list of unicode ranges for Japanese characters
         Set<Integer> charactersFoundInFile = new HashSet<>();
         for (KanjiDicParser.KanjiDicEntry entry : entries) {
-            for(int i = 0; i < entry.getKanji().length(); ++i) {
+            for (int i = 0; i < entry.getKanji().length(); ++i) {
                 int unicode = Character.codePointAt(entry.getKanji(), i);
                 charactersFoundInFile.add(unicode);
             }
         }
         return charactersFoundInFile;
     }
-
 
 
     private static void prepareOutputDirectory(Path outputDirectory) throws IOException {
@@ -173,9 +142,6 @@ public class CreatePrototypeDataset {
             jsonReader.beginArray();
 
             jsonReader.beginArray();
-
-
-
 
 
             AngleLine angleLine = gson.fromJson(jsonReader, AngleLine.class);

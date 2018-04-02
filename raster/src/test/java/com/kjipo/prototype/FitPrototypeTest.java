@@ -47,7 +47,7 @@ public class FitPrototypeTest {
 
     @Test
     public void fitPrototypeTest3() throws InterruptedException {
-        EncodedKanji encodedKanji = new EncodedKanji('a', BooleanEncodingTestData.getTestRaster6(50, 50));
+        EncodedKanji encodedKanji = new EncodedKanji(BooleanEncodingTestData.getTestRaster6(50, 50), Character.codePointAt(new char[]{'a'}, 0));
 
         Filter maskFilter = new MaskFilter();
         List<boolean[][]> results = maskFilter.applyFilter(encodedKanji.getImage());
@@ -234,8 +234,8 @@ public class FitPrototypeTest {
 
         for (int row = 0; row < colorRaster.length; ++row) {
             for (int column = 0; column < colorRaster[0].length; ++column) {
-                if(originalImage[row][column])
-                colorRaster[row][column] = Color.WHITE;
+                if (originalImage[row][column])
+                    colorRaster[row][column] = Color.WHITE;
             }
         }
 

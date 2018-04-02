@@ -1,8 +1,11 @@
 package com.kjipo.skeleton
 
+import com.kjipo.prototype.FitPrototype
 import com.kjipo.raster.EncodingUtilities
 import com.kjipo.raster.FlowDirection
 import com.kjipo.segmentation.Matrix
+import com.kjipo.visualization.stochasticflow.FlowStrengthPainter
+import kotlin.math.abs
 import kotlin.math.min
 
 
@@ -15,9 +18,295 @@ fun extractSkeleton(image: Matrix<Boolean>) {
 
 }
 
-fun extractJunctions(thinImage: Matrix<Boolean>) {
-    // TODO
+fun extractJunctions(thinImage: Matrix<Boolean>): Matrix<Boolean> {
+//    %
+//    % For a circular stroke, there are no "features" by this definition.
+//    % Thus, for any partition of the pixels into regions, there should
+//    % be at least one feature for the tracing algorithm to find.
+//    %
+//    % Input
+//    %  T: [n x n boolean] thinned image.
+//    %    images are binary, where true means "black"
+//    %
+//    % Output
+//    %  SN: [n x n boolean] extracted features.
+//    function SN = extract_junctions(T)
 
+    val se = bwmorphEndpoints(thinImage) // bwmorph(T,'endpoints');
+//    SB = T; % black pixels
+    val sb = thinImage
+
+//            sz = size(T,1);
+
+
+//    lutS3 = makelut( @(P)fS3(P) , 3);
+    val lutS3 = makelut(::fS3)
+
+//    S3 = applylut(T,lutS3);
+
+    val s3 = applylut(thinImage, lutS3)
+
+//    % final criteria
+//    SN = SE | (SB & S3);
+    val sn = Matrix(thinImage.numberOfRows, thinImage.numberOfColumns, {row, column ->
+        se[row, column] || (sb[row, column] && s3[row, column])
+    })
+
+
+//    % Check to see that each connected component has a feature.
+//    % This is necessary to process circles in the image.
+//    CC = bwconncomp(T, 8);
+    val cc = bwconncomp(thinImage)
+
+//    nCC = CC.NumObjects;
+//    val nCC = cc.pixelIdsList.size
+
+//    for c = 1:nCC
+    // TODO Check that range is correct
+    for(i in 0 until cc.pixelIdsList.size) {
+//        pid = CC.PixelIdxList { c };
+        val pid = cc.pixelIdsList[i]
+
+        val snSum = pid.map { sn[it.first, it.second] }
+                .map { if(it) {1} else {0} }
+                .sum()
+
+        if(snSum == 0) {
+            pid.minBy { it.first }?.let {
+                sn[it.first, it.second] = true
+            }
+        }
+
+
+
+
+//    % We have a circle. Circles are generally drawn from the
+//    % top, we choose the top pixel here
+//        if sum(SN(pid)) == 0
+//        [irow, icol] = ind2sub(sz, pid);
+//        sel = argmin(irow);
+//        SN(pid(sel)) = true;
+//        end
+//
+//        end
+
+
+    }
+
+
+//    end
+
+    return sn
+}
+
+data class ConnCompResult(val pixelIdsList:List<List<Pair<Int, Int>>>)
+
+fun bwconncomp(image:Matrix<Boolean>): ConnCompResult {
+    val disjointRegions = FitPrototype.findDisjointRegions(transformToArrays(image))
+
+    val regionPixelMapping = mutableMapOf<Int, MutableList<Pair<Int, Int>>>()
+    disjointRegions.forEachIndexed( {row, columnValues ->
+        columnValues.forEachIndexed({column, value ->
+            regionPixelMapping.computeIfAbsent(value, {key -> mutableListOf()}).add(Pair(row, column))
+        })
+    })
+
+    return ConnCompResult(regionPixelMapping.values.toList())
+}
+
+
+
+
+
+
+
+fun applylut(matrix:Matrix<Boolean>, lookupTable:List<Boolean>): Matrix<Boolean> {
+    val result = Matrix.copy(matrix)
+
+    matrix.forEachIndexed({row, column, value ->
+        val neighbourhood = getNeighbourhood(matrix, row, column)
+        var lookupIndex = 0
+        neighbourhood.forEachIndexed({row2, column2, value2 ->
+            if(value2) {
+                lookupIndex += com.kjipo.skeleton.matrix[row2, column2]
+            }
+        })
+        result[row, column] = lookupTable[lookupIndex]
+    })
+
+    return result
+}
+
+
+fun getNeighbourhood(matrix: Matrix<Boolean>, row: Int, column: Int): Matrix<Boolean> {
+    val result = Matrix(3, 3, {row2, column2 -> false})
+    result[1, 1] = matrix[row, column]
+    FlowDirection.values().forEach {
+        if(EncodingUtilities.validCell(row, column, it, matrix.numberOfRows, matrix.numberOfColumns)) {
+            result[1 + it.rowShift, 1 + it.columnShift] = matrix[row + it.rowShift, column + it.columnShift]
+        }
+    }
+    return result
+}
+
+
+val matrix = Matrix(3, 3, { row, column ->
+    if (row == 0) {
+        when (column) {
+            0 -> 256
+            1 -> 32
+            2 -> 4
+            else -> -1 // IllegalArgumentException("Unexpected column: $column")
+        }
+    } else if (row == 1) {
+        when (column) {
+            0 -> 128
+            1 -> 16
+            2 -> 2
+            else -> -1 // IllegalArgumentException("Unexpected column: $column")
+        }
+    } else if (row == 2) {
+        when (column) {
+            0 -> 64
+            1 -> 8
+            2 -> 1
+            else -> -1 // IllegalArgumentException("Unexpected column: $column")
+        }
+    } else {
+        throw IllegalArgumentException("Unexpected row: $row")
+    }
+})
+
+
+fun makelut(function: (matrix: Matrix<Boolean>) -> Boolean): List<Boolean> {
+//    nq=n^2;
+//    c=2^nq;
+//    lut=zeros(c,1);
+
+
+//    256    32     4
+//    128    16     2
+//    64     8     1
+
+
+    return (0 until 512).map {
+        val evalMatrix = Matrix(3, 3, {row, column ->
+            it.and(matrix[row, column]) > 0
+        })
+
+//        println("Matrix:\n${evalMatrix}")
+
+        Pair(it, function.invoke(evalMatrix))
+    }.sortedBy { it.first }
+            .map {it.second}
+            .toList()
+
+//    w = reshape(2.^[nq - 1: - 1:0], n, n);
+//    for i = 0:c-1
+//    idx = bitand(w, i) > 0;
+//    lut(i + 1) = feval(fun , idx, varargin { : });
+//    endfor
+
+}
+
+
+//% See Liu et al.
+//function Y=fS3(P)
+fun fS3(matrix: Matrix<Boolean>): Boolean {
+//sz = size(P);
+//assert(isequal(sz,[3 3]));
+
+//% Get cross number
+    val nc = fNC(matrix);
+
+//% Count black pixels
+//PM = P;
+    val pm = Matrix.copy(matrix)
+    // TODO What does this do?
+//PM(2,2) = false;
+    pm[1, 1] = false
+//NB = sum(PM(:));
+    var nb = 0
+    pm.forEach {
+        nb += if (it) {
+            1
+        } else {
+            0
+        }
+    }
+
+
+//% Criteria
+//Y = (NC >= 3-eps) || (NB >= 4-eps);
+    return (nc >= 3 - Double.MIN_VALUE) || (nb >= 4 - Double.MIN_VALUE)
+
+//end
+}
+
+
+//% See Liu et al.
+//function Y=fNC(P)
+fun fNC(matrix: Matrix<Boolean>): Double {
+//    sum = 0;
+    var sum = 0.0
+
+//    for i = 0:7
+    // TODO Check that the range is correct
+    for (i in 0..7) {
+//        sum = sum + abs(P(fIP(i + 1)) - P(fIP(i)));
+
+        val (row1, column1) = fIP(i + 1)
+        val (row2, column2) = fIP(i)
+
+        sum += abs(if (matrix[row1, column1]) {
+            1
+        } else {
+            0
+        } - if (matrix[row2, column2]) {
+            1
+        } else {
+            0
+        })
+    }
+
+//    end
+    return sum / 2
+//end
+}
+
+//% See Liu et al.
+//function newlindx = fIP(lindx)
+fun fIP(lindx: Int): Pair<Int, Int> {
+    return when (lindx) {
+        0, 8 -> Pair(0, 1)
+        1 -> Pair(0, 2)
+        2 -> Pair(1, 2)
+        3 -> Pair(2, 2)
+        4 -> Pair(2, 1)
+        5 -> Pair(2, 0)
+        6 -> Pair(1, 0)
+        7 -> Pair(0, 0)
+        else -> throw IllegalArgumentException("Unexpected index: $lindx")
+    }
+    //            case { 0, 8 }
+//    i = 1; j = 2;
+//    case 1
+//    i = 1; j = 3;
+//    case 2
+//    i = 2; j = 3;
+//    case 3
+//    i = 3; j = 3;
+//    case 4
+//    i = 3; j = 2;
+//    case 5
+//    i = 3; j = 1;
+//    case 6
+//    i = 2; j = 1;
+//    case 7
+//    i = 1; j = 1;
+//    end
+//    newlindx = sub2ind([3 3], i, j);
+//    end
 
 }
 
@@ -466,6 +755,17 @@ fun applyLookup3(image: Matrix<Boolean>, lookup: BooleanArray): Matrix<Boolean> 
 
     })
     return result
+}
+
+
+fun transformToArrays(image: Matrix<Boolean>): Array<BooleanArray> {
+    return (0 until image.numberOfRows).map {
+        val row = it
+        (0 until image.numberOfColumns).map {
+            image[row, it]
+        }.toBooleanArray()
+
+    }.toTypedArray()
 }
 
 

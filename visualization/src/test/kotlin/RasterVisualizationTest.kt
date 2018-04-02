@@ -3,7 +3,9 @@ import com.kjipo.parser.Parsers
 import com.kjipo.prototype.CreatePrototypeDataset
 import com.kjipo.prototype.Prototype
 import com.kjipo.representation.EncodedKanji
+import com.kjipo.visualization.displayKanjis
 import com.kjipo.visualization.displayRasters
+import com.kjipo.visualization.loadKanjisFromDirectory
 import javafx.scene.paint.Color
 import org.junit.Test
 import org.slf4j.LoggerFactory
@@ -20,7 +22,7 @@ class RasterVisualizationTest {
 
     @Test
     fun visualizationTest() {
-        val fittedPrototypes = Files.walk(Paths.get("fittedPrototypes4"))
+        val fittedPrototypes = Files.walk(Paths.get("/home/student/workspace/testEncodings/fittedPrototypes4"))
                 .filter { path -> Files.isRegularFile(path) }
                 .limit(100)
                 .collect(Collectors.toMap<Path, Int, Prototype>({
@@ -32,21 +34,28 @@ class RasterVisualizationTest {
                     }
                 })
 
-        val encodedKanjis = FileInputStream(Parsers.FONT_FILE_LOCATION.toFile()).use({ fontStream ->
-            FontFileParser.parseFontFileUsingUnicodeInput(fittedPrototypes.keys, fontStream, 200, 200).stream()
-        }).collect(Collectors.toMap<EncodedKanji, Int, EncodedKanji>({
-            it.character.toInt()
-        }) {
-            it
-        })
+//        val encodedKanjis = FileInputStream(Parsers.FONT_FILE_LOCATION.toFile()).use({ fontStream ->
+//            FontFileParser.parseFontFileUsingUnicodeInput(fittedPrototypes.keys, fontStream, 200, 200).stream()
+//        }).collect(Collectors.toMap<EncodedKanji, Int, EncodedKanji>({
+//            it.character.toInt()
+//        }) {
+//            it
+//        })
+
+        val encodedKanjis = loadKanjisFromDirectory(Paths.get("/home/student/workspace/testEncodings/kanji_output2")).stream()
+                .collect(Collectors.toMap<EncodedKanji, Int, EncodedKanji>({
+                    it.unicode
+                }) {
+                    it
+                })
 
         val texts = mutableListOf<String>()
         val colourRasters = fittedPrototypes.entries.map {
-            val currentKanji = encodedKanjis.getOrDefault(it.key, EncodedKanji(' ', emptyArray()))
+            val currentKanji = encodedKanjis.getOrDefault(it.key, EncodedKanji(emptyArray(), 0))
             val image = currentKanji.image
             texts.add(currentKanji.unicode.toString().plus(": ").plus(String(Character.toChars(currentKanji.unicode))))
 
-            if(image.isEmpty()) {
+            if (image.isEmpty()) {
                 log.error("Image is empty")
             }
 
@@ -63,10 +72,12 @@ class RasterVisualizationTest {
 
             it.value.segments.forEach {
                 it.pairs.forEach {
-                    if(it.row >= colourRaster.size || it.column >= colourRaster[0].size) {
+                    if (it.row < 0
+                            || it.row >= colourRaster.size
+                            || it.column < 0
+                            || it.column >= colourRaster[0].size) {
                         log.error("Prototype outside allowed range")
-                    }
-                    else {
+                    } else {
                         colourRaster[it.row][it.column] = Color.RED
                     }
                 }

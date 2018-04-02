@@ -19,7 +19,7 @@ import java.util.stream.Collectors
 
 private val logger = LoggerFactory.getLogger("EncodedDataSetCreation")
 
-
+/*
 fun applySegmentation(outputDir: Path) {
     val parseKanjidicFile = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION)
 
@@ -49,7 +49,7 @@ fun applySegmentation(outputDir: Path) {
                     logger.warn("Skipping character: $character ")
                     null
                 } else {
-                    Pair(character.toInt(), EncodedKanji(character, FontFileParser.paintOnRaster(glyphVector, FontFileParser.NUMBER_OF_ROWS, FontFileParser.NUMBER_OF_COLUMNS)))
+                    Pair(character.toInt(), EncodedKanji(FontFileParser.paintOnRaster(glyphVector, FontFileParser.NUMBER_OF_ROWS, FontFileParser.NUMBER_OF_COLUMNS)))
                 }
             }).filter({ it != null })
             .collect(Collectors.toMap({ it -> it!!.first }, { it -> it!!.second },
@@ -70,7 +70,7 @@ fun applySegmentation(outputDir: Path) {
     })
 
 }
-
+*/
 
 fun transformKanjiData(image: Matrix<Boolean>, maxRow: Int, maxColumn: Int): String {
     val stringBuilder = StringBuilder()

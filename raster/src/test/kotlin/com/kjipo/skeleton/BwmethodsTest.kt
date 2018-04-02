@@ -234,6 +234,35 @@ class BwmethodsTest {
 
 
     @Test
+    fun extractJunctionsTest() {
+        val encodedKanji = FileInputStream(Paths.get("/home/student/test_kanji.xml").toFile())
+                .use { ObjectInputStream(it).use { it.readObject() as EncodedKanji } }
+
+        val image = thin(Matrix(encodedKanji.image.size, encodedKanji.image[0].size, { row, column -> encodedKanji.image[row][column] }))
+
+        val junctions = extractJunctions(image)
+
+        val colorImage = Array(encodedKanji.image.size, { row ->
+            Array(encodedKanji.image[0].size, { column ->
+
+                if (junctions.get(row, column)) {
+                    Color.RED
+                } else if (image[row, column]) {
+                    Color.YELLOW
+                } else {
+                    Color.BLACK
+                }
+            })
+        })
+
+        RasterVisualizer2.paintRaster(colorImage, 5)
+
+        Thread.sleep(Long.MAX_VALUE)
+
+    }
+
+
+    @Test
     fun fillIsolatedHolesTest() {
         val encodedKanji = FileInputStream(Paths.get("/home/student/test_kanji.xml").toFile())
                 .use { ObjectInputStream(it).use { it.readObject() as EncodedKanji } }
@@ -329,6 +358,25 @@ class BwmethodsTest {
                 writer.newLine()
             }
         }
+    }
+
+
+    @Test
+    fun makelutTest() {
+        val lookupTable = makelut({ matrix ->
+            var sum = 0
+            matrix.forEach {
+                sum += if (it) {
+                    1
+                } else {
+                    0
+                }
+            }
+            sum > 0
+        })
+
+        println("Lookup table:")
+        lookupTable.forEach(System.out::println)
     }
 
 

@@ -42,5 +42,14 @@ class Matrix<T>(val numberOfRows: Int, val numberOfColumns: Int, val array: Arra
         array.forEachIndexed { x, p -> p.forEachIndexed { y, t -> operation.invoke(x, y, t) } }
     }
 
+    override fun toString(): String {
+        val result = StringBuilder()
+        array.forEach {
+            it.forEach { result.append(it).append(" ") }
+            result.append("\n")
+        }
+        return result.toString()
+    }
+
 
 }

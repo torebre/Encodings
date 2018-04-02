@@ -22,18 +22,18 @@ public class FontFileParser {
     private static final Logger logger = LoggerFactory.getLogger(FontFileParser.class);
 
 
-    public static Collection<EncodedKanji> parseFontFile(Collection<Character> characters, InputStream trueTypeFontData) throws IOException, FontFormatException {
+    public static Collection<EncodedKanji> parseFontFile(Collection<Integer> unicodes, InputStream trueTypeFontData) throws IOException, FontFormatException {
         Font font = Font.createFont(Font.TRUETYPE_FONT, trueTypeFontData);
         FontRenderContext renderContext = new FontRenderContext(null, false, false);
 
-        return characters.stream()
+        return unicodes.stream()
                 .map(character -> {
-                    GlyphVector glyphVector = font.createGlyphVector(renderContext, new char[]{character});
+                    GlyphVector glyphVector = font.createGlyphVector(renderContext, Character.toChars(character));
                     if (glyphVector.getNumGlyphs() > 1) {
                         logger.warn("Skipping character: " + character);
                         return null;
                     }
-                    return new EncodedKanji(character, paintOnRaster(glyphVector, NUMBER_OF_ROWS, NUMBER_OF_COLUMNS));
+                    return new EncodedKanji(paintOnRaster(glyphVector, NUMBER_OF_ROWS, NUMBER_OF_COLUMNS), character);
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -54,10 +54,7 @@ public class FontFileParser {
                         logger.warn("Skipping character: " + character);
                         return null;
                     }
-
-
-
-                    return new EncodedKanji((char) character.intValue(), paintOnRaster(glyphVector, NUMBER_OF_ROWS, NUMBER_OF_COLUMNS), character);
+                    return new EncodedKanji(paintOnRaster(glyphVector, NUMBER_OF_ROWS, NUMBER_OF_COLUMNS), character);
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());

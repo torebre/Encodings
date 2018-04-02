@@ -70,12 +70,17 @@ public final class EncodingUtilities {
     public static void main(String args[]) throws IOException, FontFormatException {
         java.util.List<KanjiDicParser.KanjiDicEntry> entries = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).collect(Collectors.toList());
 
-        Set<Character> charactersFoundInFile = new HashSet<>();
+        Set<Integer> charactersFoundInFile = new HashSet<>();
         for (KanjiDicParser.KanjiDicEntry entry : entries) {
-            char[] chars = entry.getKanji().toCharArray();
-            for (char character : chars) {
-                charactersFoundInFile.add(character);
+
+            for(int i = 0; i < entry.getKanji().length(); ++i) {
+                charactersFoundInFile.add(entry.getKanji().codePointAt(i));
             }
+
+//            char[] chars = entry.getKanji().toCharArray();
+//            for (char character : chars) {
+//                charactersFoundInFile.add(character);
+//            }
         }
 
         logger.info("Number of characters found: {}", charactersFoundInFile.size());

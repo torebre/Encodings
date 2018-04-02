@@ -15,6 +15,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
+import java.util.Arrays.stream
 import java.util.stream.Collectors
 
 
@@ -30,9 +31,9 @@ fun processDictionaryFile(outputDir: Path) {
     val characterKanjiMap: Map<String, KanjiDicParser.KanjiDicEntry> = parseKanjidicFile.map { Pair(it.identifier, it) }
             .collect(Collectors.toMap({ it -> it.first }, { it.second }))
 
-    val charactersFoundInFile = characterKanjiMap.values.map {
-        it.kanji.toCharArray().toSet()
-    }.flatten().toSet()
+    val charactersFoundInFile = characterKanjiMap.values.flatMap {
+        it.kanji.codePoints().boxed().collect(Collectors.toList())
+    }
 
     logger.info("Number of kanjis found: ${characterKanjiMap.size}")
     logger.info("Number of characters found: ${charactersFoundInFile.size}")
@@ -48,12 +49,12 @@ fun processDictionaryFile(outputDir: Path) {
 
                 logger.info("Character: $character")
 
-                val glyphVector = font.createGlyphVector(renderContext, charArrayOf(character))
+                val glyphVector = font.createGlyphVector(renderContext, Character.toChars(character))
                 if (glyphVector.getNumGlyphs() > 1) {
                     logger.warn("Skipping character: $character ")
                     null
                 } else {
-                    Pair(character.toInt(), EncodedKanji(character, FontFileParser.paintOnRaster(glyphVector, FontFileParser.NUMBER_OF_ROWS, FontFileParser.NUMBER_OF_COLUMNS)))
+                    Pair(character.toInt(), EncodedKanji(FontFileParser.paintOnRaster(glyphVector, FontFileParser.NUMBER_OF_ROWS, FontFileParser.NUMBER_OF_COLUMNS), character.toInt()))
                 }
             }).filter({ it != null })
             .collect(Collectors.toMap({ it -> it!!.first }, { it -> it!!.second },

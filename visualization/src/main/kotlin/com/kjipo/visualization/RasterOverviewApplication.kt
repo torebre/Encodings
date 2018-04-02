@@ -1,6 +1,5 @@
 package com.kjipo.visualization
 
-import com.kjipo.parser.FontFileParser
 import com.kjipo.parser.KanjiDicParser
 import com.kjipo.parser.Parsers
 import com.kjipo.prototype.CreatePrototypeDataset.extractCharacters
@@ -9,11 +8,9 @@ import javafx.application.Application
 import javafx.scene.paint.Color
 import org.slf4j.LoggerFactory
 import tornadofx.*
-import java.io.FileInputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
 import java.util.stream.Collectors
 import kotlin.streams.toList
 
@@ -35,7 +32,7 @@ fun displayKanjis(encodedKanjis: Collection<EncodedKanji>) {
 
     val characters = mutableListOf<String>()
     val colourRasters = encodedKanjis.map {
-        characters.add(it.character.toString())
+        characters.add(String(Character.toChars(it.unicode)))
 
         Array(it.image.size, { row ->
             Array(it.image[0].size, { column ->
@@ -85,8 +82,7 @@ fun loadKanjisFromDirectory(path: Path, limit: Long = Long.MAX_VALUE): List<Enco
             .map {
                 val fileName = it.fileName.toString()
 
-                EncodedKanji(Character.valueOf(' '),
-                        Files.readAllLines(it).map {
+                EncodedKanji(Files.readAllLines(it).map {
                             it.map {
                                 if (it.equals('1')) {
                                     true

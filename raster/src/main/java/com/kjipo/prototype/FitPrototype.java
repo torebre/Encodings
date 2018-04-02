@@ -480,7 +480,7 @@ public class FitPrototype {
         return null;
     }
 
-    private static int[][] findDisjointRegions(boolean inputData[][]) {
+    public static int[][] findDisjointRegions(boolean inputData[][]) {
         int regionData[][] = new int[inputData.length][inputData[0].length];
         int fillValue = 1;
         boolean foundHit = true;

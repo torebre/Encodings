@@ -1,29 +1,32 @@
 package com.kjipo.representation;
 
 
-import com.google.common.base.Preconditions;
-
 import java.io.PrintStream;
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.stream.IntStream;
 
 
 public class EncodedKanji implements Serializable {
-    private final Character character;
+    private final String character;
     private final boolean image[][];
     private final int unicode;
 
 
-    public EncodedKanji(Character character, boolean[][] image) {
-        Preconditions.checkNotNull(character);
+//    public EncodedKanji(String character, boolean[][] image) {
+//        Preconditions.checkNotNull(character);
+//        this.character = character;
+//        this.image = image;
+//        this.unicode = Character.codePointAt(new char[] {character}, 0);
+//    }
+
+    public EncodedKanji(String character, boolean[][] image, int unicode) {
         this.character = character;
         this.image = image;
-        this.unicode = Character.codePointAt(new char[] {character}, 0);
+        this.unicode = unicode;
     }
 
-    public EncodedKanji(Character character, boolean[][] image, int unicode) {
-        this.character = character;
+    public EncodedKanji(boolean[][] image, int unicode) {
+        this.character = new String(Character.toChars(unicode));
         this.image = image;
         this.unicode = unicode;
     }
@@ -42,7 +45,7 @@ public class EncodedKanji implements Serializable {
     }
 
 
-    public Character getCharacter() {
+    public String getCharacter() {
         return character;
     }
 
