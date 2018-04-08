@@ -33,7 +33,7 @@ fun processDictionaryFile(outputDir: Path) {
 
     val charactersFoundInFile = characterKanjiMap.values.flatMap {
         it.kanji.codePoints().boxed().collect(Collectors.toList())
-    }
+    }.distinct()
 
     logger.info("Number of kanjis found: ${characterKanjiMap.size}")
     logger.info("Number of characters found: ${charactersFoundInFile.size}")

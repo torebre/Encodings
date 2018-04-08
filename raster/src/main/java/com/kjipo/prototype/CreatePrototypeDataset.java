@@ -12,14 +12,10 @@ import com.kjipo.parser.Parsers;
 import com.kjipo.raster.attraction.PrototypeCollection;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.representation.EncodedKanji;
-import com.kjipo.segmentation.Matrix;
 import com.kjipo.skeleton.BwmethodsKt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Type;
@@ -30,7 +26,6 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class CreatePrototypeDataset {
@@ -75,7 +70,7 @@ public class CreatePrototypeDataset {
                     serializerFunction.accept(outputFile, prototypes.get(prototypes.size() - 1));
 
                 } catch (RuntimeException e) {
-                    logger.error("Skipping character because of exception: {}", encodedKanji.getCharacter(), e);
+                    logger.error("Skipping character because of exception: {}", new String(Character.toChars(encodedKanji.getUnicode())), e);
                 }
 
             }

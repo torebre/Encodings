@@ -10,6 +10,7 @@ import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
 import com.kjipo.representation.EncodedKanji;
 import com.kjipo.segmentation.LineSegmentationKt;
+import com.kjipo.skeleton.BwmethodsKt;
 import com.kjipo.visualization.segmentation.ColorCell;
 import com.kjipo.visualization.segmentation.ColorPainter;
 import com.kjipo.visualization.RasterRun;
@@ -171,9 +172,8 @@ public class FitPrototypeTest {
         for (Prototype prototype : prototypes1) {
             for (Segment segment : prototype.getSegments()) {
                 boolean[][] raster = extractRegion(encodedKanji.getImage(), segment.getPairs(), 0, 10);
-                RasterVisualizer2.paintRaster(raster);
+                RasterVisualizer2.paintRaster(raster, 5);
             }
-
         }
 
 //        showRaster(filteredImage, prototypes);
@@ -193,9 +193,7 @@ public class FitPrototypeTest {
         }
 
         boolean originalImage[][] = encodedKanji.getImage();
-        Filter maskFilter = new MaskFilter();
-        List<boolean[][]> results = maskFilter.applyFilter(encodedKanji.getImage());
-        boolean filteredImage[][] = results.get(results.size() - 1);
+        boolean[][] filteredImage = BwmethodsKt.transformToArrays(BwmethodsKt.makeThin(originalImage));
 
         Pair topPair = Pair.of(0, 0);
         int topId = 1;
@@ -239,7 +237,7 @@ public class FitPrototypeTest {
             }
         }
 
-        RasterVisualizer2.paintRaster(colorRaster);
+        RasterVisualizer2.paintRaster(colorRaster, 5);
 
 
         Thread.sleep(Long.MAX_VALUE);

@@ -151,30 +151,46 @@ fun getNeighbourhood(matrix: Matrix<Boolean>, row: Int, column: Int): Matrix<Boo
 
 
 val matrix = Matrix(3, 3, { row, column ->
-    if (row == 0) {
-        when (column) {
-            0 -> 256
-            1 -> 32
-            2 -> 4
-            else -> -1 // IllegalArgumentException("Unexpected column: $column")
-        }
-    } else if (row == 1) {
-        when (column) {
-            0 -> 128
-            1 -> 16
-            2 -> 2
-            else -> -1 // IllegalArgumentException("Unexpected column: $column")
-        }
-    } else if (row == 2) {
-        when (column) {
-            0 -> 64
-            1 -> 8
-            2 -> 1
-            else -> -1 // IllegalArgumentException("Unexpected column: $column")
-        }
-    } else {
-        throw IllegalArgumentException("Unexpected row: $row")
+    when(Pair(row, column)) {
+        Pair(0, 0) -> 256
+        Pair(0, 1) -> 32
+        Pair(0, 2) -> 4
+        Pair(1, 0) -> 128
+        Pair(1, 1) -> 16
+        Pair(1, 2) -> 2
+        Pair(2, 0) -> 64
+        Pair(2, 1) -> 8
+        Pair(2, 2) -> 1
+        else ->  throw IllegalArgumentException("Unexpected row: $row")
+
+
     }
+
+
+//    if (row == 0) {
+//        when (column) {
+//            0 -> 256
+//            1 -> 32
+//            2 -> 4
+//            else -> -1 // IllegalArgumentException("Unexpected column: $column")
+//        }
+//    } else if (row == 1) {
+//        when (column) {
+//            0 -> 128
+//            1 -> 16
+//            2 -> 2
+//            else -> -1 // IllegalArgumentException("Unexpected column: $column")
+//        }
+//    } else if (row == 2) {
+//        when (column) {
+//            0 -> 64
+//            1 -> 8
+//            2 -> 1
+//            else -> -1 // IllegalArgumentException("Unexpected column: $column")
+//        }
+//    } else {
+//        throw IllegalArgumentException("Unexpected row: $row")
+//    }
 })
 
 
@@ -288,26 +304,6 @@ fun fIP(lindx: Int): Pair<Int, Int> {
         7 -> Pair(0, 0)
         else -> throw IllegalArgumentException("Unexpected index: $lindx")
     }
-    //            case { 0, 8 }
-//    i = 1; j = 2;
-//    case 1
-//    i = 1; j = 3;
-//    case 2
-//    i = 2; j = 3;
-//    case 3
-//    i = 3; j = 3;
-//    case 4
-//    i = 3; j = 2;
-//    case 5
-//    i = 3; j = 1;
-//    case 6
-//    i = 2; j = 1;
-//    case 7
-//    i = 1; j = 1;
-//    end
-//    newlindx = sub2ind([3 3], i, j);
-//    end
-
 }
 
 
@@ -324,12 +320,12 @@ fun bwmorphEndpoints(image: Matrix<Boolean>): Matrix<Boolean> {
 }
 
 fun isEnd(row: Int, column: Int, image: Matrix<Boolean>): Boolean {
-    if (!image[row, column]) {
-        return false
+    return if (!image[row, column]) {
+        false
     }
-
-    return pixelsFilled(row, column, image) == 2
-
+    else {
+        pixelsFilled(row, column, image) == 2
+    }
 }
 
 fun pixelsFilled(row: Int, column: Int, image: Matrix<Boolean>): Int {

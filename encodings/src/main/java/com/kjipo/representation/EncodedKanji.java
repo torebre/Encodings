@@ -3,30 +3,16 @@ package com.kjipo.representation;
 
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
 
 public class EncodedKanji implements Serializable {
-    private final String character;
     private final boolean image[][];
     private final int unicode;
 
 
-//    public EncodedKanji(String character, boolean[][] image) {
-//        Preconditions.checkNotNull(character);
-//        this.character = character;
-//        this.image = image;
-//        this.unicode = Character.codePointAt(new char[] {character}, 0);
-//    }
-
-    public EncodedKanji(String character, boolean[][] image, int unicode) {
-        this.character = character;
-        this.image = image;
-        this.unicode = unicode;
-    }
-
     public EncodedKanji(boolean[][] image, int unicode) {
-        this.character = new String(Character.toChars(unicode));
         this.image = image;
         this.unicode = unicode;
     }
@@ -44,23 +30,15 @@ public class EncodedKanji implements Serializable {
         });
     }
 
-
-    public String getCharacter() {
-        return character;
-    }
-
-    public void printKanji() {
-        printKanji(System.out);
+    public int getUnicode() {
+        return unicode;
     }
 
     @Override
     public String toString() {
         return "EncodedKanji{" +
-                "character=" + character +
+                "image=" + Arrays.toString(image) +
+                ", unicode=" + unicode +
                 '}';
-    }
-
-    public int getUnicode() {
-        return unicode;
     }
 }

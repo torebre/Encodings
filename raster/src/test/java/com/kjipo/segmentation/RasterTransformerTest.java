@@ -84,7 +84,7 @@ public class RasterTransformerTest {
     }
 
 
-    public static void main(String args[]) throws IOException, FontFormatException, JAXBException {
+    public static void main(String args[]) throws IOException, FontFormatException {
         java.util.List<KanjiDicParser.KanjiDicEntry> entries = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).collect(Collectors.toList());
 
         Set<Integer> charactersFoundInFile = new HashSet<>();
