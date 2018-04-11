@@ -4,4 +4,5 @@ include 'raster'
 include 'encodings'
 include 'tensorflow'
 include 'visualization'
+include 'experiments'
 
