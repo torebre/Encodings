@@ -22,42 +22,45 @@ public class FontFileParser {
     private static final Logger logger = LoggerFactory.getLogger(FontFileParser.class);
 
 
-    public static Collection<EncodedKanji> parseFontFile(Collection<Integer> unicodes, InputStream trueTypeFontData) throws IOException, FontFormatException {
+    public static Collection<EncodedKanji> parseFontFile(Collection<Integer> unicodes, InputStream trueTypeFontData, int numberOfRows, int numberOfColumns) throws IOException, FontFormatException {
         Font font = Font.createFont(Font.TRUETYPE_FONT, trueTypeFontData);
-        FontRenderContext renderContext = new FontRenderContext(null, false, false);
+        FontRenderContext fontRenderContext = getFontRenderContext();
 
         return unicodes.stream()
                 .map(character -> {
-                    GlyphVector glyphVector = font.createGlyphVector(renderContext, Character.toChars(character));
+                    GlyphVector glyphVector = font.createGlyphVector(fontRenderContext, Character.toChars(character));
                     if (glyphVector.getNumGlyphs() > 1) {
                         logger.warn("Skipping character: " + character);
                         return null;
                     }
-                    return new EncodedKanji(paintOnRaster(glyphVector, NUMBER_OF_ROWS, NUMBER_OF_COLUMNS), character);
+                    return new EncodedKanji(paintOnRaster(glyphVector, numberOfRows, numberOfColumns), character);
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-    }
-
-    public static Collection<EncodedKanji> parseFontFileUsingUnicodeInput(Collection<Integer> characters, InputStream trueTypeFontData) throws IOException, FontFormatException {
-        return parseFontFileUsingUnicodeInput(characters, trueTypeFontData, NUMBER_OF_ROWS, NUMBER_OF_COLUMNS);
     }
 
     public static Collection<EncodedKanji> parseFontFileUsingUnicodeInput(Collection<Integer> unicode, InputStream trueTypeFontData, int numberOfRows, int numberOfColumns) throws IOException, FontFormatException {
         Font font = Font.createFont(Font.TRUETYPE_FONT, trueTypeFontData);
-        FontRenderContext renderContext = new FontRenderContext(null, false, false);
+        FontRenderContext fontRenderContext = getFontRenderContext();
 
         return unicode.stream()
                 .map(character -> {
-                    GlyphVector glyphVector = font.createGlyphVector(renderContext, new String(Character.toChars(character)));
+                    GlyphVector glyphVector = font.createGlyphVector(fontRenderContext, new String(Character.toChars(character)));
                     if (glyphVector.getNumGlyphs() > 1) {
                         logger.warn("Skipping character: " + character);
                         return null;
                     }
-                    return new EncodedKanji(paintOnRaster(glyphVector, NUMBER_OF_ROWS, NUMBER_OF_COLUMNS), character);
+                    return new EncodedKanji(paintOnRaster(glyphVector, numberOfRows, numberOfColumns), character);
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+
+
+    private static FontRenderContext getFontRenderContext() {
+        // If the render context is not scaled up, it can cause filled pixels to be skipped
+        AffineTransform affineTransform = AffineTransform.getScaleInstance(10.0, 10.0);
+        return new FontRenderContext(affineTransform, true, true);
     }
 
 
@@ -143,7 +146,7 @@ public class FontFileParser {
 
 
     private static boolean[][] scaleRaster(boolean raster[][], int newNumberOfRows, int newNumberOfColumns) {
-        if(raster.length == 0) {
+        if (raster.length == 0) {
             logger.error("Invalid dimensions for raster: {}", raster.length);
             return new boolean[newNumberOfRows][newNumberOfColumns];
         }

@@ -53,10 +53,9 @@ public final class EncodingUtilities {
 
         for (int row = 0; row < maxRow; ++row) {
             for (int column = 0; column < maxColumn; ++column) {
-                if(row >= booleanEncoding.length || column >= booleanEncoding[0].length) {
+                if (row >= booleanEncoding.length || column >= booleanEncoding[0].length) {
                     stringBuilder.append("0").append(",");
-                }
-                else {
+                } else {
                     stringBuilder.append(booleanEncoding[row][column] ? 0 : 1).append(",");
                 }
             }
@@ -73,7 +72,7 @@ public final class EncodingUtilities {
         Set<Integer> charactersFoundInFile = new HashSet<>();
         for (KanjiDicParser.KanjiDicEntry entry : entries) {
 
-            for(int i = 0; i < entry.getKanji().length(); ++i) {
+            for (int i = 0; i < entry.getKanji().length(); ++i) {
                 charactersFoundInFile.add(entry.getKanji().codePointAt(i));
             }
 
@@ -87,7 +86,7 @@ public final class EncodingUtilities {
 
         Path outputFile = Paths.get("/home/student/encodedkanji.txt");
         try (InputStream fontStream = new FileInputStream(Parsers.FONT_FILE_LOCATION.toFile())) {
-            Collection<EncodedKanji> encodedKanjis = parseFontFile(charactersFoundInFile, fontStream);
+            Collection<EncodedKanji> encodedKanjis = parseFontFile(charactersFoundInFile, fontStream, 200, 200);
             writeCharactersToFile(encodedKanjis, outputFile);
         }
     }

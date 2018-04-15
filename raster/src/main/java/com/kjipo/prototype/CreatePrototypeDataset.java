@@ -52,8 +52,7 @@ public class CreatePrototypeDataset {
         FitPrototype fitPrototype = new FitPrototype();
 
         try (InputStream fontStream = new FileInputStream(Parsers.FONT_FILE_LOCATION.toFile())) {
-
-            Collection<EncodedKanji> encodedKanjis = new ArrayList<>(FontFileParser.parseFontFileUsingUnicodeInput(charactersFoundInFile, fontStream));
+            Collection<EncodedKanji> encodedKanjis = new ArrayList<>(FontFileParser.parseFontFileUsingUnicodeInput(charactersFoundInFile, fontStream, FontFileParser.NUMBER_OF_ROWS, FontFileParser.NUMBER_OF_COLUMNS));
 
             for (EncodedKanji encodedKanji : encodedKanjis) {
                 try {
@@ -96,7 +95,7 @@ public class CreatePrototypeDataset {
     }
 
 
-    public static Set<Integer> extractCharacters2(java.util.List<KanjiDicParser.KanjiDicEntry> entries) {
+    private static Set<Integer> extractCharacters2(java.util.List<KanjiDicParser.KanjiDicEntry> entries) {
         // See http://www.rikai.com/library/kanjitables/kanji_codes.unicode.shtml for a list of unicode ranges for Japanese characters
         Set<Integer> charactersFoundInFile = new HashSet<>();
         for (KanjiDicParser.KanjiDicEntry entry : entries) {

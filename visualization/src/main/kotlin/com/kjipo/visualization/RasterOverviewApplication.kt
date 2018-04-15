@@ -24,7 +24,7 @@ class RasterOverviewApplication : App() {
 val log = LoggerFactory.getLogger(RasterOverviewApplication::class.java)
 
 
-fun displayKanjis(encodedKanjis: Collection<EncodedKanji>) {
+fun displayKanjis(encodedKanjis: Collection<EncodedKanji>, squareSize: Int = 1) {
     val startThread = Thread {
         Application.launch(RasterOverviewApplication::class.java)
     }
@@ -46,7 +46,7 @@ fun displayKanjis(encodedKanjis: Collection<EncodedKanji>) {
     }
 
     val kanjiView = FX.find(KanjiView::class.java)
-    FX.runAndWait { kanjiView.loadRasters(colourRasters, characters) }
+    FX.runAndWait { kanjiView.loadRasters(colourRasters, characters, squareSize) }
 }
 
 fun displayRasters(colourRasters: Collection<Array<Array<Color>>>, texts: List<String> = emptyList()) {

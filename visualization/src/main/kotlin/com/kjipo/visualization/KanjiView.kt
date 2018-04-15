@@ -4,12 +4,10 @@ import javafx.collections.ObservableList
 import javafx.scene.Group
 import javafx.scene.Node
 import javafx.scene.canvas.Canvas
-import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import javafx.scene.text.Text
 import tornadofx.*
-import javafx.scene.canvas.GraphicsContext
 
 
 class KanjiView : View("Kanji overview") {
@@ -17,21 +15,20 @@ class KanjiView : View("Kanji overview") {
     val group: Group = Group()
 
     val rastersPerLine = 20
-    val squareSize = 1
 
 
-    fun loadRasters(colourRasters: Collection<Array<Array<Color>>>, texts: List<String> = emptyList()) {
+    fun loadRasters(colourRasters: Collection<Array<Array<Color>>>, texts: List<String> = emptyList(), squareSize: Int = 1) {
         this.rasters = colourRasters
         group.children.clear()
-        drawRasters(group.children, texts)
+        drawRasters(group.children, texts, squareSize)
     }
 
     override val root = scrollpane {
         content = group
-        drawRasters(group.children)
+        drawRasters(group.children, squareSize = 1)
     }
 
-    fun drawRasters(root: ObservableList<Node>, texts: List<String> = emptyList()) {
+    fun drawRasters(root: ObservableList<Node>, texts: List<String> = emptyList(), squareSize: Int) {
         if (rasters.isEmpty()) {
             return
         }
