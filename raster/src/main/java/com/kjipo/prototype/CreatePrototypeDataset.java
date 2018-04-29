@@ -195,7 +195,7 @@ public class CreatePrototypeDataset {
 
     public static void main(String args[]) throws IOException, FontFormatException {
         CreatePrototypeDataset createPrototypeDataset = new CreatePrototypeDataset();
-        createPrototypeDataset.fitPrototypes2(Paths.get("fittedPrototypes4"), getSerializer());
+        createPrototypeDataset.fitPrototypes2(Paths.get("fittedPrototypes7"), getSerializer());
 
 //        try (FileInputStream fs = new FileInputStream(Paths.get("fittedPrototypes/12406.dat").toFile())) {
 //            readPrototype(fs);

@@ -48,7 +48,7 @@ fun extractJunctions(thinImage: Matrix<Boolean>): Matrix<Boolean> {
 
 //    % final criteria
 //    SN = SE | (SB & S3);
-    val sn = Matrix(thinImage.numberOfRows, thinImage.numberOfColumns, {row, column ->
+    val sn = Matrix(thinImage.numberOfRows, thinImage.numberOfColumns, { row, column ->
         se[row, column] || (sb[row, column] && s3[row, column])
     })
 
@@ -63,21 +63,25 @@ fun extractJunctions(thinImage: Matrix<Boolean>): Matrix<Boolean> {
 
 //    for c = 1:nCC
     // TODO Check that range is correct
-    for(i in 0 until cc.pixelIdsList.size) {
+    for (i in 0 until cc.pixelIdsList.size) {
 //        pid = CC.PixelIdxList { c };
         val pid = cc.pixelIdsList[i]
 
         val snSum = pid.map { sn[it.first, it.second] }
-                .map { if(it) {1} else {0} }
+                .map {
+                    if (it) {
+                        1
+                    } else {
+                        0
+                    }
+                }
                 .sum()
 
-        if(snSum == 0) {
+        if (snSum == 0) {
             pid.minBy { it.first }?.let {
                 sn[it.first, it.second] = true
             }
         }
-
-
 
 
 //    % We have a circle. Circles are generally drawn from the
@@ -99,15 +103,15 @@ fun extractJunctions(thinImage: Matrix<Boolean>): Matrix<Boolean> {
     return sn
 }
 
-data class ConnCompResult(val pixelIdsList:List<List<Pair<Int, Int>>>)
+data class ConnCompResult(val pixelIdsList: List<List<Pair<Int, Int>>>)
 
-fun bwconncomp(image:Matrix<Boolean>): ConnCompResult {
+fun bwconncomp(image: Matrix<Boolean>): ConnCompResult {
     val disjointRegions = FitPrototype.findDisjointRegions(transformToArrays(image))
 
     val regionPixelMapping = mutableMapOf<Int, MutableList<Pair<Int, Int>>>()
-    disjointRegions.forEachIndexed( {row, columnValues ->
-        columnValues.forEachIndexed({column, value ->
-            regionPixelMapping.computeIfAbsent(value, {key -> mutableListOf()}).add(Pair(row, column))
+    disjointRegions.forEachIndexed({ row, columnValues ->
+        columnValues.forEachIndexed({ column, value ->
+            regionPixelMapping.computeIfAbsent(value, { key -> mutableListOf() }).add(Pair(row, column))
         })
     })
 
@@ -115,19 +119,14 @@ fun bwconncomp(image:Matrix<Boolean>): ConnCompResult {
 }
 
 
-
-
-
-
-
-fun applylut(matrix:Matrix<Boolean>, lookupTable:List<Boolean>): Matrix<Boolean> {
+fun applylut(matrix: Matrix<Boolean>, lookupTable: List<Boolean>): Matrix<Boolean> {
     val result = Matrix.copy(matrix)
 
-    matrix.forEachIndexed({row, column, value ->
+    matrix.forEachIndexed({ row, column, value ->
         val neighbourhood = getNeighbourhood(matrix, row, column)
         var lookupIndex = 0
-        neighbourhood.forEachIndexed({row2, column2, value2 ->
-            if(value2) {
+        neighbourhood.forEachIndexed({ row2, column2, value2 ->
+            if (value2) {
                 lookupIndex += com.kjipo.skeleton.matrix[row2, column2]
             }
         })
@@ -139,10 +138,10 @@ fun applylut(matrix:Matrix<Boolean>, lookupTable:List<Boolean>): Matrix<Boolean>
 
 
 fun getNeighbourhood(matrix: Matrix<Boolean>, row: Int, column: Int): Matrix<Boolean> {
-    val result = Matrix(3, 3, {row2, column2 -> false})
+    val result = Matrix(3, 3, { row2, column2 -> false })
     result[1, 1] = matrix[row, column]
     FlowDirection.values().forEach {
-        if(EncodingUtilities.validCell(row, column, it, matrix.numberOfRows, matrix.numberOfColumns)) {
+        if (EncodingUtilities.validCell(row, column, it, matrix.numberOfRows, matrix.numberOfColumns)) {
             result[1 + it.rowShift, 1 + it.columnShift] = matrix[row + it.rowShift, column + it.columnShift]
         }
     }
@@ -151,7 +150,7 @@ fun getNeighbourhood(matrix: Matrix<Boolean>, row: Int, column: Int): Matrix<Boo
 
 
 val matrix = Matrix(3, 3, { row, column ->
-    when(Pair(row, column)) {
+    when (Pair(row, column)) {
         Pair(0, 0) -> 256
         Pair(0, 1) -> 32
         Pair(0, 2) -> 4
@@ -161,7 +160,7 @@ val matrix = Matrix(3, 3, { row, column ->
         Pair(2, 0) -> 64
         Pair(2, 1) -> 8
         Pair(2, 2) -> 1
-        else ->  throw IllegalArgumentException("Unexpected row: $row")
+        else -> throw IllegalArgumentException("Unexpected row: $row")
 
 
     }
@@ -206,7 +205,7 @@ fun makelut(function: (matrix: Matrix<Boolean>) -> Boolean): List<Boolean> {
 
 
     return (0 until 512).map {
-        val evalMatrix = Matrix(3, 3, {row, column ->
+        val evalMatrix = Matrix(3, 3, { row, column ->
             it.and(matrix[row, column]) > 0
         })
 
@@ -214,7 +213,7 @@ fun makelut(function: (matrix: Matrix<Boolean>) -> Boolean): List<Boolean> {
 
         Pair(it, function.invoke(evalMatrix))
     }.sortedBy { it.first }
-            .map {it.second}
+            .map { it.second }
             .toList()
 
 //    w = reshape(2.^[nq - 1: - 1:0], n, n);
@@ -322,8 +321,7 @@ fun bwmorphEndpoints(image: Matrix<Boolean>): Matrix<Boolean> {
 fun isEnd(row: Int, column: Int, image: Matrix<Boolean>): Boolean {
     return if (!image[row, column]) {
         false
-    }
-    else {
+    } else {
         pixelsFilled(row, column, image) == 2
     }
 }
@@ -763,5 +761,8 @@ fun transformToArrays(image: Matrix<Boolean>): Array<BooleanArray> {
 
     }.toTypedArray()
 }
+
+
+fun transformArraysToMatrix(image: Array<BooleanArray>) = Matrix(image.size, image[0].size, { row, column -> image[row][column] })
 
 

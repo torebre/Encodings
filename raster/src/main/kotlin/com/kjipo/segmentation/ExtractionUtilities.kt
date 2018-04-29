@@ -48,5 +48,53 @@ fun zoomRegion(image: Matrix<Boolean>, finalNumberOfRows: Int, finalNumberOfColu
     return Matrix(finalNumberOfRows, finalNumberOfColumns, { row, column ->
         image[floor(deltaRow.times(row)).roundToInt(), floor(deltaColumn.times(column)).roundToInt()]
     })
-
 }
+
+
+
+fun shrinkImage(image: Matrix<Boolean>, finalNumberOfRows: Int, finalNumberOfColumns: Int): Matrix<Boolean> {
+    val deltaRow = floor(image.numberOfRows.toDouble().div(finalNumberOfRows)).toInt()
+    val deltaColumn = floor(image.numberOfColumns.toDouble().div(finalNumberOfColumns)).toInt()
+
+    val kernelSize = deltaRow * deltaColumn
+    val result = Matrix(finalNumberOfRows, finalNumberOfColumns, { row, column -> false })
+
+    // TODO Do anything about the remainder?
+    val rowRemainder = image.numberOfRows.rem(deltaRow * finalNumberOfRows)
+    val columnRemainder = image.numberOfColumns.rem(deltaColumn * finalNumberOfColumns)
+
+    var row2Counter = 0
+    for (row in 0 until (image.numberOfRows - rowRemainder) step deltaRow) {
+        var column2Counter = 0
+        for (column in 0 until (image.numberOfColumns - columnRemainder) step deltaColumn) {
+
+            var count = 0
+            for (row2 in 0 until deltaRow) {
+                for (column2 in 0 until deltaColumn) {
+                    count += if (image[row + row2, column + column2]) {
+                        1
+                    } else {
+                        0
+                    }
+                }
+            }
+//            if (count * 2 > kernelSize) {
+//                result[row2Counter, column2Counter] = true
+//            }
+
+            // TODO Can be done more efficiently
+            if(count > 0) {
+
+                println("Count: $count")
+                result[row2Counter, column2Counter] = true
+            }
+            ++column2Counter
+        }
+        ++row2Counter
+
+    }
+
+    return result
+}
+
+

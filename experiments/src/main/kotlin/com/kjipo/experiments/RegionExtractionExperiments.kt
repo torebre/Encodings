@@ -7,25 +7,35 @@ import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.createRectangleFromEncompassingPoints
 import com.kjipo.segmentation.extractEmbeddedRegion
 import com.kjipo.segmentation.zoomRegion
+import com.kjipo.setup.transformKanjiData
+import com.kjipo.visualization.displayKanjis
 import com.kjipo.visualization.displayRasters
+import com.kjipo.visualization.loadEncodedKanji
 import com.kjipo.visualization.loadKanjisFromDirectory
 import javafx.scene.paint.Color
 import org.slf4j.LoggerFactory
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 import java.util.stream.Collectors
+import kotlin.streams.toList
 
 
-val log = LoggerFactory.getLogger("RegionExtractionExperiments")
+private val log = LoggerFactory.getLogger("RegionExtractionExperiments")
 
 
+private val fittedPrototypes = Paths.get("/home/student/workspace/testEncodings/fittedPrototypes6")
+private val encodedKanjiFolder = Paths.get("/home/student/workspace/testEncodings/kanji_output7")
 
 
 fun extractRegionsAroundPrototypes() {
-    val fittedPrototypes = Files.walk(Paths.get("/home/student/workspace/testEncodings/fittedPrototypes4"))
+    val numberOfKanjiToInclude = 10L
+
+    val fittedPrototypes = Files.walk(fittedPrototypes)
             .filter { path -> Files.isRegularFile(path) }
-            .limit(10)
+            .limit(numberOfKanjiToInclude)
             .collect(Collectors.toMap<Path, Int, Prototype>({
                 val fileName = it.fileName.toString()
                 Integer.valueOf(fileName.substring(0, fileName.indexOf('.')))
@@ -35,15 +45,7 @@ fun extractRegionsAroundPrototypes() {
                 }
             })
 
-//        val encodedKanjis = FileInputStream(Parsers.FONT_FILE_LOCATION.toFile()).use({ fontStream ->
-//            FontFileParser.parseFontFileUsingUnicodeInput(fittedPrototypes.keys, fontStream, 200, 200).stream()
-//        }).collect(Collectors.toMap<EncodedKanji, Int, EncodedKanji>({
-//            it.character.toInt()
-//        }) {
-//            it
-//        })
-
-    val encodedKanjis = loadKanjisFromDirectory(Paths.get("/home/student/workspace/testEncodings/kanji_output2")).stream()
+    val encodedKanjis = loadKanjisFromDirectory(encodedKanjiFolder).stream()
             .collect(Collectors.toMap<EncodedKanji, Int, EncodedKanji>({
                 it.unicode
             }) {
@@ -55,9 +57,9 @@ fun extractRegionsAroundPrototypes() {
         val currentKanji = encodedKanjis.getOrDefault(it.key, EncodedKanji(emptyArray(), 0))
         val image = currentKanji.image
 
-        val matrix = Matrix(image.size, image[0].size, {row, column -> false})
-        image.forEachIndexed({row, columnValues ->
-            columnValues.forEachIndexed({column, value ->
+        val matrix = Matrix(image.size, image[0].size, { row, column -> false })
+        image.forEachIndexed({ row, columnValues ->
+            columnValues.forEachIndexed({ column, value ->
                 matrix[row, column] = value
             })
         })
@@ -114,11 +116,18 @@ fun extractRegionsAroundPrototypes() {
 }
 
 
-
 fun extractRegionsAroundPrototypes2() {
-    val fittedPrototypes = Files.walk(Paths.get("/home/student/workspace/testEncodings/fittedPrototypes4"))
+    val outputDirectory = Paths.get("fragments")
+    if(!Files.exists(outputDirectory)) {
+        Files.createDirectory(outputDirectory)
+    }
+    val numberOfKanjiToInclude = 50L
+    val finalNumberOfRows = 100
+    val finalNumberOfColumns = 100
+
+    val fittedPrototypes = Files.walk(fittedPrototypes)
             .filter { path -> Files.isRegularFile(path) }
-            .limit(50)
+            .limit(numberOfKanjiToInclude)
             .collect(Collectors.toMap<Path, Int, Prototype>({
                 val fileName = it.fileName.toString()
                 Integer.valueOf(fileName.substring(0, fileName.indexOf('.')))
@@ -128,15 +137,7 @@ fun extractRegionsAroundPrototypes2() {
                 }
             })
 
-//        val encodedKanjis = FileInputStream(Parsers.FONT_FILE_LOCATION.toFile()).use({ fontStream ->
-//            FontFileParser.parseFontFileUsingUnicodeInput(fittedPrototypes.keys, fontStream, 200, 200).stream()
-//        }).collect(Collectors.toMap<EncodedKanji, Int, EncodedKanji>({
-//            it.character.toInt()
-//        }) {
-//            it
-//        })
-
-    val encodedKanjis = loadKanjisFromDirectory(Paths.get("/home/student/workspace/testEncodings/kanji_output2")).stream()
+    val encodedKanjis = loadKanjisFromDirectory(encodedKanjiFolder).stream()
             .collect(Collectors.toMap<EncodedKanji, Int, EncodedKanji>({
                 it.unicode
             }) {
@@ -144,18 +145,18 @@ fun extractRegionsAroundPrototypes2() {
             })
 
     val texts = mutableListOf<String>()
+
     val colourRasters = fittedPrototypes.entries.flatMap {
         val currentKanji = encodedKanjis.getOrDefault(it.key, EncodedKanji(emptyArray(), 0))
         val image = currentKanji.image
 
-        val kanjiCharacters = mutableListOf<String>()
+        val kanjiCharacters = currentKanji.unicode.toString().plus(": ").plus(String(Character.toChars(currentKanji.unicode)))
         val matrix = Matrix(image.size, image[0].size, { row, column -> false })
         image.forEachIndexed({ row, columnValues ->
             columnValues.forEachIndexed({ column, value ->
                 matrix[row, column] = value
             })
         })
-        kanjiCharacters.add(currentKanji.unicode.toString().plus(": ").plus(String(Character.toChars(currentKanji.unicode))))
 
         if (image.isEmpty()) {
             log.error("Image is empty")
@@ -165,10 +166,9 @@ fun extractRegionsAroundPrototypes2() {
             extractEmbeddedRegion(matrix, it.pairs, 90.0, it.pairs.size.toDouble())
         }.toList()
 
-        var counter = 0
-
+        var embeddedRegionCounter = 0
         val rasters = embeddedRegions.map {
-            val rectangle = zoomRegion(createRectangleFromEncompassingPoints(it), 100, 100)
+            val rectangle = zoomRegion(createRectangleFromEncompassingPoints(it), finalNumberOfRows, finalNumberOfColumns)
 
             val colourRaster = Array(rectangle.numberOfRows, { row ->
                 Array(rectangle.numberOfColumns, { column ->
@@ -179,13 +179,19 @@ fun extractRegionsAroundPrototypes2() {
                     }
                 })
             })
-            texts.add(kanjiCharacters[counter])
+            texts.add(kanjiCharacters)
+
+            Files.newBufferedWriter(outputDirectory.resolve(currentKanji.unicode.toString().plus("_").plus(embeddedRegionCounter).plus(".dat")),
+                    StandardCharsets.UTF_8, StandardOpenOption.CREATE).use {
+                it.write(transformKanjiData(rectangle, finalNumberOfRows, finalNumberOfColumns))
+            }
+
+            ++embeddedRegionCounter
+
             colourRaster
         }
                 .toList()
 
-
-        ++counter
 
         return@flatMap rasters
 
@@ -201,5 +207,9 @@ fun extractRegionsAroundPrototypes2() {
 
 
 fun main(args: Array<String>) {
-    extractRegionsAroundPrototypes()
+//    extractRegionsAroundPrototypes2()
+    displayKanjis(Files.list(Paths.get("fragments"))
+            .map {
+                loadEncodedKanji(it,  { name -> name.substring(0, name.indexOf('_')).toInt() })
+            }.toList())
 }

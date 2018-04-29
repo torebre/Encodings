@@ -72,7 +72,7 @@ fun applySegmentation(outputDir: Path) {
 }
 */
 
-fun transformKanjiData(image: Matrix<Boolean>, maxRow: Int, maxColumn: Int): String {
+fun transformKanjiData(image: Matrix<Boolean>, maxRow: Int = image.numberOfRows, maxColumn: Int = image.numberOfColumns): String {
     val stringBuilder = StringBuilder()
 
     for (row in 0 until maxRow) {
@@ -80,7 +80,7 @@ fun transformKanjiData(image: Matrix<Boolean>, maxRow: Int, maxColumn: Int): Str
             if (row >= image.numberOfRows || column >= image.numberOfColumns) {
                 stringBuilder.append("0").append(",")
             } else {
-                stringBuilder.append(if (image[row, column]) 0 else 1).append(",")
+                stringBuilder.append(if (image[row, column]) 1 else 0).append(",")
             }
         }
         stringBuilder.delete(stringBuilder.length - 1, stringBuilder.length)

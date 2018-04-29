@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class FontFileParser {
-    public static final int NUMBER_OF_ROWS = 200;
-    public static final int NUMBER_OF_COLUMNS = 200;
+    public static final int NUMBER_OF_ROWS = 100;
+    public static final int NUMBER_OF_COLUMNS = 100;
 
     private static final Logger logger = LoggerFactory.getLogger(FontFileParser.class);
 
@@ -39,30 +39,35 @@ public class FontFileParser {
                 .collect(Collectors.toList());
     }
 
-    public static Collection<EncodedKanji> parseFontFileUsingUnicodeInput(Collection<Integer> unicode, InputStream trueTypeFontData, int numberOfRows, int numberOfColumns) throws IOException, FontFormatException {
+    public static Collection<EncodedKanji> parseFontFileUsingUnicodeInput(Collection<Integer> unicodes, InputStream trueTypeFontData, int numberOfRows, int numberOfColumns) throws IOException, FontFormatException {
         Font font = Font.createFont(Font.TRUETYPE_FONT, trueTypeFontData);
         FontRenderContext fontRenderContext = getFontRenderContext();
 
-        return unicode.stream()
-                .map(character -> {
-                    GlyphVector glyphVector = font.createGlyphVector(fontRenderContext, new String(Character.toChars(character)));
-                    if (glyphVector.getNumGlyphs() > 1) {
-                        logger.warn("Skipping character: " + character);
-                        return null;
-                    }
-                    return new EncodedKanji(paintOnRaster(glyphVector, numberOfRows, numberOfColumns), character);
-                })
+        return unicodes.stream()
+                .map(unicode -> createEncodedKanji(unicode, font, fontRenderContext, numberOfRows, numberOfColumns))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
+    public static EncodedKanji createEncodedKanji(int unicode, Font font, FontRenderContext fontRenderContext, int numberOfRows, int numberOfColumns) {
+        GlyphVector glyphVector = createGlyphVector(unicode, font, fontRenderContext);
+        if (glyphVector.getNumGlyphs() > 1) {
+            logger.warn("Skipping character: " + unicode);
+            return null;
+        }
+        return new EncodedKanji(paintOnRaster(glyphVector, numberOfRows, numberOfColumns), unicode);
+    }
 
-    private static FontRenderContext getFontRenderContext() {
+
+    public static GlyphVector createGlyphVector(int unicode, Font font, FontRenderContext fontRenderContext) {
+        return font.createGlyphVector(fontRenderContext, new String(Character.toChars(unicode)));
+    }
+
+    public static FontRenderContext getFontRenderContext() {
         // If the render context is not scaled up, it can cause filled pixels to be skipped
         AffineTransform affineTransform = AffineTransform.getScaleInstance(10.0, 10.0);
         return new FontRenderContext(affineTransform, true, true);
     }
-
 
     public static boolean[][] setupRaster(GlyphVector glyphVector, int height, int width) throws IllegalArgumentException {
         assertOnlyOneGlyphInGlyphVector(glyphVector);
