@@ -28,7 +28,7 @@ public class RasterTransformerTest {
 
 
     @Test
-    public void processKanjiTest() throws IOException, FontFormatException, InterruptedException, ClassNotFoundException {
+    public void processKanjiTest() throws IOException, InterruptedException, ClassNotFoundException {
         EncodedKanji encodedKanji;
         try (InputStream fontStream = new FileInputStream(Paths.get("/home/student/test_kanji.xml").toFile());
              ObjectInputStream objectInputStream = new ObjectInputStream(fontStream)) {
@@ -98,7 +98,7 @@ public class RasterTransformerTest {
 
         EncodedKanji encodedKanji;
         try (InputStream fontStream = new FileInputStream(Parsers.FONT_FILE_LOCATION.toFile())) {
-            Collection<EncodedKanji> encodedKanjis = FontFileParser.parseFontFile(charactersFoundInFile, fontStream);
+            Collection<EncodedKanji> encodedKanjis = FontFileParser.parseFontFile(charactersFoundInFile, fontStream, FontFileParser.NUMBER_OF_ROWS, FontFileParser.NUMBER_OF_COLUMNS);
             encodedKanji = encodedKanjis.iterator().next();
         }
 

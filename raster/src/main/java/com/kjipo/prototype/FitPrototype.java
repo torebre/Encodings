@@ -136,7 +136,7 @@ public class FitPrototype {
                 return result;
             }
 
-            if (includeHistory ) { // || result.isEmpty()) {
+            if (includeHistory ) {
                 result.addAll(addSinglePrototype2(inputData, prototype, startRow, startColumn));
             } else {
                 if(result.isEmpty()) {
@@ -144,7 +144,6 @@ public class FitPrototype {
                     result.add(stepsInAddingPrototype.get(stepsInAddingPrototype.size() - 1));
                 }
                 else {
-//                    Prototype previousResult = result.get(result.size() - 1);
                     result.addAll(addSinglePrototype2(inputData, prototype, startRow, startColumn));
                 }
             }
