@@ -79,6 +79,29 @@ fun displayMatrix(image: Matrix<Boolean>, squareSize: Int = 1) {
 }
 
 
+fun displayColourMatrix(image: Matrix<Color>, squareSize: Int = 1) {
+    val startThread = Thread {
+        try {
+            Application.launch(RasterOverviewApplication::class.java)
+        } catch (e: IllegalStateException) {
+            if (log.isDebugEnabled) {
+                log.debug(e.message, e)
+            }
+        }
+    }
+    startThread.start()
+
+    val colourArrays = image.array.map {
+        it.map {
+            it
+        }.toTypedArray()
+    }.toTypedArray()
+
+    val kanjiView = FX.find(KanjiView::class.java)
+    FX.runAndWait { kanjiView.loadRasters(listOf(colourArrays), squareSize = squareSize) }
+}
+
+
 fun displayRasters(colourRasters: Collection<Array<Array<Color>>>, texts: List<String> = emptyList()) {
     val startThread = Thread {
         try {

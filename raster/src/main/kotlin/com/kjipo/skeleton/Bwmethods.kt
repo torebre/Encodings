@@ -4,7 +4,6 @@ import com.kjipo.prototype.FitPrototype
 import com.kjipo.raster.EncodingUtilities
 import com.kjipo.raster.FlowDirection
 import com.kjipo.segmentation.Matrix
-import com.kjipo.visualization.stochasticflow.FlowStrengthPainter
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -161,35 +160,7 @@ val matrix = Matrix(3, 3, { row, column ->
         Pair(2, 1) -> 8
         Pair(2, 2) -> 1
         else -> throw IllegalArgumentException("Unexpected row: $row")
-
-
     }
-
-
-//    if (row == 0) {
-//        when (column) {
-//            0 -> 256
-//            1 -> 32
-//            2 -> 4
-//            else -> -1 // IllegalArgumentException("Unexpected column: $column")
-//        }
-//    } else if (row == 1) {
-//        when (column) {
-//            0 -> 128
-//            1 -> 16
-//            2 -> 2
-//            else -> -1 // IllegalArgumentException("Unexpected column: $column")
-//        }
-//    } else if (row == 2) {
-//        when (column) {
-//            0 -> 64
-//            1 -> 8
-//            2 -> 1
-//            else -> -1 // IllegalArgumentException("Unexpected column: $column")
-//        }
-//    } else {
-//        throw IllegalArgumentException("Unexpected row: $row")
-//    }
 })
 
 
