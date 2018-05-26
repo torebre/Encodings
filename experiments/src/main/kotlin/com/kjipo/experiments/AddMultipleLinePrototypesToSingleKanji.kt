@@ -20,7 +20,7 @@ fun addMultipleLinesPrototypesToSingleKanji() {
     val originalImage = Matrix.copy(shrinkImage)
     val allPrototypes = mutableListOf<Prototype>()
 
-    for (i in 0 until 40) {
+    for (i in 0 until 5) {
         val topPair = Pair.of(0, 0)
         val topId = 1
         val top = AngleLine(topId, topPair, 3.0, 0.0)

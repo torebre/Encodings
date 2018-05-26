@@ -7,9 +7,7 @@ import com.kjipo.raster.segment.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.Queue;
+import java.util.*;
 
 public class MatchDistance {
 
@@ -24,6 +22,7 @@ public class MatchDistance {
             Arrays.fill(row, -1);
         }
 
+        // First pass. Mark the pixels that are part of the image, these have a distance of 0
         for (int row = 0; row < prototype.length; ++row) {
             for (int column = 0; column < prototype[0].length; ++column) {
                 if (prototype[row][column]) {
@@ -44,24 +43,34 @@ public class MatchDistance {
             }
         }
 
-        int distance = 1;
-        while (!cellsToProcessNext.isEmpty()) {
-            Pair next = cellsToProcessNext.poll();
-            TileType[] tileTypes = EncodingUtilities.determineNeighbourTypes(next.getRow(), next.getColumn(), prototype);
-            FlowDirection flowDirections[] = FlowDirection.values();
-            int counter = 0;
 
-            for (TileType tileType : tileTypes) {
-                if (tileType == TileType.OUTSIDE_CHARACTER
-                        && distanceMap[next.getRow() + flowDirections[counter].getRowShift()][next.getColumn() + flowDirections[counter].getColumnShift()] == -1) {
-                    cellsToProcessNext.add(new Pair(next.getRow() + flowDirections[counter].getRowShift(),
-                            next.getColumn() + flowDirections[counter].getColumnShift()));
-                    distanceMap[next.getRow() + flowDirections[counter].getRowShift()][next.getColumn() + flowDirections[counter].getColumnShift()] = distance;
+        int distance = 1;
+        List<Pair> nextBatch = new ArrayList<>();
+
+        do {
+            while (!cellsToProcessNext.isEmpty()) {
+                Pair next = cellsToProcessNext.poll();
+                TileType[] tileTypes = EncodingUtilities.determineNeighbourTypes(next.getRow(), next.getColumn(), prototype);
+                FlowDirection flowDirections[] = FlowDirection.values();
+                int counter = 0;
+
+                for (TileType tileType : tileTypes) {
+                    if (tileType == TileType.OUTSIDE_CHARACTER
+                            && distanceMap[next.getRow() + flowDirections[counter].getRowShift()][next.getColumn() + flowDirections[counter].getColumnShift()] == -1) {
+                        nextBatch.add(new Pair(next.getRow() + flowDirections[counter].getRowShift(),
+                                next.getColumn() + flowDirections[counter].getColumnShift()));
+                        distanceMap[next.getRow() + flowDirections[counter].getRowShift()][next.getColumn() + flowDirections[counter].getColumnShift()] = distance;
+                    }
+                    ++counter;
                 }
-                ++counter;
             }
+
+            cellsToProcessNext.addAll(nextBatch);
+            nextBatch.clear();
             ++distance;
-        }
+
+        } while (!cellsToProcessNext.isEmpty());
+
 
         return distanceMap;
     }

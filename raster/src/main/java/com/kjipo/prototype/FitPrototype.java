@@ -345,14 +345,6 @@ public class FitPrototype {
             } else {
                 scoreUnchanged = 0;
             }
-
-//            LOG.info("Scores:");
-//            newPrototypes.forEach(linePrototypeIntegerPair -> {
-//                LOG.info("Score: {}", linePrototypeIntegerPair.getSecond());
-//            });
-//            linePrototypes = newPrototypes.stream().map(kotlin.Pair::getFirst).collect(Collectors.toList());
-//            bestScore = newPrototypes.get(0).getSecond();
-
         }
 
         LOG.info("Best score: {}", bestScore);

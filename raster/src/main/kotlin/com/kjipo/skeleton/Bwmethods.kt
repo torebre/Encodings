@@ -278,6 +278,8 @@ fun fIP(lindx: Int): Pair<Int, Int> {
 
 
 fun bwmorphEndpoints(image: Matrix<Boolean>): Matrix<Boolean> {
+    // TODO Does not mark everything that looks like an endpoint. Try to find a better algorithm
+
     val result = Matrix(image.numberOfRows, image.numberOfColumns, { row, column -> false })
 
     for (row in 0 until image.numberOfRows) {
@@ -735,5 +737,8 @@ fun transformToArrays(image: Matrix<Boolean>): Array<BooleanArray> {
 
 
 fun transformArraysToMatrix(image: Array<BooleanArray>) = Matrix(image.size, image[0].size, { row, column -> image[row][column] })
+
+
+fun transformArraysToMatrix(image: Array<IntArray>) = Matrix(image.size, image[0].size, { row, column -> image[row][column] })
 
 
