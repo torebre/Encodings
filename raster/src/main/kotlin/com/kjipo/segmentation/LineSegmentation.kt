@@ -243,11 +243,11 @@ fun computeLine(start: Pair<Int, Int>, stop: Pair<Int, Int>): List<Pair<Int, Int
     for (x in startPair.first..stopPair.first) {
         if (y != newY) {
             if (signYDelta < 0) {
-                for (incY in (newY..y).reversed()) {
+                for (incY in (newY..y)) {
                     segment.add(Pair(x, incY))
                 }
             } else {
-                for (incY in (y..newY).reversed()) {
+                for (incY in (y..newY)) {
                     segment.add(Pair(x, incY))
                 }
             }

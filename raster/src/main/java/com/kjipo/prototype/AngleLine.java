@@ -169,6 +169,7 @@ public class AngleLine implements AdjustablePrototype {
                 ", angle=" + angle +
                 ", angleOffset=" + angleOffset +
                 ", connectedTo=" + connectedTo +
+                ", endPair=" +getEndPair() +
                 '}';
     }
 }

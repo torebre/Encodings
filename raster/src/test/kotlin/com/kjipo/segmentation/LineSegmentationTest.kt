@@ -114,10 +114,15 @@ fun computeLineTest() {
     computeLine(Pair(1, 4), Pair(0, 8)).forEach(System.out::println)
 }
 
+fun computeLineTest2() {
+    println("Line 1:")
+    computeLine(Pair(30, 30), Pair(31, 32)).forEach(System.out::println)
+}
+
 
 
 fun main(args: Array<String> ) {
 //    segmentKanji2()
-    computeLineTest()
+    computeLineTest2()
 
 }

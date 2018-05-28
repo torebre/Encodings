@@ -21,134 +21,51 @@ public class FitPrototype {
     private static final Logger LOG = LoggerFactory.getLogger(FitPrototype.class);
 
 
-    public List<Collection<Prototype>> fit(boolean inputData[][]) {
-        int numberOfRows = inputData.length;
-        int numberOfColumns = inputData[0].length;
-        int[][] distanceMap = MatchDistance.computeDistanceMap(inputData);
-
-        List<Collection<Prototype>> prototypeDevelopment = new ArrayList<>();
-        prototypeDevelopment.add(Collections.emptyList());
-        int[][] disjunctRegions = findDisjointRegions(inputData);
-
-        for (int j = 1; j < 10; ++j) {
-            LOG.info("Adding prototype: {}", j);
-            int addPoint = prototypeDevelopment.size() - 1;
-
-            boolean[][] occupiedData = computeOccupied(prototypeDevelopment.get(addPoint), numberOfRows, numberOfColumns);
-            LinePrototype linePrototype = nextStartInRegion(inputData, occupiedData, disjunctRegions, j);
-
-            if (linePrototype == null) {
-                LOG.info("No available start point");
-                break;
-            }
-
-            List<LinePrototype> linePrototypes = new ArrayList<>();
-            linePrototypes.add(linePrototype);
-            int scoreUnchanged = 0;
-            int bestScore = computeScore2(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
-
-            for (int i = 0; i < MAX_ITERATIONS; ++i) {
-                // A line prototype only has one segment
-                List<kotlin.Pair<LinePrototype, Integer>> newPrototypes = linePrototypes.stream()
-                        .map(linePrototype1 -> {
-                            Segment segment1 = linePrototype1.getSegments().get(0);
-                            Pair startPair = segment1.getPairs().get(0);
-                            Pair endPair = segment1.getPairs().get(segment1.getPairs().size() - 1);
-
-                            // If the end points are valid, then all the points in between has to be valid
-                            if (!validCoordinates(startPair, numberOfRows, numberOfColumns)
-                                    || !validCoordinates(endPair, numberOfRows, numberOfColumns)) {
-                                return null;
-                            }
-
-                            return new kotlin.Pair<>(new LinePrototype(startPair, endPair),
-                                    computeScore2(segment1.getPairs(),
-                                            distanceMap,
-                                            computeOccupied(prototypeDevelopment.get(addPoint),
-                                                    inputData.length,
-                                                    inputData[0].length)));
-                        })
-                        .filter(Objects::nonNull)
-                        .sorted(Comparator.comparing(linePrototypeIntegerPair -> -linePrototypeIntegerPair.getSecond()))
-                        .limit(3)
-                        .collect(Collectors.toList());
-
-                if (newPrototypes.get(0).getSecond() < bestScore) {
-                    break;
-                } else if (newPrototypes.get(0).getSecond() == bestScore) {
-                    if (scoreUnchanged == 5) {
-                        break;
-                    }
-                    ++scoreUnchanged;
-                } else {
-                    scoreUnchanged = 0;
-                }
-
-                LOG.info("Scores:");
-                newPrototypes.forEach(linePrototypeIntegerPair -> {
-                    LOG.info("Score: {}", linePrototypeIntegerPair.getSecond());
-                });
-                linePrototypes = newPrototypes.stream().map(kotlin.Pair::getFirst).collect(Collectors.toList());
-                bestScore = newPrototypes.get(0).getSecond();
-
-//                result.add(linePrototype);
-
-                Collection<Prototype> newDevelopment = new ArrayList<>();
-                newDevelopment.addAll(prototypeDevelopment.get(addPoint));
-                newDevelopment.add(linePrototype);
-
-                prototypeDevelopment.add(newDevelopment);
-            }
-        }
-
-        return prototypeDevelopment;
-    }
-
-
-    public List<Prototype> addPrototypes(boolean inputData[][], Collection<AngleLine> prototype) {
-        return addPrototypes(inputData, prototype, true);
-    }
-
     public List<Prototype> addPrototypes(boolean inputData[][], Collection<AngleLine> prototype, boolean includeHistory) {
         int[][] disjunctRegions = findDisjointRegions(inputData);
         int current = 1;
         List<Prototype> result = new ArrayList<>();
 
+        Pair prototypeStart = prototype.iterator().next().getStartPair();
+        int startRow = prototypeStart.getRow();
+        int startColumn = prototypeStart.getColumn();
 
-        while (true) {
-            int startRow = -1;
-            int startColumn = -1;
+//        while (true) {
+//            int startRow = -1;
+//            int startColumn = -1;
 
-            for (int row = 0; row < disjunctRegions.length; ++row) {
-                for (int column = 0; column < disjunctRegions[0].length; ++column) {
-                    if (disjunctRegions[row][column] == current) {
-                        startRow = row;
-                        startColumn = column;
-                        break;
-                    }
-                }
-                if (startRow != -1) {
-                    break;
-                }
-            }
+//            for (int row = 0; row < disjunctRegions.length; ++row) {
+//                for (int column = 0; column < disjunctRegions[0].length; ++column) {
+//                    if (disjunctRegions[row][column] == current) {
+//                        startRow = row;
+//                        startColumn = column;
+//                        break;
+//                    }
+//                }
+//                if (startRow != -1) {
+//                    break;
+//                }
+//            }
 
-            if (startRow == -1) {
-                return result;
-            }
+//            if (startRow == -1) {
+//                return result;
+//            }
 
             if (includeHistory ) {
-                result.addAll(addSinglePrototype2(inputData, prototype, startRow, startColumn));
+                result.addAll(addSinglePrototype2(inputData, prototype, 0, 0));
             } else {
                 if(result.isEmpty()) {
-                    List<Prototype> stepsInAddingPrototype = addSinglePrototype2(inputData, prototype, startRow, startColumn);
+                    List<Prototype> stepsInAddingPrototype = addSinglePrototype2(inputData, prototype, 0, 0);
                     result.add(stepsInAddingPrototype.get(stepsInAddingPrototype.size() - 1));
                 }
                 else {
-                    result.addAll(addSinglePrototype2(inputData, prototype, startRow, startColumn));
+                    result.addAll(addSinglePrototype2(inputData, prototype, 0, 0));
                 }
             }
             ++current;
-        }
+//        }
+
+        return result;
     }
 
 
@@ -334,7 +251,7 @@ public class FitPrototype {
                     })
                     .filter(Objects::nonNull)
                     .sorted(Comparator.comparing(linePrototypeIntegerPair -> -linePrototypeIntegerPair.getSecond()))
-                    .limit(5)
+//                    .limit(5)
                     .forEach(priorityQueue::add);
 
             if (previousBestScore == bestScore) {
@@ -403,23 +320,24 @@ public class FitPrototype {
 
                     if (distance > 0) {
                         score += -distance;
-                    } else {
-                        score += 10;
                     }
-                    if (occupiedMatrix[pair.getRow()][pair.getColumn()]) {
-                        score += -50;
+                    else {
+                        score += 1;
                     }
+//                    if (occupiedMatrix[pair.getRow()][pair.getColumn()]) {
+//                        score += -50;
+//                    }
                     return score;
-                }).sum()
-                + lengthScore;
+                }).sum();
+//                + lengthScore;
 
     }
 
     private static boolean validCoordinates(Pair pair, int numberOfRows, int numberOfColumns) {
-        return !(pair.getRow() < 0
-                || pair.getRow() >= numberOfRows
-                || pair.getColumn() < 0
-                || pair.getColumn() >= numberOfColumns);
+        return pair.getRow() >= 0
+               && pair.getRow() < numberOfRows
+                && pair.getColumn() >= 0
+                && pair.getColumn() < numberOfColumns;
     }
 
 

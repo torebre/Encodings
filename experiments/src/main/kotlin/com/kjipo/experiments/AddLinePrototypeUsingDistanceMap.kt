@@ -4,7 +4,6 @@ import com.kjipo.raster.EncodingUtilities
 import com.kjipo.raster.FlowDirection
 import com.kjipo.raster.TileType
 import com.kjipo.raster.match.MatchDistance
-import com.kjipo.representation.EncodedKanji
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.computeLine
 import com.kjipo.segmentation.shrinkImage
@@ -12,23 +11,16 @@ import com.kjipo.skeleton.bwmorphEndpoints
 import com.kjipo.skeleton.transformArraysToMatrix
 import com.kjipo.skeleton.transformToArrays
 import com.kjipo.visualization.displayColourMatrix
-import com.kjipo.visualization.displayMatrix
 import com.kjipo.visualization.loadEncodedKanji
 import javafx.scene.paint.Color
-import tornadofx.*
 import java.nio.file.Paths
 
 
 fun addLinePrototypeUsingDistanceMap() {
     val encodedKanji = loadEncodedKanji(Paths.get("kanji_output8/26681.dat"))
     val image = transformArraysToMatrix(encodedKanji.image)
-
-
     val shrinkImage = shrinkImage(image, 32, 32)
-
     val endPoints = bwmorphEndpoints(shrinkImage)
-
-
     val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToArrays(shrinkImage)))
 
     var maxValue = Int.MIN_VALUE
@@ -61,8 +53,6 @@ fun addLinePrototypeUsingDistanceMap() {
     }
 
     displayColourMatrix(dispImage, 20)
-
-
 }
 
 
@@ -87,7 +77,8 @@ fun addLinePrototype(startCoordinate: Pair<Int, Int>, image: Matrix<Boolean>, di
         val nextCell = neighbours.mapIndexed { index, tileType ->
             val flowDirection = FlowDirection.values()[index]
             Pair(Pair(currentCoordinate.first + flowDirection.rowShift, currentCoordinate.second + flowDirection.columnShift), when (tileType) {
-                TileType.OUTSIDE_CHARACTER, TileType.OPEN -> {
+//                TileType.OUTSIDE_CHARACTER,
+                TileType.OPEN -> {
                     distanceMatrix[currentCoordinate.first + flowDirection.rowShift, currentCoordinate.second + flowDirection.columnShift]
                 }
                 else -> Int.MAX_VALUE
