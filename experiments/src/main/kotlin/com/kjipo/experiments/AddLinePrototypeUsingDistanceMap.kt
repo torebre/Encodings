@@ -9,7 +9,7 @@ import com.kjipo.segmentation.computeLine
 import com.kjipo.segmentation.shrinkImage
 import com.kjipo.skeleton.bwmorphEndpoints
 import com.kjipo.skeleton.transformArraysToMatrix
-import com.kjipo.skeleton.transformToArrays
+import com.kjipo.skeleton.transformToBooleanArrays
 import com.kjipo.visualization.displayColourMatrix
 import com.kjipo.visualization.loadEncodedKanji
 import javafx.scene.paint.Color
@@ -21,7 +21,7 @@ fun addLinePrototypeUsingDistanceMap() {
     val image = transformArraysToMatrix(encodedKanji.image)
     val shrinkImage = shrinkImage(image, 32, 32)
     val endPoints = bwmorphEndpoints(shrinkImage)
-    val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToArrays(shrinkImage)))
+    val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToBooleanArrays(shrinkImage)))
 
     var maxValue = Int.MIN_VALUE
     distanceMatrix.forEach {
@@ -58,7 +58,7 @@ fun addLinePrototypeUsingDistanceMap() {
 
 
 fun addLinePrototype(startCoordinate: Pair<Int, Int>, image: Matrix<Boolean>, distanceMatrix: Matrix<Int>): MutableList<Pair<Pair<Int, Int>, Int>> {
-    val imageArray = transformToArrays(image)
+    val imageArray = transformToBooleanArrays(image)
     val visited = Matrix(image.numberOfRows, image.numberOfColumns, {row, column -> false})
 
     var currentCoordinate = startCoordinate

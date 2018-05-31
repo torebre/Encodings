@@ -1,8 +1,5 @@
 package com.kjipo.visualization
 
-import com.kjipo.parser.KanjiDicParser
-import com.kjipo.parser.Parsers
-import com.kjipo.prototype.CreatePrototypeDataset.extractCharacters
 import com.kjipo.representation.EncodedKanji
 import com.kjipo.segmentation.Matrix
 import javafx.application.Application
@@ -12,15 +9,11 @@ import tornadofx.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
-import java.util.stream.Collectors
 import kotlin.streams.toList
 
 
 class RasterOverviewApplication : App() {
     override val primaryView = KanjiView::class
-
-
 }
 
 val log = LoggerFactory.getLogger(RasterOverviewApplication::class.java)
@@ -49,6 +42,17 @@ fun displayKanjis(encodedKanjis: Collection<EncodedKanji>, squareSize: Int = 1) 
 
     val kanjiView = FX.find(KanjiView::class.java)
     FX.runAndWait { kanjiView.loadRasters(colourRasters, characters, squareSize) }
+}
+
+
+fun displayColourRasters(colourRasters: Collection<Array<Array<Color>>>, texts: List<String> = emptyList(), squareSize: Int = 1) {
+    val startThread = Thread {
+        Application.launch(RasterOverviewApplication::class.java)
+    }
+    startThread.start()
+
+    val kanjiView = FX.find(KanjiView::class.java)
+    FX.runAndWait { kanjiView.loadRasters(colourRasters, texts, squareSize) }
 }
 
 
@@ -156,13 +160,10 @@ fun main(args: Array<String>) {
 //
 //    encodedKanjis.forEach {
 //        it.printKanji()
-//
 //    }
 //
 //    displayKanjis(encodedKanjis)
 
-//    displayKanjis(loadKanjisFromDirectory(Paths.get("kanji_output5"), 50))
-    displayKanjis(Collections.singleton(loadEncodedKanji(Paths.get("kanji_output7").resolve("24011.dat"))))
-
+    displayKanjis(loadKanjisFromDirectory(Paths.get("kanji_output8"), 50))
 
 }

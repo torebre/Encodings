@@ -62,7 +62,7 @@ public class CreatePrototypeDataset {
 
                     List<AngleLine> allLines = Lists.newArrayList(top);
 
-                    boolean[][] processedImage = BwmethodsKt.transformToArrays(BwmethodsKt.makeThin(encodedKanji.getImage()));
+                    boolean[][] processedImage = BwmethodsKt.transformToBooleanArrays(BwmethodsKt.makeThin(encodedKanji.getImage()));
 
                     List<Prototype> prototypes = fitPrototype.addPrototypes(processedImage, allLines, false);
                     Path outputFile = outputDirectory.resolve(encodedKanji.getUnicode() + ".json");

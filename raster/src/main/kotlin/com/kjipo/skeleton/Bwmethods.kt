@@ -4,6 +4,7 @@ import com.kjipo.prototype.FitPrototype
 import com.kjipo.raster.EncodingUtilities
 import com.kjipo.raster.FlowDirection
 import com.kjipo.segmentation.Matrix
+import javafx.scene.paint.Color
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -105,7 +106,7 @@ fun extractJunctions(thinImage: Matrix<Boolean>): Matrix<Boolean> {
 data class ConnCompResult(val pixelIdsList: List<List<Pair<Int, Int>>>)
 
 fun bwconncomp(image: Matrix<Boolean>): ConnCompResult {
-    val disjointRegions = FitPrototype.findDisjointRegions(transformToArrays(image))
+    val disjointRegions = FitPrototype.findDisjointRegions(transformToBooleanArrays(image))
 
     val regionPixelMapping = mutableMapOf<Int, MutableList<Pair<Int, Int>>>()
     disjointRegions.forEachIndexed({ row, columnValues ->
@@ -725,7 +726,7 @@ fun applyLookup3(image: Matrix<Boolean>, lookup: BooleanArray): Matrix<Boolean> 
 }
 
 
-fun transformToArrays(image: Matrix<Boolean>): Array<BooleanArray> {
+fun transformToBooleanArrays(image: Matrix<Boolean>): Array<BooleanArray> {
     return (0 until image.numberOfRows).map {
         val row = it
         (0 until image.numberOfColumns).map {
@@ -735,9 +736,18 @@ fun transformToArrays(image: Matrix<Boolean>): Array<BooleanArray> {
     }.toTypedArray()
 }
 
+fun transformToArrays(image: Matrix<Color>): Array<Array<Color>> {
+    return (0 until image.numberOfRows).map {
+        val row = it
+        (0 until image.numberOfColumns).map {
+            image[row, it]
+        }.toTypedArray()
+
+    }.toTypedArray()
+}
+
 
 fun transformArraysToMatrix(image: Array<BooleanArray>) = Matrix(image.size, image[0].size, { row, column -> image[row][column] })
-
 
 fun transformArraysToMatrix(image: Array<IntArray>) = Matrix(image.size, image[0].size, { row, column -> image[row][column] })
 

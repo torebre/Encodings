@@ -1,6 +1,5 @@
 package com.kjipo.experiments
 
-import com.google.common.collect.ImmutableList
 import com.kjipo.prototype.AngleLine
 import com.kjipo.prototype.FitPrototype
 import com.kjipo.prototype.Prototype
@@ -9,7 +8,7 @@ import com.kjipo.raster.segment.Pair
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.shrinkImage
 import com.kjipo.skeleton.transformArraysToMatrix
-import com.kjipo.skeleton.transformToArrays
+import com.kjipo.skeleton.transformToBooleanArrays
 import com.kjipo.visualization.*
 import javafx.collections.ObservableList
 import javafx.scene.Node
@@ -20,7 +19,8 @@ import kotlin.streams.toList
 
 
 fun addMultipleLinesPrototypesToSingleKanji() {
-    val encodedKanji = loadEncodedKanji(Paths.get("kanji_output8/26681.dat"))
+//    val encodedKanji = loadEncodedKanji(Paths.get("kanji_output8/26681.dat"))
+    val encodedKanji = loadEncodedKanji(Paths.get("kanji_output8/33897.dat"))
     val image = transformArraysToMatrix(encodedKanji.image)
     val shrinkImage = shrinkImage(image, 32, 32)
     val originalImage = Matrix.copy(shrinkImage)
@@ -35,7 +35,7 @@ fun addMultipleLinesPrototypesToSingleKanji() {
 
     val prototypeImages = mutableListOf<Matrix<Color>>()
 
-    val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToArrays(shrinkImage)))
+    val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToBooleanArrays(shrinkImage)))
     var maxValue = Int.MIN_VALUE
     distanceMatrix.forEach {
         if (it > maxValue) {
@@ -43,7 +43,7 @@ fun addMultipleLinesPrototypesToSingleKanji() {
         }
     }
 
-    for (i in 0 until 30) {
+    for (i in 0 until 50) {
         var startPair = Pair(0, 0)
         shrinkImage.forEachIndexed({row, column, value ->
             if(value) {
@@ -59,7 +59,7 @@ fun addMultipleLinesPrototypesToSingleKanji() {
         val allLines = listOf(top)
         val fitPrototype = FitPrototype()
 
-        val imageAsArrays = transformToArrays(shrinkImage)
+        val imageAsArrays = transformToBooleanArrays(shrinkImage)
         val prototypes = fitPrototype.addPrototypes(imageAsArrays, allLines, false).stream()
                 .map { listOf(it) }
                 .toList()
@@ -108,6 +108,7 @@ fun addMultipleLinesPrototypesToSingleKanji() {
 
 
 
+
 //    displayColourMatrix(dispImage, 20)
 
 
@@ -129,7 +130,7 @@ fun addMultipleLinesPrototypesToSingleKanji() {
             object : RasterRun<Cell> {
 
                 override fun getRawInput(): Array<BooleanArray> {
-                    return transformToArrays(shrinkImage)
+                    return transformToBooleanArrays(shrinkImage)
                 }
 
                 override fun hasNext(): Boolean {
@@ -154,7 +155,7 @@ fun addMultipleLinesPrototypesToSingleKanji() {
             },
             listOf(ElementProcessor()))
 
-    showRaster(transformToArrays(originalImage), listOf(allPrototypes))
+    showRaster(transformToBooleanArrays(originalImage), listOf(allPrototypes))
 }
 
 fun main(args: Array<String>) {

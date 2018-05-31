@@ -1,14 +1,13 @@
 package com.kjipo.experiments
 
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.Lists
 import com.kjipo.prototype.AngleLine
 import com.kjipo.prototype.FitPrototype
 import com.kjipo.prototype.Prototype
 import com.kjipo.raster.segment.Pair
 import com.kjipo.segmentation.shrinkImage
 import com.kjipo.skeleton.transformArraysToMatrix
-import com.kjipo.skeleton.transformToArrays
+import com.kjipo.skeleton.transformToBooleanArrays
 import com.kjipo.visualization.RasterElementProcessor
 import com.kjipo.visualization.RasterRun
 import com.kjipo.visualization.RasterVisualizer2
@@ -53,7 +52,7 @@ fun addPrototypesToSingleKanji() {
     val allLines = listOf(top, right, bottom, left, connector, underLine)
     val fitPrototype = FitPrototype()
 
-    val imageAsArrays = transformToArrays(shrinkImage)
+    val imageAsArrays = transformToBooleanArrays(shrinkImage)
     val prototypes = fitPrototype.addPrototypes(imageAsArrays, allLines, false).stream()
             .map { listOf(it) }
             .toList()
