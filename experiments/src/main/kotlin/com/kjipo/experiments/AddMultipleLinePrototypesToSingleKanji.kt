@@ -20,9 +20,9 @@ import kotlin.streams.toList
 
 fun addMultipleLinesPrototypesToSingleKanji() {
 //    val encodedKanji = loadEncodedKanji(Paths.get("kanji_output8/26681.dat"))
-    val encodedKanji = loadEncodedKanji(Paths.get("kanji_output8/33897.dat"))
-    val image = transformArraysToMatrix(encodedKanji.image)
-    val shrinkImage = shrinkImage(image, 32, 32)
+//    val encodedKanji = loadEncodedKanji(Paths.get("kanji_output8/33897.dat"))
+    val encodedKanji = loadEncodedKanji(Paths.get("kanji_output8/33550.dat"))
+    val shrinkImage = shrinkImage(transformArraysToMatrix(encodedKanji.image), 32, 32)
     val originalImage = Matrix.copy(shrinkImage)
     val allPrototypes = mutableListOf<Prototype>()
 
@@ -84,10 +84,13 @@ fun addMultipleLinesPrototypesToSingleKanji() {
 
         var filledPixels = 0
         var counter = 0
+        val tempImage = Matrix.copy(originalImage)
+
         allPrototypes.forEach {
             it.segments.flatMap { it.pairs }.forEach {
                 if(it.row >= 0 && it.row < dispImage.numberOfRows && it.column >= 0 && it.column < dispImage.numberOfColumns) {
-                    if(originalImage[it.row, it.column]) {
+                    if(tempImage[it.row, it.column]) {
+                        tempImage[it.row, it.column] = false
                         ++filledPixels
                     }
                     dispImage[it.row, it.column] = Color.hsb(counter.toDouble().div(allPrototypes.size).times(360), 1.0, 1.0)

@@ -21,6 +21,10 @@ fun addLinePrototypes() {
 
     loadedKanji.stream()
             .limit(50)
+            .filter {
+//                it.unicode == 33550 ||
+                it.unicode == 33897
+            }
             .forEach {
                 val image = transformArraysToMatrix(it.image)
                 val shrinkImage = shrinkImage(image, 32, 32)
@@ -40,19 +44,23 @@ fun addLinePrototypes() {
                 })
 
                 var counter = 0
-
                 linePrototypes.forEach {
                     it.segments.flatMap { it.pairs }.forEach {
                         if (it.row >= 0 && it.row < dispImage.numberOfRows && it.column >= 0 && it.column < dispImage.numberOfColumns) {
-                            dispImage[it.row, it.column] = Color.hsb(counter.toDouble().div(linePrototypes.size).times(360), 1.0, 1.0)
+                            if(dispImage[it.row, it.column].brightness == 1.0) {
+                                dispImage[it.row, it.column] = Color.WHITE
+                            }
+                            else {
+                                dispImage[it.row, it.column] = Color.hsb(counter.toDouble().div(linePrototypes.size).times(360), 1.0, 1.0)
+                            }
                         }
                     }
+                    ++counter
                 }
 
                 colourRasters.add(transformToArrays(dispImage))
                 texts.add(it.unicode.toString() +": " +String(Character.toChars(it.unicode)))
             }
-
 
     displayColourRasters(colourRasters, texts, 5)
 }

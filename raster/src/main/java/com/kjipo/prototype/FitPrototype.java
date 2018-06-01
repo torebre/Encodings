@@ -51,18 +51,17 @@ public class FitPrototype {
 //                return result;
 //            }
 
-            if (includeHistory ) {
-                result.addAll(addSinglePrototype2(inputData, prototype, 0, 0));
+        if (includeHistory) {
+            result.addAll(addSinglePrototype2(inputData, prototype, 0, 0));
+        } else {
+            if (result.isEmpty()) {
+                List<Prototype> stepsInAddingPrototype = addSinglePrototype2(inputData, prototype, 0, 0);
+                result.add(stepsInAddingPrototype.get(stepsInAddingPrototype.size() - 1));
             } else {
-                if(result.isEmpty()) {
-                    List<Prototype> stepsInAddingPrototype = addSinglePrototype2(inputData, prototype, 0, 0);
-                    result.add(stepsInAddingPrototype.get(stepsInAddingPrototype.size() - 1));
-                }
-                else {
-                    result.addAll(addSinglePrototype2(inputData, prototype, 0, 0));
-                }
+                result.addAll(addSinglePrototype2(inputData, prototype, 0, 0));
             }
-            ++current;
+        }
+        ++current;
 //        }
 
         return result;
@@ -81,7 +80,7 @@ public class FitPrototype {
                 originalFirst.getStartPair().getColumn() + initialColumnOffset));
 
         // Fit line segment in prototype
-        List<kotlin.Pair<AngleLine, Integer>> linePrototypeIntegerPair = fitSingleLinePrototype(shiftedFirst, distanceMap, occupiedData, numberOfRows, numberOfColumns);
+        List<kotlin.Pair<AngleLine, Integer>> linePrototypeIntegerPair = fitSingleLinePrototype(shiftedFirst, distanceMap, numberOfRows, numberOfColumns);
         linePrototypeIntegerPair.add(0, new kotlin.Pair<>(shiftedFirst, 0));
 
         // Move the line into position
@@ -189,10 +188,9 @@ public class FitPrototype {
 
 
     private static <T extends AdjustablePrototype> List<kotlin.Pair<T, Integer>> fitSingleLinePrototype(T linePrototype, int distanceMap[][],
-                                                                                                        boolean occupiedData[][],
                                                                                                         int numberOfRows, int numberOfColumns) {
         int scoreUnchanged = 0;
-        int bestScore = computeScore2(linePrototype.getSegments().get(0).getPairs(), distanceMap, occupiedData);
+        int bestScore = computeScore3(linePrototype.getSegments().get(0).getPairs(), distanceMap);
         int previousBestScore = bestScore;
 
         PriorityQueue<kotlin.Pair<T, Integer>> priorityQueue = new PriorityQueue<>(Comparator.comparingInt(pair -> -pair.getSecond()));
@@ -244,10 +242,12 @@ public class FitPrototype {
                             return null;
                         }
 
-                        return new kotlin.Pair<>((T) linePrototype1,
-                                computeScore2(segment1.getPairs(),
-                                        distanceMap,
-                                        occupiedData));
+                        int score = computeScore3(segment1.getPairs(),
+                                distanceMap);
+
+                        LOG.info("Score: " +score +". Checking prototype: " +linePrototype.getSegments().stream().flatMap(segment -> segment.getPairs().stream()).collect(Collectors.toList()));
+
+                        return new kotlin.Pair<>((T) linePrototype1, score);
                     })
                     .filter(Objects::nonNull)
                     .sorted(Comparator.comparing(linePrototypeIntegerPair -> -linePrototypeIntegerPair.getSecond()))
@@ -309,8 +309,8 @@ public class FitPrototype {
                 .mapToInt(pair -> {
                     int score = 0;
 
-                    if(pair.getRow() >= distanceMatrix.length || pair.getColumn() >= distanceMatrix[0].length) {
-                        LOG.warn("Point is outside matrix. Distance matrix dimensions: " +distanceMatrix.length +", " +distanceMatrix[0].length +". Pair: " +pair);
+                    if (pair.getRow() >= distanceMatrix.length || pair.getColumn() >= distanceMatrix[0].length) {
+                        LOG.warn("Point is outside matrix. Distance matrix dimensions: " + distanceMatrix.length + ", " + distanceMatrix[0].length + ". Pair: " + pair);
                         return Integer.MIN_VALUE;
                     }
 
@@ -320,8 +320,7 @@ public class FitPrototype {
 
                     if (distance > 0) {
                         score += -distance;
-                    }
-                    else {
+                    } else {
                         score += 1;
                     }
 //                    if (occupiedMatrix[pair.getRow()][pair.getColumn()]) {
@@ -333,9 +332,42 @@ public class FitPrototype {
 
     }
 
+
+    private static int computeScore3(List<Pair> pairs, int distanceMatrix[][]) {
+        Pair startPair = pairs.get(0);
+        Pair stopPair = pairs.get(pairs.size() - 1);
+
+        if (startPair.getRow() < 0 || startPair.getColumn() >= distanceMatrix[0].length
+                || stopPair.getRow() < 0 || stopPair.getColumn() >= distanceMatrix[0].length) {
+            return -1000;
+        }
+
+        int score = 0;
+        for (Pair pair : pairs) {
+            if (pair.getRow() < 0
+                    || pair.getRow() >= distanceMatrix.length
+                    || pair.getColumn() < 0
+                    || pair.getColumn() >= distanceMatrix[0].length) {
+                LOG.warn("Point is outside matrix. Distance matrix dimensions: " + distanceMatrix.length + ", " + distanceMatrix[0].length + ". Pair: " + pair);
+                return -1000;
+            }
+
+            int distance = distanceMatrix[pair.getRow()][pair.getColumn()];
+
+            LOG.debug("Distance: " + distance);
+
+            if (distance > 0) {
+                return -1000;
+            } else {
+                score += 1;
+            }
+        }
+        return score;
+    }
+
     private static boolean validCoordinates(Pair pair, int numberOfRows, int numberOfColumns) {
         return pair.getRow() >= 0
-               && pair.getRow() < numberOfRows
+                && pair.getRow() < numberOfRows
                 && pair.getColumn() >= 0
                 && pair.getColumn() < numberOfColumns;
     }
@@ -415,6 +447,34 @@ public class FitPrototype {
 
         }
         return regionData;
+    }
+
+    public static int findNumberOfDisjointRegions(boolean inputData[][]) {
+        int regionData[][] = new int[inputData.length][inputData[0].length];
+        int fillValue = 1;
+        boolean foundHit = true;
+
+        while (foundHit) {
+            foundHit = false;
+            for (int row = 0; row < inputData.length; ++row) {
+                for (int column = 0; column < inputData[0].length; ++column) {
+                    if (inputData[row][column]
+                            && regionData[row][column] == 0) {
+                        spreadAcrossRegion(row, column, fillValue++, inputData, regionData);
+                        foundHit = true;
+                    }
+                    if (foundHit) {
+                        break;
+                    }
+                }
+                if (foundHit) {
+                    break;
+                }
+
+            }
+
+        }
+        return fillValue;
     }
 
 
