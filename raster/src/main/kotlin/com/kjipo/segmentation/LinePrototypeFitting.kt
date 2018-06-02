@@ -2,8 +2,6 @@ package com.kjipo.segmentation
 
 import com.kjipo.prototype.AngleLine
 import com.kjipo.prototype.FitPrototype
-import com.kjipo.raster.FlowDirection
-import com.kjipo.raster.attraction.PrototypeCollection
 import com.kjipo.raster.match.MatchDistance
 import com.kjipo.raster.segment.Pair
 import com.kjipo.skeleton.transformArraysToMatrix
@@ -34,8 +32,8 @@ fun fitLinePrototypes(originalImage: Matrix<Boolean>): List<AngleLine> {
     }
 
 
-
-    for (i in 0 until 50) {
+//    for (i in 0 until 50) {
+    while (true) {
         var startPair = Pair(0, 0)
         shrinkImage.forEachIndexed({ row, column, value ->
             if (value) {
@@ -43,6 +41,10 @@ fun fitLinePrototypes(originalImage: Matrix<Boolean>): List<AngleLine> {
                 return@forEachIndexed
             }
         })
+
+
+        linePrototypeFittingLog.info("Start pair: $startPair")
+
 
         val topPair = Pair.of(startPair.row, startPair.column)
         val topId = 1
@@ -58,52 +60,84 @@ fun fitLinePrototypes(originalImage: Matrix<Boolean>): List<AngleLine> {
 
 
         // There is only one prototype in this case
-        val prototype = (prototypes[0][0] as PrototypeCollection<AngleLine>).prototypes.iterator().next()
+//        val prototype = (prototypes[0][0] as PrototypeCollection<AngleLine>).prototypes.iterator().next()
+
+        val prototype = prototypes[0][0] as AngleLine
         allPrototypes.add(prototype)
 
         var filledPixels = 0
         val tempImage = Matrix.copy(originalImage)
 
-        prototype.segments.flatMap {it.pairs}.forEach {
-                if (it.row < shrinkImage.numberOfRows && it.row >= 0 && it.column < shrinkImage.numberOfColumns && it.column >= 0) {
-                    val centerRow = it.row
-                    val centerColumn = it.column
+        linePrototypeFittingLog.info("Pairs: " + prototype.segments.flatMap { it.pairs }.toList())
 
-//                    fun fillFunction(row: Int, column: Int): Boolean {
-//                        val rowOffset = row - 1
-//                        val columnOffset = column - 1
-//
-//                        val currentRow = centerRow - rowOffset
-//                        val currentColumn = centerColumn - columnOffset
-//
-//                        return if (currentRow < 0 || currentRow >= shrinkImage.numberOfRows || currentColumn < 0 || currentColumn >= shrinkImage.numberOfColumns) {
-//                            false
-//                        } else {
-//                            shrinkImage[currentRow, currentColumn]
-//                        }
-//                    }
-//
-//                    val tempMatrix = Matrix(3, 3, ::fillFunction)
-//                    val regionsBeforeRemoval = FitPrototype.findNumberOfDisjointRegions(transformToBooleanArrays(tempMatrix))
-//
-//                    shrinkImage[it.row, it.column] = false
-//
-//                    val tempMatrix2 = Matrix(3, 3, ::fillFunction)
-//                    val regionsAfterRemoval = FitPrototype.findNumberOfDisjointRegions(transformToBooleanArrays(tempMatrix2))
-//
-//                    val change = regionsBeforeRemoval - regionsAfterRemoval
-//                    if(change != 0) {
-//                        shrinkImage[it.row, it.column] = true
-//                    }
+        prototype.segments.flatMap { it.pairs }.let {
+            var first = true
 
-                    shrinkImage[it.row, it.column] = false
+            for (pair in it) {
+                if (first) {
+                    first = false
+                    shrinkImage[pair.row, pair.column] = false
+
+                    continue
+                }
+
+                if (pair.row < shrinkImage.numberOfRows && pair.row >= 0 && pair.column < shrinkImage.numberOfColumns && pair.column >= 0) {
+                    val centerRow = pair.row
+                    val centerColumn = pair.column
+
+                    fun fillFunction(row: Int, column: Int): Boolean {
+                        val rowOffset = row - 1
+                        val columnOffset = column - 1
+
+                        val currentRow = centerRow - rowOffset
+                        val currentColumn = centerColumn - columnOffset
+
+                        return if (currentRow < 0 || currentRow >= shrinkImage.numberOfRows || currentColumn < 0 || currentColumn >= shrinkImage.numberOfColumns) {
+                            false
+                        } else {
+                            shrinkImage[currentRow, currentColumn]
+                        }
+                    }
+
+                    val tempMatrix = Matrix(3, 3, ::fillFunction)
+                    val originalValue = shrinkImage[pair.row, pair.column]
+
+                    if ((tempMatrix[1, 0] && tempMatrix[1, 1] && tempMatrix[1, 2])
+                            || (tempMatrix[0, 1] && tempMatrix[1, 1] && tempMatrix[1, 2])
+                            || (tempMatrix[0, 0] && tempMatrix[1, 1] && tempMatrix[2, 2])
+                            || (tempMatrix[2, 2] && tempMatrix[1, 1] && tempMatrix[0, 2])) {
+                        shrinkImage[pair.row, pair.column] = originalValue
+                    } else {
+                        shrinkImage[pair.row, pair.column] = false
+
+                        /*
+                        val regionsBeforeRemoval = FitPrototype.findNumberOfDisjointRegions(transformToBooleanArrays(tempMatrix))
+                        shrinkImage[pair.row, pair.column] = false
+
+                        val tempMatrix2 = Matrix(3, 3, ::fillFunction)
+                        val regionsAfterRemoval = FitPrototype.findNumberOfDisjointRegions(transformToBooleanArrays(tempMatrix2))
+
+                        val change = regionsBeforeRemoval - regionsAfterRemoval
+
+                        linePrototypeFittingLog.info("regionsBeforeRemoval: $regionsBeforeRemoval, regionsAfterRemoval: $regionsAfterRemoval")
+
+                        if (change != 0) {
+                            shrinkImage[pair.row, pair.column] = originalValue
+                        }
+                        */
+                    }
+
+
+//                    shrinkImage[pair.row, pair.column] = false
 
                 }
             }
 
+        }
+
         allPrototypes.stream()
                 .flatMap { it.segments.stream() }
-                .flatMap{it.pairs.stream()}
+                .flatMap { it.pairs.stream() }
                 .forEach {
                     filledPixels += if (it.row < shrinkImage.numberOfRows && it.row >= 0 && it.column < shrinkImage.numberOfColumns && it.column >= 0 && tempImage[it.row, it.column]) {
                         tempImage[it.row, it.column] = false
@@ -114,7 +148,7 @@ fun fitLinePrototypes(originalImage: Matrix<Boolean>): List<AngleLine> {
                 }
 
 
-        linePrototypeFittingLog.info("Total: $totalFilledPixels. Filled: $filledPixels")
+//        linePrototypeFittingLog.info("Total: $totalFilledPixels. Filled: $filledPixels")
 
 
         if (filledPixels == totalFilledPixels) {

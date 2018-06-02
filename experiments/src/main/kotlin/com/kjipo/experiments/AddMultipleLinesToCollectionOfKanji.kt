@@ -20,11 +20,11 @@ fun addLinePrototypes() {
 
 
     loadedKanji.stream()
-            .limit(50)
-            .filter {
-//                it.unicode == 33550 ||
-                it.unicode == 33897
-            }
+            .limit(500)
+//            .filter {
+////                it.unicode == 33550 ||
+////                it.unicode == 33897
+//            }
             .forEach {
                 val image = transformArraysToMatrix(it.image)
                 val shrinkImage = shrinkImage(image, 32, 32)

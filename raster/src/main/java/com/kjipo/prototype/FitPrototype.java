@@ -80,13 +80,33 @@ public class FitPrototype {
                 originalFirst.getStartPair().getColumn() + initialColumnOffset));
 
         // Fit line segment in prototype
-        List<kotlin.Pair<AngleLine, Integer>> linePrototypeIntegerPair = fitSingleLinePrototype(shiftedFirst, distanceMap, numberOfRows, numberOfColumns);
-        linePrototypeIntegerPair.add(0, new kotlin.Pair<>(shiftedFirst, 0));
+        List<kotlin.Pair<AngleLine, Integer>> fittedPrototypes = fitSingleLinePrototype(shiftedFirst, distanceMap, numberOfRows, numberOfColumns);
+
+
+        kotlin.Pair<AngleLine, Integer> angleLineIntegerPair = fittedPrototypes.get(fittedPrototypes.size() - 1);
+
+
+LOG.info("Best fit: " +angleLineIntegerPair);
+
+
+// TODO Use defined constant
+if(angleLineIntegerPair.getSecond() < -500) {
+    return Collections.emptyList();
+}
+
+        // TODO Code commented out to make it easier to see what happens when adding single line prototype
+
+        return Lists.newArrayList(angleLineIntegerPair.component1());
+
+
+        /*
+
+        List<kotlin.Pair<AngleLine, Integer>> startEndPrototype = Lists.newArrayList(new kotlin.Pair<>(shiftedFirst, 0), fittedPrototypes.get(fittedPrototypes.size() - 1));
 
         // Move the line into position
         List<List<AngleLineMoveOperation>> moveOperations = new ArrayList<>();
         AngleLine previousPrototype = new AngleLine(originalFirst);
-        for (kotlin.Pair<AngleLine, Integer> pair : linePrototypeIntegerPair) {
+        for (kotlin.Pair<AngleLine, Integer> pair : startEndPrototype) {
             moveOperations.add(computeMovements(previousPrototype, pair.getFirst()));
             previousPrototype = pair.getFirst();
         }
@@ -147,10 +167,29 @@ public class FitPrototype {
             }
 
             List<AngleLine> linesToAdd = iterationOrder.stream().map(AngleLine::new).collect(Collectors.toList());
+
+            // TODO Only here for debugging
+            for (AngleLine angleLine : linesToAdd) {
+                List<Segment> segments = angleLine.getSegments();
+                for (Segment segment : segments) {
+                    for (Pair pair : segment.getPairs()) {
+                        if(pair.getRow() < 0 || pair.getRow() >= inputData.length || pair.getColumn() < 0 || pair.getColumn() > inputData[0].length) {
+                            System.out.println("Test30");
+                        }
+
+                    }
+
+                }
+
+
+            }
+
             collect.add(new PrototypeCollection<>(linesToAdd));
         }
 
         return collect;
+
+        */
     }
 
     public static List<Prototype> applyMoveOperations(Prototype prototype, Collection<LineMoveOperation> moveOperations) {
@@ -181,7 +220,7 @@ public class FitPrototype {
         double deltaLength = processedPrototype.getLength() - originalPrototype.getLength();
         double rotationAngle = processedPrototype.getAngle() - originalPrototype.getAngle();
 
-        LOG.info("Rotation angle: {}", rotationAngle);
+//        LOG.info("Rotation angle: {}", rotationAngle);
 
         return Collections.singletonList(new AngleLineMoveOperationImpl(rowShift, columnShift, deltaLength, rotationAngle));
     }
@@ -219,11 +258,13 @@ public class FitPrototype {
                 tabooSearchSet.add(nextPrototype.getFirst());
             }
 
-            LOG.info("Checking prototype: {}", nextPrototype);
+
+
+//            LOG.info("Checking prototype: {}", nextPrototype);
 
             if (nextPrototype.getSecond() > bestScore) {
 
-                LOG.info("New best score: {}", nextPrototype);
+//                LOG.info("New best score: {}", nextPrototype);
 
                 previousBestScore = bestScore;
                 bestScore = nextPrototype.getSecond();
@@ -233,19 +274,26 @@ public class FitPrototype {
             nextPrototype.component1().getMovements()
                     .map(linePrototype1 -> {
                         Segment segment1 = linePrototype1.getSegments().get(0);
-                        Pair startPair = segment1.getPairs().get(0);
-                        Pair endPair = segment1.getPairs().get(segment1.getPairs().size() - 1);
 
-                        // If the end points are valid, then all the points in between have to be valid
-                        if (!validCoordinates(startPair, numberOfRows, numberOfColumns)
-                                || !validCoordinates(endPair, numberOfRows, numberOfColumns)) {
-                            return null;
+                        for (Pair pair : segment1.getPairs()) {
+                            if (!validCoordinates(pair, numberOfRows, numberOfColumns)) {
+                                return null;
+                            }
                         }
+
+//                        Pair startPair = segment1.getPairs().get(0);
+//                        Pair endPair = segment1.getPairs().get(segment1.getPairs().size() - 1);
+//                        // If the end points are valid, then all the points in between have to be valid
+//                        if (!validCoordinates(startPair, numberOfRows, numberOfColumns)
+//                                || !validCoordinates(endPair, numberOfRows, numberOfColumns)) {
+//                            return null;
+//                        }
+
 
                         int score = computeScore3(segment1.getPairs(),
                                 distanceMap);
 
-                        LOG.info("Score: " +score +". Checking prototype: " +linePrototype.getSegments().stream().flatMap(segment -> segment.getPairs().stream()).collect(Collectors.toList()));
+//                        LOG.info("Score: " +score +". Checking prototype: " +linePrototype.getSegments().stream().flatMap(segment -> segment.getPairs().stream()).collect(Collectors.toList()));
 
                         return new kotlin.Pair<>((T) linePrototype1, score);
                     })
@@ -264,7 +312,7 @@ public class FitPrototype {
             }
         }
 
-        LOG.info("Best score: {}", bestScore);
+//        LOG.info("Best score: {}", bestScore);
 
         return bestScorePairs;
     }
