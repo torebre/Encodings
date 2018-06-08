@@ -8,6 +8,10 @@ repositories {
     mavenCentral()
 }
 
+//compileKotlin {
+//    kotlinOptions.jvmTarget= "1.8"
+//}
+
 dependencies {
     compile project(":raster")
     compile "no.tornado:tornadofx:1.7.5"

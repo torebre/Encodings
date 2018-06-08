@@ -1,8 +1,10 @@
 package com.kjipo.experiments
 
+import com.kjipo.prototype.AngleLine
 import com.kjipo.raster.match.MatchDistance
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitLinePrototypes
+import com.kjipo.segmentation.linePrototypeFittingLog
 import com.kjipo.segmentation.shrinkImage
 import com.kjipo.skeleton.transformArraysToMatrix
 import com.kjipo.skeleton.transformToArrays
@@ -19,8 +21,11 @@ fun addLinePrototypes() {
     val texts = mutableListOf<String>()
 
 
+    val kanjiPrototypeMap = mutableMapOf<Int, Collection<AngleLine>>()
+
+
     loadedKanji.stream()
-            .limit(500)
+            .limit(5)
 //            .filter {
 ////                it.unicode == 33550 ||
 ////                it.unicode == 33897
@@ -58,11 +63,22 @@ fun addLinePrototypes() {
                     ++counter
                 }
 
+                kanjiPrototypeMap.put(it.unicode, linePrototypes)
+
                 colourRasters.add(transformToArrays(dispImage))
                 texts.add(it.unicode.toString() +": " +String(Character.toChars(it.unicode)))
             }
 
     displayColourRasters(colourRasters, texts, 5)
+
+
+    kanjiPrototypeMap.forEach { unicode, prototypes ->
+        val prototypesDescription = prototypes.map { it.startPair.let { it.row.toString() +"," +it.column } +"," +it.angle +"," +it.length +","}.toString()
+        println("Unicode: $unicode. Prototypes: $prototypesDescription")
+        println("Unicode: $unicode. Number of prototypes: ${prototypes.size}")
+    }
+
+
 }
 
 
