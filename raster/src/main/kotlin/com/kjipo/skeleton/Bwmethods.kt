@@ -752,3 +752,52 @@ fun transformArraysToMatrix(image: Array<BooleanArray>) = Matrix(image.size, ima
 fun transformArraysToMatrix(image: Array<IntArray>) = Matrix(image.size, image[0].size, { row, column -> image[row][column] })
 
 
+fun makeSquare(matrix: Matrix<Boolean>): Matrix<Boolean> {
+    if (matrix.numberOfRows == matrix.numberOfColumns) {
+        return Matrix.copy(matrix)
+    }
+
+    var minRow = Int.MAX_VALUE
+    var maxRow = 0
+    var minColumn = Int.MAX_VALUE
+    var maxColumn = 0
+
+    matrix.forEachIndexed({ row, column, value ->
+        if (matrix[row, column]) {
+            if (minRow > row) {
+                minRow = row
+            }
+            if (maxRow < row) {
+                maxRow = row
+            }
+            if (minColumn > column) {
+                minColumn = column
+            }
+            if (maxColumn < column) {
+                maxColumn = column
+            }
+        }
+    })
+
+    val occupiedRows = maxRow - minRow
+    val occupiedColumns = maxColumn - minColumn
+    val sideSize = if (occupiedRows < occupiedColumns) {
+        occupiedColumns
+    } else {
+        occupiedRows
+    }
+
+    return Matrix(sideSize, sideSize, { row, column ->
+        val offsetRow = row + minRow
+        val offsetColumn = column + minColumn
+
+        if(offsetRow >= matrix.numberOfRows || offsetColumn >= matrix.numberOfColumns) {
+            false
+        }
+        else {
+            matrix[offsetRow, offsetColumn]
+        }
+    })
+
+
+}
