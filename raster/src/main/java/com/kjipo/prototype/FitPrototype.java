@@ -22,34 +22,7 @@ public class FitPrototype {
 
 
     public List<Prototype> addPrototypes(boolean inputData[][], Collection<AngleLine> prototype, boolean includeHistory) {
-        int[][] disjunctRegions = findDisjointRegions(inputData);
-        int current = 1;
         List<Prototype> result = new ArrayList<>();
-
-        Pair prototypeStart = prototype.iterator().next().getStartPair();
-        int startRow = prototypeStart.getRow();
-        int startColumn = prototypeStart.getColumn();
-
-//        while (true) {
-//            int startRow = -1;
-//            int startColumn = -1;
-
-//            for (int row = 0; row < disjunctRegions.length; ++row) {
-//                for (int column = 0; column < disjunctRegions[0].length; ++column) {
-//                    if (disjunctRegions[row][column] == current) {
-//                        startRow = row;
-//                        startColumn = column;
-//                        break;
-//                    }
-//                }
-//                if (startRow != -1) {
-//                    break;
-//                }
-//            }
-
-//            if (startRow == -1) {
-//                return result;
-//            }
 
         if (includeHistory) {
             result.addAll(addSinglePrototype2(inputData, prototype, 0, 0));
@@ -61,8 +34,6 @@ public class FitPrototype {
                 result.addAll(addSinglePrototype2(inputData, prototype, 0, 0));
             }
         }
-        ++current;
-//        }
 
         return result;
     }
@@ -86,13 +57,13 @@ public class FitPrototype {
         kotlin.Pair<AngleLine, Integer> angleLineIntegerPair = fittedPrototypes.get(fittedPrototypes.size() - 1);
 
 
-LOG.info("Best fit: " +angleLineIntegerPair);
+        LOG.info("Best fit: " + angleLineIntegerPair);
 
 
 // TODO Use defined constant
-if(angleLineIntegerPair.getSecond() < -500) {
-    return Collections.emptyList();
-}
+        if (angleLineIntegerPair.getSecond() < -500) {
+            return Collections.emptyList();
+        }
 
         // TODO Code commented out to make it easier to see what happens when adding single line prototype
 
@@ -259,7 +230,6 @@ if(angleLineIntegerPair.getSecond() < -500) {
             }
 
 
-
 //            LOG.info("Checking prototype: {}", nextPrototype);
 
             if (nextPrototype.getSecond() > bestScore) {
@@ -413,7 +383,7 @@ if(angleLineIntegerPair.getSecond() < -500) {
         return score;
     }
 
-    private static boolean validCoordinates(Pair pair, int numberOfRows, int numberOfColumns) {
+    public static boolean validCoordinates(Pair pair, int numberOfRows, int numberOfColumns) {
         return pair.getRow() >= 0
                 && pair.getRow() < numberOfRows
                 && pair.getColumn() >= 0

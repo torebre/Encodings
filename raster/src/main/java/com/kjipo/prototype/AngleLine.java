@@ -52,7 +52,7 @@ public class AngleLine implements AdjustablePrototype {
     }
 
     @Override
-    public Stream<? extends AdjustablePrototype> getMovements() {
+    public Stream<? extends AngleLine> getMovements() {
         Pair endPair = getEndPair();
 
         return Arrays.stream(FlowDirection.values())
