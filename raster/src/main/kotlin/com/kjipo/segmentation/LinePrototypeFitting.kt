@@ -296,7 +296,7 @@ private fun fitSingleLine(inputData: Matrix<Boolean>, startPrototype: AngleLine)
 
 
 private fun expandFit(prototypeHistory: MutableList<AngleLine>, distanceMatrix: Matrix<Int>, tabooSet: MutableSet<kotlin.Pair<Pair, Pair>>, scoreHistory: MutableList<Int>): kotlin.Pair<AngleLine, Int> {
-    if(tabooSet.contains(kotlin.Pair(prototypeHistory.last().startPair, prototypeHistory.last().endPair))) {
+    if (tabooSet.contains(kotlin.Pair(prototypeHistory.last().startPair, prototypeHistory.last().endPair))) {
         return kotlin.Pair(prototypeHistory.last(), scoreHistory.last())
     }
     tabooSet.add(kotlin.Pair(prototypeHistory.last().startPair, prototypeHistory.last().endPair))
@@ -345,8 +345,8 @@ private fun expandFit(prototypeHistory: MutableList<AngleLine>, distanceMatrix: 
             continue
         }
 
-        if(distanceMatrix[movement.startPair.row, movement.startPair.column] != 0
-        || distanceMatrix[movement.endPair.row, movement.endPair.column] != 0) {
+        if (distanceMatrix[movement.startPair.row, movement.startPair.column] != 0
+                || distanceMatrix[movement.endPair.row, movement.endPair.column] != 0) {
             continue
         }
 
@@ -377,81 +377,7 @@ private fun expandFit(prototypeHistory: MutableList<AngleLine>, distanceMatrix: 
     return kotlin.Pair(bestPrototype, bestScore)
 }
 
-
-
-
-fun fitSingleLine2(inputData: Matrix<Boolean>, start: kotlin.Pair<Int, Int>): AngleLine {
-    val distanceMap = MatchDistance.computeDistanceMap(transformToBooleanArrays(inputData))
-    val distanceMatrix = transformArraysToMatrix(distanceMap)
-
-    val tabooSet = mutableSetOf<kotlin.Pair<Pair, Pair>>()
-
-    var bestScore = Int.MIN_VALUE
-    var bestPrototype = AngleLine(1, Pair(0, 0), 1.0, 0.0)
-
-
-    for (value in FlowDirection.values()) {
-        val nextPoint = Pair.of(start.first + value.rowShift, start.second + value.columnShift)
-        if (!FitPrototype.validCoordinates(nextPoint, inputData.numberOfRows, inputData.numberOfColumns)
-        || distanceMatrix[nextPoint.row, nextPoint.column] != 0) {
-            continue
-        }
-    }
-
-
-
-    // TODO
-
-
-
-
-
-
-//    for (movement in startPrototype.movements) {
-//        val startAndEnd = kotlin.Pair(movement.startPair, movement.endPair)
-//        if (tabooSet.contains(startAndEnd)) {
-//            continue
-//        }
-//        tabooSet.add(startAndEnd)
-//
-//        var invalidCoordinate = false
-//        for (pair in movement.segments[0].pairs) {
-//            if (!FitPrototype.validCoordinates(pair, inputData.numberOfRows, inputData.numberOfColumns)) {
-//                invalidCoordinate = true
-//                break
-//            }
-//        }
-//        if (invalidCoordinate) {
-//            continue
-//        }
-//
-//        var distanceScore = 0
-//
-//        val scoreHistory = mutableListOf<Int>()
-//        val movementHistory = mutableListOf<AngleLine>()
-//
-//        // There is only one segment in a line
-//        for (pair in movement.segments[0].pairs) {
-//            distanceScore -= distanceMatrix[pair.row, pair.column]
-//        }
-//
-//        scoreHistory.add(distanceScore)
-//        movementHistory.add(movement)
-//
-//        val results = expandFit(movementHistory, distanceMatrix, tabooSet, scoreHistory)
-//
-//        if (bestScore < results.second) {
-//            bestScore = results.second
-//            bestPrototype = results.first
-//        }
-//    }
-
-    return bestPrototype
-}
-
-
-
-private fun fitSingleLine2(inputData: Matrix<Boolean>, startPrototype: AngleLine): AngleLine {
+fun fitSingleLine2(inputData: Matrix<Boolean>, startPrototype: AngleLine): AngleLine {
     val distanceMap = MatchDistance.computeDistanceMap(transformToBooleanArrays(inputData))
     val distanceMatrix = transformArraysToMatrix(distanceMap)
 
@@ -465,7 +391,7 @@ private fun fitSingleLine2(inputData: Matrix<Boolean>, startPrototype: AngleLine
     processQueue.add(startPrototype)
 
 
-    while(!processQueue.isEmpty()) {
+    while (!processQueue.isEmpty()) {
         val currentElement = processQueue.element()
 
         for (movement in currentElement.movements) {
@@ -490,8 +416,6 @@ private fun fitSingleLine2(inputData: Matrix<Boolean>, startPrototype: AngleLine
             if (movement.length < maxLength) {
                 continue
             }
-
-            var distanceScore = 0
 
             val results = expandFit2(currentElement, distanceMatrix, tabooSet)
 
@@ -543,7 +467,7 @@ private fun expandFit2(prototype: AngleLine, distanceMatrix: Matrix<Int>, tabooS
             distanceScore -= distanceMatrix[pair.row, pair.column]
         }
 
-        if(bestScore < distanceScore) {
+        if (bestScore < distanceScore) {
             bestScore = distanceScore
             bestPrototype = movement
         }

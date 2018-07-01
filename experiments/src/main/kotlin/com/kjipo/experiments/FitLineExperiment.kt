@@ -1,5 +1,6 @@
 package com.kjipo.experiments
 
+import com.kjipo.prototype.AngleLine
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitSingleLine2
 import com.kjipo.segmentation.shrinkImage
@@ -7,7 +8,7 @@ import java.io.File
 import javax.imageio.ImageIO
 
 
-private object FitLineExperiment {
+object FitLineExperiment {
 
 
     fun fitLine() {
@@ -31,8 +32,9 @@ private object FitLineExperiment {
             }
         }
 
+        val startLine = AngleLine(1, com.kjipo.raster.segment.Pair(startPair.first, startPair.second), 0.0, 0.0)
 
-        val fittedLine = fitSingleLine2(shrinkImage, startPair)
+        val fittedLine = fitSingleLine2(shrinkImage, startLine)
 
 //        val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToBooleanArrays(shrinkImage)))
 

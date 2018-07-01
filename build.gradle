@@ -1,12 +1,17 @@
-plugins {
-    id "org.jetbrains.kotlin.jvm" version "1.2.31"
+buildscript {
+    ext.kotlin_version = '1.2.50'
 }
 
-apply plugin: 'java'
-//apply plugin: 'org.jetbrains.kotlin.jvm'
+
+
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.2.50"
+}
+
+//apply plugin: 'java'
 
 version = '1.0'
 
-repositories  {
-    mavenCentral()
-}
+//repositories  {
+//    mavenCentral()
+//}
