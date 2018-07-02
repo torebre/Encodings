@@ -479,3 +479,58 @@ private fun expandFit2(prototype: AngleLine, distanceMatrix: Matrix<Int>, tabooS
 }
 
 
+fun fitSingleLine3(inputData: Matrix<Boolean>, startPair: kotlin.Pair<Int, Int>): AngleLine {
+    val distanceMap = MatchDistance.computeDistanceMap(transformToBooleanArrays(inputData))
+    val distanceMatrix = transformArraysToMatrix(distanceMap)
+    val tabooSet = mutableSetOf<kotlin.Pair<Int, Int>>()
+
+    var bestScore = Int.MIN_VALUE
+    var bestPrototype = AngleLine(1, Pair(0, 0), 1.0, 0.0)
+    val processQueue = ArrayDeque<kotlin.Pair<Int, Int>>()
+    processQueue.add(startPair)
+    tabooSet.add(startPair)
+
+
+    while (!processQueue.isEmpty()) {
+        val currentElement = processQueue.poll()
+
+        val line = AngleLine(1, Pair(startPair.first, startPair.second), Pair(currentElement.first, currentElement.second))
+        var distanceScore = 0
+        for (pair in line.segments[0].pairs) {
+            distanceScore -= distanceMatrix[pair.row, pair.column]
+        }
+
+        if (bestScore <= distanceScore) {
+            bestScore = distanceScore
+            bestPrototype = line
+
+            println("Best prototype: $bestPrototype. Score: $bestScore")
+        }
+
+
+
+        for (value in FlowDirection.values()) {
+            val shiftedElement = kotlin.Pair(currentElement.first + value.rowShift, currentElement.second + value.columnShift)
+
+            if (!FitPrototype.validCoordinates(shiftedElement.first, shiftedElement.second, inputData.numberOfRows, inputData.numberOfColumns)) {
+                continue
+            }
+
+            if (!inputData[shiftedElement.first, shiftedElement.second]
+                    || tabooSet.contains(shiftedElement)) {
+
+                println("Test24: $shiftedElement")
+
+                continue
+            }
+
+            println("Test23: " +shiftedElement)
+
+            tabooSet.add(shiftedElement)
+            processQueue.add(shiftedElement)
+        }
+
+    }
+
+    return bestPrototype
+}

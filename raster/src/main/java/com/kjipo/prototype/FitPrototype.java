@@ -383,6 +383,13 @@ public class FitPrototype {
         return score;
     }
 
+    public static boolean validCoordinates(int row, int column, int numberOfRows, int numberOfColumns) {
+        return row >= 0
+                && row < numberOfRows
+                && column >= 0
+                && column < numberOfColumns;
+    }
+
     public static boolean validCoordinates(Pair pair, int numberOfRows, int numberOfColumns) {
         return pair.getRow() >= 0
                 && pair.getRow() < numberOfRows

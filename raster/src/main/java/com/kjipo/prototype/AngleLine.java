@@ -31,7 +31,7 @@ public class AngleLine implements AdjustablePrototype {
         this(id, startPair, length, angle, Collections.emptySet());
     }
 
-    private AngleLine(int id, Pair startPair, Pair endPair) {
+    public AngleLine(int id, Pair startPair, Pair endPair) {
         Objects.requireNonNull(startPair);
         this.id = id;
         int xDelta = endPair.getColumn() - startPair.getColumn();
