@@ -484,12 +484,15 @@ fun fitSingleLine3(inputData: Matrix<Boolean>, startPair: kotlin.Pair<Int, Int>)
     val distanceMatrix = transformArraysToMatrix(distanceMap)
     val tabooSet = mutableSetOf<kotlin.Pair<Int, Int>>()
 
-    var bestScore = Int.MIN_VALUE
+    var bestScore: Int
     var bestPrototype = AngleLine(1, Pair(0, 0), 1.0, 0.0)
     val processQueue = ArrayDeque<kotlin.Pair<Int, Int>>()
     processQueue.add(startPair)
     tabooSet.add(startPair)
 
+
+    val scoreHistory = mutableListOf<Int>()
+    val prototypeHistory = mutableListOf<AngleLine>()
 
     while (!processQueue.isEmpty()) {
         val currentElement = processQueue.poll()
@@ -500,14 +503,16 @@ fun fitSingleLine3(inputData: Matrix<Boolean>, startPair: kotlin.Pair<Int, Int>)
             distanceScore -= distanceMatrix[pair.row, pair.column]
         }
 
-        if (bestScore <= distanceScore) {
+//        if (bestScore <= distanceScore) {
+        if (bestPrototype.length < line.length) {
             bestScore = distanceScore
             bestPrototype = line
 
+            scoreHistory.add(bestScore)
+            prototypeHistory.add(bestPrototype)
+
             println("Best prototype: $bestPrototype. Score: $bestScore")
         }
-
-
 
         for (value in FlowDirection.values()) {
             val shiftedElement = kotlin.Pair(currentElement.first + value.rowShift, currentElement.second + value.columnShift)
@@ -518,19 +523,15 @@ fun fitSingleLine3(inputData: Matrix<Boolean>, startPair: kotlin.Pair<Int, Int>)
 
             if (!inputData[shiftedElement.first, shiftedElement.second]
                     || tabooSet.contains(shiftedElement)) {
-
-                println("Test24: $shiftedElement")
-
                 continue
             }
-
-            println("Test23: " +shiftedElement)
-
             tabooSet.add(shiftedElement)
             processQueue.add(shiftedElement)
         }
 
     }
+
+    println("Score history: $scoreHistory")
 
     return bestPrototype
 }
