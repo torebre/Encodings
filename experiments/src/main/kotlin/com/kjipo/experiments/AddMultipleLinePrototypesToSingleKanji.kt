@@ -109,13 +109,6 @@ fun addMultipleLinesPrototypesToSingleKanji() {
     }
 
 
-
-
-
-//    displayColourMatrix(dispImage, 20)
-
-
-
     var current = 0
 
     class Cell(val row: Int, val column: Int): CellType

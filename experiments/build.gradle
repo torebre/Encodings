@@ -1,9 +1,17 @@
 apply plugin: 'kotlin'
 
+
+
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+
 dependencies {
     compile project(":raster")
     compile project(":visualization")
-    compile project(":opencv")
+//    compile project(":opencv")
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.7'
     compile group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.7'

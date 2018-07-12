@@ -14,7 +14,6 @@ import javax.imageio.ImageIO
 private object FitLineUsingFilledPixels {
 
 
-
     private fun fitLine() {
         val readImage = ImageIO.read(File("test2.png"))
         val image = Matrix(readImage.height, readImage.width, { row, column -> false })
@@ -57,31 +56,18 @@ private object FitLineUsingFilledPixels {
             Color.hsb(distance.toDouble().div(maxValue).times(360), 0.5, 0.2)
         })
 
-        showRaster(transformToBooleanArrays(shrinkImage), listOf(listOf(fittedLine)))
-
+        showRaster(transformToBooleanArrays(shrinkImage), listOf(listOf(fittedLine.first)))
 
 
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
     @JvmStatic
-    fun main(args:Array<String>) {
+    fun main(args: Array<String>) {
         fitLine()
 
 
     }
-
 
 
 }

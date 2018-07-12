@@ -479,23 +479,32 @@ private fun expandFit2(prototype: AngleLine, distanceMatrix: Matrix<Int>, tabooS
 }
 
 
-fun fitSingleLine3(inputData: Matrix<Boolean>, startPair: kotlin.Pair<Int, Int>): AngleLine {
+fun fitSingleLine3(inputData: Matrix<Boolean>, startPair: kotlin.Pair<Int, Int>): kotlin.Pair<AngleLine, Set<kotlin.Pair<Int, Int>>> {
     val distanceMap = MatchDistance.computeDistanceMap(transformToBooleanArrays(inputData))
     val distanceMatrix = transformArraysToMatrix(distanceMap)
     val tabooSet = mutableSetOf<kotlin.Pair<Int, Int>>()
 
     var bestScore: Int
     var bestPrototype = AngleLine(1, Pair(0, 0), 1.0, 0.0)
+    var bestPrototypeUsedPixels = setOf<kotlin.Pair<Int, Int>>()
+
     val processQueue = ArrayDeque<kotlin.Pair<Int, Int>>()
+    val usedPixels = ArrayDeque<Set<kotlin.Pair<Int, Int>>>()
+
     processQueue.add(startPair)
     tabooSet.add(startPair)
-
+    usedPixels.add(setOf(startPair))
 
     val scoreHistory = mutableListOf<Int>()
     val prototypeHistory = mutableListOf<AngleLine>()
+    val derivativeHistory = mutableListOf<Int>()
+    val secondDerivativeHistory = mutableListOf<Int>()
+    val bestPrototypeUsedPixelsHistory = mutableListOf<Set<kotlin.Pair<Int, Int>>>()
+
 
     while (!processQueue.isEmpty()) {
         val currentElement = processQueue.poll()
+        val currentUsed = usedPixels.poll()
 
         val line = AngleLine(1, Pair(startPair.first, startPair.second), Pair(currentElement.first, currentElement.second))
         var distanceScore = 0
@@ -507,11 +516,39 @@ fun fitSingleLine3(inputData: Matrix<Boolean>, startPair: kotlin.Pair<Int, Int>)
         if (bestPrototype.length < line.length) {
             bestScore = distanceScore
             bestPrototype = line
+            bestPrototypeUsedPixels = currentUsed
 
             scoreHistory.add(bestScore)
             prototypeHistory.add(bestPrototype)
+            bestPrototypeUsedPixelsHistory.add(currentUsed)
 
-            println("Best prototype: $bestPrototype. Score: $bestScore")
+            if (scoreHistory.size > 1) {
+                derivativeHistory.add(scoreHistory.last() - scoreHistory[scoreHistory.lastIndex - 1])
+            } else {
+                scoreHistory.add(0)
+            }
+
+            if (derivativeHistory.size > 1) {
+                secondDerivativeHistory.add(derivativeHistory.last() - derivativeHistory[derivativeHistory.lastIndex - 1])
+            } else {
+                secondDerivativeHistory.add(0)
+            }
+
+            var previous = Int.MIN_VALUE
+            if (secondDerivativeHistory.last() < -5) {
+                val bestIndex = secondDerivativeHistory.indices.reversed().find {
+                    val result = secondDerivativeHistory[it] > previous
+                    previous = secondDerivativeHistory[it]
+                    result
+                } ?: secondDerivativeHistory.lastIndex
+
+                println("Score history: $scoreHistory")
+                println("Derivative history: $derivativeHistory")
+                println("Second derivative history: $secondDerivativeHistory")
+                println("Best index: $bestIndex")
+
+                return Pair(prototypeHistory[bestIndex], currentUsed)
+            }
         }
 
         for (value in FlowDirection.values()) {
@@ -527,11 +564,20 @@ fun fitSingleLine3(inputData: Matrix<Boolean>, startPair: kotlin.Pair<Int, Int>)
             }
             tabooSet.add(shiftedElement)
             processQueue.add(shiftedElement)
+
+            mutableSetOf(*currentUsed.toTypedArray()).let {
+                it.add(shiftedElement)
+                usedPixels.add(it)
+            }
+
+
         }
 
     }
 
     println("Score history: $scoreHistory")
+    println("Derivative history: $derivativeHistory")
+    println("Second derivative history: $secondDerivativeHistory")
 
-    return bestPrototype
+    return Pair(bestPrototype, bestPrototypeUsedPixels)
 }
