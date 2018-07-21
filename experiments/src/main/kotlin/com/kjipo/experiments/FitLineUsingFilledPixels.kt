@@ -35,11 +35,7 @@ private object FitLineUsingFilledPixels {
             }
         }
 
-
         val fittedLine = fitSingleLine3(shrinkImage, startPair)
-
-//        val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToBooleanArrays(shrinkImage)))
-
 
         println("Fitted line: $fittedLine")
 

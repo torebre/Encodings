@@ -22,10 +22,7 @@ private object HoughTransformExperiment {
 
 
     fun applyHoughTransformToDrawing(path: Path) {
-        val colourRasters = mutableListOf<Array<Array<Color>>>()
-        val texts = mutableListOf<String>()
         val readImage = ImageIO.read(path.toFile())
-
 
         val matrixImage = Matrix(readImage.height, readImage.width, { row, column -> false })
         for (row in 0 until readImage.height) {
@@ -49,14 +46,14 @@ private object HoughTransformExperiment {
         })
 
         val dst = Mat()
-        Imgproc.Canny(opencvMat, dst, 50.0, 200.0, 3, false);
+        Imgproc.Canny(opencvMat, dst, 20.0, 200.0, 3, false);
 
         val cdst = Mat()
         Imgproc.cvtColor(dst, cdst, Imgproc.COLOR_GRAY2BGR)
 
         // Standard Hough Line Transform
         val lines = Mat() // will hold the results of the detection
-        Imgproc.HoughLines(dst, lines, 1.0, Math.PI / 180, 50) // runs the actual detection
+        Imgproc.HoughLines(dst, lines, 1.0, Math.PI / 18, 30) // runs the actual detection
 
         // Draw the lines
         for (x in 0 until lines.rows()) {

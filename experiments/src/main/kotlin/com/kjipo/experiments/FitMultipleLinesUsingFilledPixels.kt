@@ -33,7 +33,11 @@ object FitMultipleLinesUsingFilledPixels {
             val fittedPrototypes = mutableListOf<AngleLine>()
 
             val tempImage = Matrix.copy(shrinkImage)
-            for(counter in 0 until 20) {
+            var numberOfPixels = 0
+            tempImage.forEach{ if(it) {++numberOfPixels }}
+            var filledFixels = 0
+
+            while(filledFixels != numberOfPixels) {
                 var startPair = Pair(0, 0)
                 tempImage.forEachIndexed { row, column, value ->
                     if (value) {
@@ -48,6 +52,9 @@ object FitMultipleLinesUsingFilledPixels {
                 val fittedLine = fitSingleLine3(tempImage, startPair)
 
                 fittedLine.second.forEach {
+                    if(tempImage[it.first, it.second]) {
+                        ++filledFixels
+                    }
                     tempImage[it.first, it.second] = false
                 }
 

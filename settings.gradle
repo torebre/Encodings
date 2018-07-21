@@ -5,5 +5,5 @@ include ':encodings'
 include ':tensorflow'
 include ':visualization'
 include ':experiments'
-//include ':opencv'
+include ':opencv'
 
