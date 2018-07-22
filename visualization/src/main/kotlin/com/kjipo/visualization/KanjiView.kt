@@ -38,23 +38,23 @@ class KanjiView : View("Kanji overview") {
         var rasterCounter = 0
         val rectangles = Group()
 
-        val firstRaster = rasters.iterator().next()
+//        val firstRaster = rasters.iterator().next()
 
         rasters.forEach {
 
             if (texts.isNotEmpty()) {
-                val text = Text(currentColumn.toDouble() * firstRaster[0].size * squareSize, currentRow.toDouble() * firstRaster.size * squareSize, texts[rasterCounter])
+                val text = Text(currentColumn.toDouble() * it[0].size * squareSize, currentRow.toDouble() * it.size * squareSize, texts[rasterCounter])
                 text.font = Font(20.0)
                 text.fill = Color.BLUE
 
                 rectangles.add(text)
             }
 
-            val canvas = Canvas(firstRaster[0].size.toDouble() * squareSize, firstRaster.size.toDouble() * squareSize)
+            val canvas = Canvas(it[0].size.toDouble() * squareSize, it.size.toDouble() * squareSize)
             val gc = canvas.getGraphicsContext2D()
 
-            canvas.layoutX = currentColumn * firstRaster[0].size.toDouble() * squareSize
-            canvas.layoutY = currentRow * firstRaster.size.toDouble() * squareSize
+            canvas.layoutX = currentColumn * it[0].size.toDouble() * squareSize
+            canvas.layoutY = currentRow * it.size.toDouble() * squareSize
 
             for (row in it.indices) {
                 for (column in 0 until it[0].size) {

@@ -15,7 +15,7 @@ private object CreateDataset {
 
     fun createDataset() {
         val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"))
-        val outputDirectory = Paths.get("fragments2")
+        val outputDirectory = Paths.get("fragments3")
 
         if (!Files.exists(outputDirectory)) {
             Files.createDirectory(outputDirectory)
@@ -23,7 +23,7 @@ private object CreateDataset {
 
         loadedKanji.map {
             val image = transformArraysToMatrix(it.image)
-            Pair(it.unicode, shrinkImage(image, 32, 32))
+            Pair(it.unicode, shrinkImage(image, 64, 64))
         }
                 .forEach { pair ->
                     Files.newBufferedWriter(outputDirectory.resolve(pair.first.toString().plus(".dat")),

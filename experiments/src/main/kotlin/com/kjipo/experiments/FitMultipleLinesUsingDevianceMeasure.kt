@@ -85,6 +85,12 @@ object FitMultipleLinesUsingDevianceMeasure {
         }
 
         displayColourMatrix(dispImage, 5)
+
+
+
+
+
+
     }
 
 

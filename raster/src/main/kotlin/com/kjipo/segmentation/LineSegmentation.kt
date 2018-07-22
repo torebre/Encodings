@@ -223,9 +223,11 @@ fun computeLine(start: Pair<Int, Int>, stop: Pair<Int, Int>): List<Pair<Int, Int
     val secondTranslate = Math.abs(Math.min(0, Math.min(start.second, stop.second)))
 
     val (startPair, stopPair) = if (swap) {
-        Pair(Pair(stop.first + firstTranslate, stop.second + secondTranslate), Pair(start.first + firstTranslate, start.second + secondTranslate))
+        Pair(Pair(stop.first + firstTranslate, stop.second + secondTranslate),
+                Pair(start.first + firstTranslate, start.second + secondTranslate))
     } else {
-        Pair(Pair(start.first + firstTranslate, start.second + secondTranslate), Pair(stop.first + firstTranslate, stop.second + secondTranslate))
+        Pair(Pair(start.first + firstTranslate, start.second + secondTranslate),
+                Pair(stop.first + firstTranslate, stop.second + secondTranslate))
     }
 
     val xDelta = stopPair.first.minus(startPair.first).toDouble()
@@ -258,7 +260,7 @@ fun computeLine(start: Pair<Int, Int>, stop: Pair<Int, Int>): List<Pair<Int, Int
 
         error += deltaError
         while (error >= 0.5) {
-            newY += signYDelta * 1
+            newY += signYDelta
             error -= 1.0
         }
     }

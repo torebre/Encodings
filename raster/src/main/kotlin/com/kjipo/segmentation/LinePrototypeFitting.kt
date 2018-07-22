@@ -646,14 +646,9 @@ fun fitSingleLineUsingDevianceMeasure(inputData: Matrix<Boolean>, startPair: kot
 //    var counter = 0
 
     while (!processQueue.isEmpty()) {
-
-
-//        ++counter
-//        if(counter == 100) {
-//            break
-//        }
-
-        println("Number of elements: ${processQueue.size}")
+        if(linePrototypeFittingLog.isDebugEnabled) {
+            linePrototypeFittingLog.debug("Number of elements: ${processQueue.size}")
+        }
 
         val currentElement = processQueue.poll()
         val currentUsed = usedPixels.poll()
@@ -663,10 +658,11 @@ fun fitSingleLineUsingDevianceMeasure(inputData: Matrix<Boolean>, startPair: kot
 
         tabooSet.add(kotlin.Pair(currentElement.first(), currentElement.last()))
 
-        println("Score along line: $scoreAlongLine")
-        println("Current element: $currentElement")
-        println("Currently used: $currentUsed")
-
+        if(linePrototypeFittingLog.isDebugEnabled) {
+            linePrototypeFittingLog.debug("Score along line: $scoreAlongLine")
+            linePrototypeFittingLog.debug("Current element: $currentElement")
+            linePrototypeFittingLog.debug("Currently used: $currentUsed")
+        }
 
         result.add(kotlin.Pair(line, currentUsed))
 
@@ -679,15 +675,11 @@ fun fitSingleLineUsingDevianceMeasure(inputData: Matrix<Boolean>, startPair: kot
         for (value in FlowDirection.values()) {
             val shiftedElement = kotlin.Pair(currentElement.last().first + value.rowShift, currentElement.last().second + value.columnShift)
 
-//            if(distanceMap[shiftedElement.first][shiftedElement.second] != 0) {
-//                continue
-//            }
-
-            if(!inputData[shiftedElement.first, shiftedElement.second]) {
+            if (!FitPrototype.validCoordinates(shiftedElement.first, shiftedElement.second, inputData.numberOfRows, inputData.numberOfColumns)) {
                 continue
             }
 
-            if (!FitPrototype.validCoordinates(shiftedElement.first, shiftedElement.second, inputData.numberOfRows, inputData.numberOfColumns)) {
+            if(!inputData[shiftedElement.first, shiftedElement.second]) {
                 continue
             }
 
@@ -715,4 +707,41 @@ fun fitSingleLineUsingDevianceMeasure(inputData: Matrix<Boolean>, startPair: kot
     return Pair(bestPrototype, bestPrototypeUsedPixels)
 
 //    return result
+}
+
+
+
+fun fitMultipleLinesUsingDevianceMeasure(inputData: Matrix<Boolean>): List<AngleLine> {
+    val fittedPrototypes = mutableListOf<AngleLine>()
+    val tempImage = Matrix.copy(inputData)
+    var numberOfPixels = 0
+    tempImage.forEach {
+        if (it) {
+            ++numberOfPixels
+        }
+    }
+    var filledFixels = 0
+
+    while (filledFixels != numberOfPixels) {
+        var startPair = kotlin.Pair(0, 0)
+        tempImage.forEachIndexed { row, column, value ->
+            if (value) {
+                startPair = kotlin.Pair(row, column)
+                return@forEachIndexed
+            }
+        }
+
+        val fittedLine = fitSingleLineUsingDevianceMeasure(tempImage, startPair)
+
+        fittedLine.second.forEach {
+            if (tempImage[it.first, it.second]) {
+                ++filledFixels
+            }
+            tempImage[it.first, it.second] = false
+        }
+
+        fittedPrototypes.add(fittedLine.first)
+    }
+
+    return fittedPrototypes
 }
