@@ -161,7 +161,60 @@ public class RasterVisualizer2 {
     }
 
 
-    private static <T extends CellType> void paintRaster(
+    public static void paintRaster(java.util.List<Color[][]> colorRasters) {
+        if(colorRasters.isEmpty()) {
+            return;
+        }
+        Color[][] firstRaster = colorRasters.get(0);
+        JFXPanel panel = new JFXPanel();
+        panel.setPreferredSize(new Dimension(firstRaster[0].length * SQUARE_SIDE,
+                firstRaster.length * SQUARE_SIDE));
+        JFrame frame = new JFrame();
+        frame.add(panel);
+        Group root = new Group();
+
+        Platform.runLater(() -> {
+            Scene scene = new Scene(root, firstRaster[0].length * SQUARE_SIDE,
+                    firstRaster.length * SQUARE_SIDE, javafx.scene.paint.Color.BLACK);
+            panel.setScene(scene);
+        });
+
+        frame.pack();
+        frame.setVisible(true);
+        for (Color[][] colorRaster : colorRasters) {
+            Platform.runLater(() -> {
+
+                root.getChildren().clear();
+                Group rectangles = new Group();
+                ObservableList<Node> children = rectangles.getChildren();
+
+                for (int row = 0; row < firstRaster.length; ++row) {
+                    for (int column = 0; column < firstRaster[0].length; ++column) {
+                        javafx.scene.shape.Rectangle rectangle = new javafx.scene.shape.Rectangle(
+                                column * SQUARE_SIDE,
+                                row * SQUARE_SIDE,
+                                SQUARE_SIDE,
+                                SQUARE_SIDE);
+
+                        rectangle.setFill(colorRaster[row][column]);
+                        children.add(rectangle);
+                    }
+                }
+                root.getChildren().add(rectangles);
+
+
+            });
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    public static <T extends CellType> void paintRaster(
             Group pRoot,
             int squareSize,
             RasterRun<T> rasterRun,

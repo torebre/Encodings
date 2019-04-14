@@ -4,3 +4,4 @@
 **/build
 **/out
 kanji_output
+**/*.iml

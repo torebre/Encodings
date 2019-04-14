@@ -3,18 +3,18 @@ package com.kjipo.experiments
 import com.google.common.collect.ImmutableList
 import com.kjipo.prototype.AngleLine
 import com.kjipo.prototype.Prototype
+import com.kjipo.raster.EncodingUtilities
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitSingleLineUsingDevianceMeasure
 import com.kjipo.segmentation.shrinkImage
 import com.kjipo.skeleton.makeThin
-import com.kjipo.visualization.RasterElementProcessor
-import com.kjipo.visualization.RasterRun
-import com.kjipo.visualization.RasterVisualizer2
-import com.kjipo.visualization.displayColourMatrix
+import com.kjipo.skeleton.transformArraysToMatrix
+import com.kjipo.visualization.*
 import com.kjipo.visualization.segmentation.ColorCell
 import com.kjipo.visualization.segmentation.ColorPainter
 import javafx.scene.paint.Color
 import java.io.File
+import java.nio.file.Paths
 import javax.imageio.ImageIO
 import kotlin.streams.toList
 
@@ -22,15 +22,23 @@ import kotlin.streams.toList
 object FitMultipleLinesUsingDevianceMeasure {
 
     private fun fitLine() {
-        val readImage = ImageIO.read(File("test2.png"))
-        val image = Matrix(readImage.height, readImage.width, { row, column -> false })
-        for (row in 0 until readImage.height) {
-            for (column in 0 until readImage.width) {
-                if (readImage.getRGB(column, row) != -1) {
-                    image[row, column] = true
+//        val readImage = ImageIO.read(File("test2.png"))
+//        val image = Matrix(readImage.height, readImage.width, { row, column -> false })
+//        for (row in 0 until readImage.height) {
+//            for (column in 0 until readImage.width) {
+//                if (readImage.getRGB(column, row) != -1) {
+//                    image[row, column] = true
+//                }
+//            }
+//        }
+
+        val image = loadKanjisFromDirectory(Paths.get("kanji_output8"))
+                .filter { encodedKanji ->
+                    encodedKanji.unicode == 25022
                 }
-            }
-        }
+                .map { encodedKanji -> transformArraysToMatrix(encodedKanji.image) }
+                .first()
+
 
         val shrinkImage = makeThin(shrinkImage(image, 64, 64))
         val fittedPrototypes = mutableListOf<AngleLine>()

@@ -84,8 +84,6 @@ fun shrinkImage(image: Matrix<Boolean>, finalNumberOfRows: Int, finalNumberOfCol
 
             // TODO Can be done more efficiently
             if(count > 0) {
-
-                println("Count: $count")
                 result[row2Counter, column2Counter] = true
             }
             ++column2Counter

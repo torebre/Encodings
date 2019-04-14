@@ -1,10 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'kotlin'
 
-dependencies {
-    compile group: 'org.tensorflow', name: 'tensorflow', version: '1.13.1'
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"}
-
 buildscript {
     repositories {
         mavenCentral()
@@ -16,4 +12,10 @@ buildscript {
 
 repositories {
     mavenCentral()
+}
+
+dependencies {
+    compile project(":raster")
+    compile group: 'org.tensorflow', name: 'tensorflow', version: '1.13.1'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
