@@ -1,9 +1,7 @@
 package com.kjipo.graph
 
 
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal.Symbols.select
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.`__`.outE
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.`__`.select
 import org.apache.tinkerpop.gremlin.structure.Edge
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph
 import java.nio.file.Files
@@ -25,44 +23,43 @@ object LoadAllKanjiGraphs {
         }
 
 
-        val graph = graphList[0]
+        val pathCountMap = mutableMapOf<List<Int>, Int>()
+        for (graph in graphList) {
+            val traversals = graph.traversal()
+                    .withComputer()
+                    .V()
+                    .repeat(
+                            outE().`as`("e")
+                                    .inV()).times(5)
+                    .path()
 
 
-//        println("Graph: ${graph.features()}")
-
-        val traversals = graph.traversal()
-                .withComputer()
-//                .E()
-                .V()
-                .repeat(
-                        outE().`as`("e")
-                                .inV()).times(5)
-//                .shortestPath()
-                .path()
-//                .by("e")
-//                .select<Any>("e")
-//                .values<Any>("category")
-//                .outE("e_category")
-//                .outE()
-//                .path()
-//                .by("category")
-//                .group<Any, Any>()
-//                .select<Any>("e")
-//                .label()
-//                .by(select<Any, Any>("e"))
-//                        .values<Any>("category"))
-//                .valueMap<Any>()
-//                .toList()
-
-        for (traversal in traversals) {
-            val filteredPath = traversal.filter { it is Edge }
-                    .map { it as Edge }
-                    .map { graph.edges(it.id()).next().property<Any>("category").value() }
+            for (traversal in traversals) {
+                val filteredPath = traversal.filter { it is Edge }
+                        .map { it as Edge }
+                        .map { graph.edges(it.id()).next().property<Double>("category").value() }
+                        .map { it.toInt() }
 
 //            println("Traversal: $traversal")
-            println("Filtered path: $filteredPath")
+//            println("Filtered path: $filteredPath")
+
+                pathCountMap.compute(filteredPath) { key, value ->
+                    if (value == null) {
+                        1
+                    } else {
+                        value + 1
+                    }
+                }
+            }
         }
 
+        pathCountMap.map {
+            Pair(it.key, it.value)
+        }
+                .sortedBy { it.second }
+                .forEach {
+                    println("Key: ${it.first}. Value: ${it.second}")
+                }
     }
 
 
