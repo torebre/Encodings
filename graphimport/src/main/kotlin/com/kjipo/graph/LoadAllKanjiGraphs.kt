@@ -9,6 +9,7 @@ import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
+import kotlin.streams.toList
 
 
 object LoadAllKanjiGraphs {
@@ -76,7 +77,7 @@ object LoadAllKanjiGraphs {
             graphList.add(newGraph)
         }
 
-        val allPaths = mutableListOf<List<Vertex>>()
+        val allPaths = mutableListOf<List<PathElement>>()
 
         println("Examining graphs")
 
@@ -86,17 +87,16 @@ object LoadAllKanjiGraphs {
             val vertex = vertices.next()
             val seenVertices = mutableSetOf<Vertex>()
 
-
             seenVertices.add(vertex)
 
-            val pathsToProcess = ArrayDeque<List<Vertex>>()
-            pathsToProcess.add(listOf(vertex))
+            val pathsToProcess = ArrayDeque<List<PathElement>>()
+            pathsToProcess.add(listOf(PathElement(vertex, -1)))
 
             while (pathsToProcess.isNotEmpty()) {
                 val pathToExpand = pathsToProcess.poll()
                 val lastVertexOnPath = pathToExpand.last()
 
-                val edges = lastVertexOnPath.edges(Direction.BOTH)
+                val edges = lastVertexOnPath.vertex.edges(Direction.BOTH)
 
                 for (edge in edges) {
                     val category = edge.property<Double>("category").orElseThrow {
@@ -105,7 +105,7 @@ object LoadAllKanjiGraphs {
                     for (verticesAtEdge in edge.bothVertices()) {
                         if (!seenVertices.contains(verticesAtEdge)) {
                             seenVertices.add(verticesAtEdge)
-                            val extendedPath = pathToExpand + verticesAtEdge
+                            val extendedPath = pathToExpand + LoadAllKanjiGraphs.PathElement(verticesAtEdge, category)
 
                             allPaths.add(extendedPath)
 
@@ -120,10 +120,20 @@ object LoadAllKanjiGraphs {
 
         }
 
-        println("All paths: $allPaths")
+//        println("All paths: $allPaths")
 
+        val transformedPaths = mutableListOf<Path>()
+
+        for (path in allPaths) {
+            transformedPaths.add(Path(path.stream().skip(1).map { it.category }.toList()))
+        }
+
+        println("Transformed paths: $transformedPaths")
 
     }
+
+
+    data class PathElement(val vertex: Vertex, val category: Int)
 
 
     data class Path(val clusters: List<Int>) {
