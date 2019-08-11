@@ -1,6 +1,11 @@
 package com.kjipo.graph
 
 
+import com.kjipo.experiments.LoadKanjiFromCsvFile
+import com.kjipo.segmentation.Matrix
+import com.kjipo.skeleton.transformToArrays
+import com.kjipo.visualization.displayColourRasters
+import javafx.scene.paint.Color
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.`__`.outE
 import org.apache.tinkerpop.gremlin.structure.Direction
 import org.apache.tinkerpop.gremlin.structure.Edge
@@ -9,6 +14,7 @@ import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
+import kotlin.math.abs
 import kotlin.streams.toList
 
 
@@ -66,24 +72,26 @@ object LoadAllKanjiGraphs {
     }
 
 
-    private fun traversePaths() {
-        val graphList = mutableListOf<TinkerGraph>()
-
-        Files.list(Paths.get("/home/student/workspace/kanjiR/kanji_graphs2")).forEach { graphMlFile ->
-            val newGraph = TinkerGraph.open()
-            newGraph.traversal().io<Any>(graphMlFile.toAbsolutePath().toString())
-                    .read()
-                    .iterate()
-            graphList.add(newGraph)
-        }
-
+    private fun traversePaths(): MutableMap<Path, MutableList<VertexPath>> {
         val allPaths = mutableListOf<List<PathElement>>()
 
         println("Examining graphs")
 
+        val pathMap = mutableMapOf<Path, MutableList<VertexPath>>()
+
         // TODO Restricting the range while developing
-        for (graph in graphList.subList(1, 10)) {
-            val vertices = graph.vertices()
+//        for (graphMlFile in Files.list(Paths.get("/home/student/workspace/kanjiR/kanji_graphs3"))) {
+        for (graphMlFile in Files.list(Paths.get("/home/student/workspace/kanjiR/kanji_graphs3")).limit(10)) {
+            val fileName = graphMlFile.getName(graphMlFile.nameCount - 1).toString()
+            val kanjiUnicode = fileName.substringBefore('.').toInt()
+
+            val newGraph = TinkerGraph.open()
+            newGraph.traversal().io<Any>(graphMlFile.toAbsolutePath().toString())
+                    .read()
+                    .iterate()
+
+
+            val vertices = newGraph.vertices()
             val vertex = vertices.next()
             val seenVertices = mutableSetOf<Vertex>()
 
@@ -105,41 +113,99 @@ object LoadAllKanjiGraphs {
                     for (verticesAtEdge in edge.bothVertices()) {
                         if (!seenVertices.contains(verticesAtEdge)) {
                             seenVertices.add(verticesAtEdge)
-                            val extendedPath = pathToExpand + LoadAllKanjiGraphs.PathElement(verticesAtEdge, category)
-
+                            val extendedPath = pathToExpand + PathElement(verticesAtEdge, category)
                             allPaths.add(extendedPath)
-
                             pathsToProcess.add(extendedPath)
                         }
-
-
                     }
                 }
+            }
+
+            for (path in allPaths) {
+                val vertexList = path.map { it.vertex.property<Double>("lineNumber") }.map { it.orElseThrow({ java.lang.IllegalStateException("Expecting lineNumber property to be present") }).toInt() }.toList()
+
+//            for(element in path) {
+//                val lineNumber = element.vertex.property<Double>("lineNumber")
+//                println("Line number: $lineNumber")
+//            }
+
+                val transformedPath = Path(path.stream().skip(1).map { it.category }.toList())
+
+
+                if (pathMap.containsKey(transformedPath)) {
+                    pathMap[transformedPath]?.add(VertexPath(vertexList, kanjiUnicode))
+                } else {
+                    pathMap[transformedPath] = mutableListOf(VertexPath(vertexList, kanjiUnicode))
+                }
+
             }
 
 
         }
 
-//        println("All paths: $allPaths")
 
-        val transformedPaths = mutableListOf<Path>()
+//        println("Transformed paths: $pathMap")
 
-        for (path in allPaths) {
-            transformedPaths.add(Path(path.stream().skip(1).map { it.category }.toList()))
-        }
-
-        println("Transformed paths: $transformedPaths")
+        return pathMap
 
     }
 
 
-    data class PathElement(val vertex: Vertex, val category: Int)
+    private fun markLines(pathMap: MutableMap<Path, MutableList<VertexPath>>) {
+        val kanjiData = Paths.get("kanji_data_full.csv")
+        val unicodeKanjiMap = LoadKanjiFromCsvFile.readKanjiFile(kanjiData)
+
+        val path = pathMap.entries.stream().filter {
+            it.value.size > 2
+        }
+                .findAny().orElseThrow { throw java.lang.IllegalStateException("Expecting at least one path with length greater than 2") }
 
 
-    data class Path(val clusters: List<Int>) {
+        val colourRasters = mutableListOf<Array<Array<Color>>>()
+        val texts = mutableListOf<String>()
+        val (minX, maxX, minY, maxY) = LoadKanjiFromCsvFile.findMinAndMax(unicodeKanjiMap)
+
+        for (vertexPath in path.value) {
+            val lineData = unicodeKanjiMap[vertexPath.kanjiUnicode]
+
+            lineData?.let { lines ->
+                var counter = 0
+                val dispImage = Matrix(abs(maxX - minX), abs(maxY - minY)) { _, _ ->
+                    Color.BLACK
+                }
+
+                lines.forEach {
+                    it.segments.flatMap { it.pairs }.forEach {
+                        if (it.row >= 0 && it.row < dispImage.numberOfRows && it.column >= 0 && it.column < dispImage.numberOfColumns) {
+                            if (dispImage[it.row, it.column].brightness == 1.0) {
+                                dispImage[it.row, it.column] = Color.WHITE
+                            } else {
+                                dispImage[it.row, it.column] = Color.hsb(counter.toDouble().div(lines.size).times(360), 1.0, 1.0)
+                            }
+                        }
+                    }
+                    ++counter
+                }
+
+                colourRasters.add(transformToArrays(dispImage))
+                texts.add(vertexPath.kanjiUnicode.toString() + ": " + String(Character.toChars(vertexPath.kanjiUnicode)))
+            }
+        }
+
+        displayColourRasters(colourRasters, texts, 2)
+
+    }
+
+
+    private data class PathElement(val vertex: Vertex, val category: Int)
+
+    private data class VertexPath(val lineNumberList: List<Int>, val kanjiUnicode: Int)
+
+
+    private data class Path(val clusters: List<Int>) {
 
         override fun hashCode(): Int {
-            return clusters.hashCode()
+            return clusters.sum()
         }
 
 
@@ -152,8 +218,8 @@ object LoadAllKanjiGraphs {
                 return false
             }
 
-            var match = false
-            search@ for (i in 0 until clusters.size) {
+            var match: Boolean
+            for (i in 0 until clusters.size) {
 
                 for (j in 0 until other.clusters.size) {
                     if (clusters[i] == other.clusters[j]) {
@@ -178,7 +244,7 @@ object LoadAllKanjiGraphs {
                             }
                         }
                         if (match) {
-                            return@search
+                            return true
                         }
                     }
                 }
@@ -186,7 +252,7 @@ object LoadAllKanjiGraphs {
 
             }
 
-            return match
+            return false
 
 
         }
@@ -198,7 +264,14 @@ object LoadAllKanjiGraphs {
     @JvmStatic
     fun main(args: Array<String>) {
 //        loadAll()
-        traversePaths()
+        val pathMap = traversePaths()
+
+        markLines(pathMap)
+
+//        val path1 = Path(listOf(1, 2, 3))
+//        val path2 = Path(listOf(1, 2, 3))
+//        println(path1 == path2)
+//        println("Test23")
 
     }
 
