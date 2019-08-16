@@ -40,25 +40,31 @@ class KanjiView : View("Kanji overview") {
 
 //        val firstRaster = rasters.iterator().next()
 
-        rasters.forEach {
+        rasters.forEach { colourRaster ->
 
             if (texts.isNotEmpty()) {
-                val text = Text(currentColumn.toDouble() * it[0].size * squareSize, currentRow.toDouble() * it.size * squareSize, texts[rasterCounter])
+                val text = Text(currentColumn.toDouble() * colourRaster[0].size * squareSize, currentRow.toDouble() * colourRaster.size * squareSize, texts[rasterCounter])
                 text.font = Font(20.0)
                 text.fill = Color.BLUE
 
                 rectangles.add(text)
             }
 
-            val canvas = Canvas(it[0].size.toDouble() * squareSize, it.size.toDouble() * squareSize)
-            val gc = canvas.getGraphicsContext2D()
+            val canvas = Canvas(colourRaster[0].size.toDouble() * squareSize + 1, colourRaster.size.toDouble() * squareSize + 1)
+            val gc = canvas.graphicsContext2D
 
-            canvas.layoutX = currentColumn * it[0].size.toDouble() * squareSize
-            canvas.layoutY = currentRow * it.size.toDouble() * squareSize
+            canvas.layoutX = currentColumn * colourRaster[0].size.toDouble() * squareSize + currentColumn
+            canvas.layoutY = currentRow * colourRaster.size.toDouble() * squareSize + currentRow
 
-            for (row in it.indices) {
-                for (column in 0 until it[0].size) {
-                    gc.setFill(it[row][column])
+            gc.fill = Color.RED
+            gc.fillRect(0.0,
+                    0.0,
+                    colourRaster[0].size.toDouble() * squareSize + 1,
+                    colourRaster.size.toDouble() * squareSize + 1)
+
+            for (row in colourRaster.indices) {
+                for (column in 0 until colourRaster[0].size) {
+                    gc.fill = colourRaster[row][column]
                     gc.fillRect(column * squareSize.toDouble(),
                             row * squareSize.toDouble(),
                             squareSize.toDouble(),
