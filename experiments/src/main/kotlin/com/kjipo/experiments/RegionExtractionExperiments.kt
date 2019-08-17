@@ -3,12 +3,14 @@ package com.kjipo.experiments
 import com.kjipo.prototype.AngleLine
 import com.kjipo.prototype.CreatePrototypeDataset
 import com.kjipo.prototype.Prototype
+import com.kjipo.raster.match.MatchDistance
 import com.kjipo.representation.EncodedKanji
 import com.kjipo.segmentation.*
 import com.kjipo.setup.transformKanjiData
 import com.kjipo.skeleton.makeThin
 import com.kjipo.skeleton.transformArraysToMatrix
 import com.kjipo.skeleton.transformToArrays
+import com.kjipo.skeleton.transformToBooleanArrays
 import com.kjipo.visualization.*
 import javafx.scene.paint.Color
 import org.slf4j.LoggerFactory
@@ -20,6 +22,7 @@ import java.nio.file.StandardOpenOption
 import java.util.stream.Collectors
 import kotlin.math.absoluteValue
 import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlin.math.sign
 import kotlin.streams.toList
 
@@ -210,30 +213,94 @@ object RegionExtractionExperiments {
     private fun testExtraction() {
         val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), 1)
 
+        val kanjiSubImages = mutableListOf<Pair<Matrix<Boolean>, MutableList<MutableList<AngleLine>>>>()
+
         for (encodedKanji in loadedKanji) {
             val kanjiMatrix = transformArraysToMatrix(encodedKanji.image)
             val standardizedImage = makeThin(shrinkImage(kanjiMatrix, 64, 64))
             val linePrototypes = fitMultipleLinesUsingDevianceMeasure(standardizedImage)
 
-            extractRegionsAroundPrototypes3(standardizedImage, linePrototypes)
+
+//            val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToBooleanArrays(standardizedImage)))
+
+            val subImages = extractRegionsAroundPrototypes3(linePrototypes)
+
+            kanjiSubImages.add(Pair(standardizedImage, subImages))
+
+//            for (subImage in subImages) {
+//                subImage
+//            }
+
         }
 
+        val colourRasters = kanjiSubImages.first().second.stream().map { linesInSet ->
+            val pointsInLine = linesInSet.stream().flatMap { it.segments.first().pairs.stream() }.map { Pair(it.row, it.column) }.toList()
+            val rectangle = zoomRegion(createRectangleFromEncompassingPoints(pointsInLine), 64, 64)
+
+            val colourRaster = Array(rectangle.numberOfRows, { row ->
+                Array(rectangle.numberOfColumns, { column ->
+                    if (rectangle[row, column]) {
+                        Color.WHITE
+                    } else {
+                        Color.BLACK
+                    }
+                })
+            })
+            colourRaster
+        }.toList()
+
+        displayColourRasters(colourRasters, squareSize = 1)
     }
 
 
-    private fun extractRegionsAroundPrototypes3(image: Matrix<Boolean>, linePrototypes: List<AngleLine>) {
+    private fun extractRegionsAroundPrototypes3(linePrototypes: List<AngleLine>): MutableList<MutableList<AngleLine>> {
         val lineSets = mutableListOf<MutableList<AngleLine>>()
         for (linePrototype in linePrototypes) {
             if (linePrototype.length < 2) {
                 continue
             }
-            lineSets.add(extractLines(linePrototype, linePrototypes, true))
-            lineSets.add(extractLines(linePrototype, linePrototypes, false))
+
+            for (i in 2 until 10) {
+                extractLines(linePrototype, linePrototypes, true, i).let { lines ->
+                    if (lines.isNotEmpty()) {
+                        val linesInNewSet = mutableListOf<AngleLine>()
+                        linesInNewSet.add(linePrototype)
+                        lines.map {
+
+                            val rotatedStartPoint = rotateAboutPoint(it.startPair.column.toDouble(), it.startPair.row.toDouble(), linePrototype.startPair.column.toDouble(), linePrototype.startPair.row.toDouble(), -linePrototype.angle)
+                            val rotatedEndPoint = rotateAboutPoint(it.endPair.column.toDouble(), it.endPair.row.toDouble(), linePrototype.startPair.column.toDouble(), linePrototype.startPair.row.toDouble(), -linePrototype.angle)
+
+                            AngleLine(it.id, com.kjipo.raster.segment.Pair(rotatedStartPoint.second.roundToInt(), rotatedStartPoint.first.roundToInt()),
+                                    com.kjipo.raster.segment.Pair(rotatedEndPoint.second.roundToInt(), rotatedEndPoint.first.roundToInt()))
+                        }.forEach {
+                            linesInNewSet.add(it)
+                        }
+
+                        lineSets.add(linesInNewSet)
+                    }
+                }
+
+//                extractLines(linePrototype, linePrototypes, false, i).let {
+//                    if (it.isNotEmpty()) {
+//                        lineSets.add(it)
+//                    }
+//                }
+            }
         }
 
+        return lineSets
+    }
+
+
+    private fun rotateAboutPoint(x: Double, y: Double, rotationX: Double, rotationY: Double, angle: Double) =
+            Pair(rotationX + (x - rotationX) * Math.cos(angle) - (y - rotationY) * Math.sin(angle),
+                    rotationY + (x - rotationY) * Math.sin(angle) + (y - rotationY) * Math.cos(angle))
+
+
+    private fun showRasters(numberOfRows: Int, numberOfColumns: Int, lineSets: MutableList<MutableList<AngleLine>>) {
         val colourRasters = mutableListOf<Array<Array<Color>>>()
         for (lineSet in lineSets) {
-            val dispImage = Matrix(image.numberOfRows, image.numberOfColumns) { row, column ->
+            val dispImage = Matrix(numberOfRows, numberOfColumns) { row, column ->
                 Color.BLACK
             }
 
@@ -246,13 +313,12 @@ object RegionExtractionExperiments {
             }
             colourRasters.add(transformToArrays(dispImage))
         }
+        displayColourRasters(colourRasters, squareSize = 1)
 
-        // TODO Only looking at sublist while debugging
-        displayColourRasters(colourRasters.subList(0, 10), squareSize = 5)
     }
 
 
-    private fun extractLines(linePrototype: AngleLine, linePrototypes: List<AngleLine>, side: Boolean): MutableList<AngleLine> {
+    private fun extractLines(linePrototype: AngleLine, linePrototypes: List<AngleLine>, side: Boolean, numberOfLinesToInclude: Int): MutableList<AngleLine> {
         val x1 = linePrototype.startPair.column.toDouble()
         val y1 = linePrototype.startPair.row.toDouble()
 
@@ -298,7 +364,7 @@ object RegionExtractionExperiments {
             }
         }
 
-        val cutOff = lineDistanceMap.values.sortedDescending().reversed().stream().skip(5).findFirst().orElse(0.0)
+        val cutOff = lineDistanceMap.values.sortedDescending().reversed().stream().skip(numberOfLinesToInclude.toLong()).findFirst().orElse(0.0)
         lineDistanceMap.entries.stream().filter {
             it.value <= cutOff
         }

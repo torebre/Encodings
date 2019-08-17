@@ -13,6 +13,9 @@ import java.nio.file.Paths
 import kotlin.math.roundToInt
 
 
+/**
+ * Contains code used to create a dataset for R
+ */
 private object ExtractRelationDataFromKanji {
 
 
