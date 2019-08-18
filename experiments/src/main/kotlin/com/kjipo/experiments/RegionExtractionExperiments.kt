@@ -211,46 +211,74 @@ object RegionExtractionExperiments {
 
 
     private fun testExtraction() {
-        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), 1)
-
-        val kanjiSubImages = mutableListOf<Pair<Matrix<Boolean>, MutableList<MutableList<AngleLine>>>>()
+        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), 3)
+        val kanjiSubImages = mutableListOf<SubImageHolder>()
 
         for (encodedKanji in loadedKanji) {
             val kanjiMatrix = transformArraysToMatrix(encodedKanji.image)
             val standardizedImage = makeThin(shrinkImage(kanjiMatrix, 64, 64))
             val linePrototypes = fitMultipleLinesUsingDevianceMeasure(standardizedImage)
-
-
-//            val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToBooleanArrays(standardizedImage)))
-
             val subImages = extractRegionsAroundPrototypes3(linePrototypes)
 
-            kanjiSubImages.add(Pair(standardizedImage, subImages))
+            for (subImage in subImages) {
+                val pointsInLine = subImage.stream().flatMap { it.segments.first().pairs.stream() }.map { Pair(it.row, it.column) }.toList()
+                val rectangle = zoomRegion(createRectangleFromEncompassingPoints(pointsInLine), 64, 64)
+                val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToBooleanArrays(rectangle)))
 
-//            for (subImage in subImages) {
-//                subImage
-//            }
-
+                kanjiSubImages.add(SubImageHolder(encodedKanji, subImage, distanceMatrix, rectangle))
+            }
         }
 
-        val colourRasters = kanjiSubImages.first().second.stream().map { linesInSet ->
-            val pointsInLine = linesInSet.stream().flatMap { it.segments.first().pairs.stream() }.map { Pair(it.row, it.column) }.toList()
+        val subImageDistances = mutableMapOf<String, Int>()
+        for (kanjiSubImage in kanjiSubImages) {
+            for (kanjiSubImage2 in kanjiSubImages) {
+                if (kanjiSubImage.encodedKanji.unicode == kanjiSubImage2.encodedKanji.unicode) {
+                    // Only look for similar shapes in different kanji for now
+                    continue
+                }
+
+                var distance1 = 0
+                kanjiSubImage.pixelMatrix.forEachIndexed { row, column, value ->
+                    distance1 += kanjiSubImage2.distanceMatrix[row, column]
+                }
+
+                var distance2 = 0
+                kanjiSubImage2.pixelMatrix.forEachIndexed { row, column, value ->
+                    distance2 += kanjiSubImage.distanceMatrix[row, column]
+                }
+
+                val id1 = kanjiSubImage.subImages.stream().map { it.id.toString() }.toList().joinToString("_")
+                val id2 = kanjiSubImage2.subImages.stream().map { it.id.toString() }.toList().joinToString("_")
+                val distance = distance1 + distance2 / 2
+
+                subImageDistances[kanjiSubImage.encodedKanji.unicode.toString() + "-" + kanjiSubImage2.encodedKanji.unicode.toString() + "-" + id1 + "-" + id2] = distance
+            }
+        }
+
+        println("Distances: $subImageDistances")
+
+        val colourRasters = kanjiSubImages.stream().limit(200).map { subImageHolder ->
+            val pointsInLine = subImageHolder.subImages.stream().flatMap { it.segments.first().pairs.stream() }.map { Pair(it.row, it.column) }.toList()
             val rectangle = zoomRegion(createRectangleFromEncompassingPoints(pointsInLine), 64, 64)
 
-            val colourRaster = Array(rectangle.numberOfRows, { row ->
-                Array(rectangle.numberOfColumns, { column ->
+            val colourRaster = Array(rectangle.numberOfRows) { row ->
+                Array(rectangle.numberOfColumns) { column ->
                     if (rectangle[row, column]) {
                         Color.WHITE
                     } else {
                         Color.BLACK
                     }
-                })
-            })
+                }
+            }
             colourRaster
         }.toList()
 
+
         displayColourRasters(colourRasters, squareSize = 1)
     }
+
+
+    private data class SubImageHolder(val encodedKanji: EncodedKanji, val subImages: MutableList<AngleLine>, val distanceMatrix: Matrix<Int>, val pixelMatrix: Matrix<Boolean>)
 
 
     private fun extractRegionsAroundPrototypes3(linePrototypes: List<AngleLine>): MutableList<MutableList<AngleLine>> {
@@ -279,12 +307,6 @@ object RegionExtractionExperiments {
                         lineSets.add(linesInNewSet)
                     }
                 }
-
-//                extractLines(linePrototype, linePrototypes, false, i).let {
-//                    if (it.isNotEmpty()) {
-//                        lineSets.add(it)
-//                    }
-//                }
             }
         }
 
