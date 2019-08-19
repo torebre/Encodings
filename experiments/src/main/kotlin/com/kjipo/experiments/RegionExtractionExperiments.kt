@@ -211,13 +211,14 @@ object RegionExtractionExperiments {
 
 
     private fun testExtraction() {
-        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), 3)
+        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"))
         val kanjiSubImages = mutableListOf<SubImageHolder>()
 
         for (encodedKanji in loadedKanji) {
             val kanjiMatrix = transformArraysToMatrix(encodedKanji.image)
             val standardizedImage = makeThin(shrinkImage(kanjiMatrix, 64, 64))
             val linePrototypes = fitMultipleLinesUsingDevianceMeasure(standardizedImage)
+
             val subImages = extractRegionsAroundPrototypes3(linePrototypes)
 
             for (subImage in subImages) {
@@ -255,9 +256,16 @@ object RegionExtractionExperiments {
             }
         }
 
-        println("Distances: $subImageDistances")
+        Files.newBufferedWriter(Paths.get("sub_image_distances.csv")).use { bufferedWriter ->
+            subImageDistances.entries.forEach {
+                bufferedWriter.write(it.key)
+                bufferedWriter.write(",")
+                bufferedWriter.write(it.value)
+                bufferedWriter.newLine();
+            }
+        }
 
-        val colourRasters = kanjiSubImages.stream().limit(200).map { subImageHolder ->
+        val colourRasters = kanjiSubImages.stream().limit(800).map { subImageHolder ->
             val pointsInLine = subImageHolder.subImages.stream().flatMap { it.segments.first().pairs.stream() }.map { Pair(it.row, it.column) }.toList()
             val rectangle = zoomRegion(createRectangleFromEncompassingPoints(pointsInLine), 64, 64)
 
@@ -272,6 +280,7 @@ object RegionExtractionExperiments {
             }
             colourRaster
         }.toList()
+
 
 
         displayColourRasters(colourRasters, squareSize = 1)

@@ -253,7 +253,7 @@ private fun fitSingleLine(inputData: Matrix<Boolean>, startPrototype: AngleLine)
     var bestPrototype = AngleLine(1, Pair(0, 0), 1.0, 0.0)
 
     for (movement in startPrototype.movements) {
-        val startAndEnd = kotlin.Pair(movement.startPair, movement.endPair)
+        val startAndEnd = Pair(movement.startPair, movement.endPair)
         if (tabooSet.contains(startAndEnd)) {
             continue
         }
@@ -296,10 +296,10 @@ private fun fitSingleLine(inputData: Matrix<Boolean>, startPrototype: AngleLine)
 
 
 private fun expandFit(prototypeHistory: MutableList<AngleLine>, distanceMatrix: Matrix<Int>, tabooSet: MutableSet<kotlin.Pair<Pair, Pair>>, scoreHistory: MutableList<Int>): kotlin.Pair<AngleLine, Int> {
-    if (tabooSet.contains(kotlin.Pair(prototypeHistory.last().startPair, prototypeHistory.last().endPair))) {
-        return kotlin.Pair(prototypeHistory.last(), scoreHistory.last())
+    if (tabooSet.contains(Pair(prototypeHistory.last().startPair, prototypeHistory.last().endPair))) {
+        return Pair(prototypeHistory.last(), scoreHistory.last())
     }
-    tabooSet.add(kotlin.Pair(prototypeHistory.last().startPair, prototypeHistory.last().endPair))
+    tabooSet.add(Pair(prototypeHistory.last().startPair, prototypeHistory.last().endPair))
 
     if (scoreHistory.size > 3) {
 
@@ -313,7 +313,7 @@ private fun expandFit(prototypeHistory: MutableList<AngleLine>, distanceMatrix: 
             for (score in scoreHistory.asReversed()) {
                 if (score > previousValue) {
                     if (bestScore < score) {
-                        return kotlin.Pair(prototypeHistory[index], score)
+                        return Pair(prototypeHistory[index], score)
                     }
                 }
                 previousValue = score
@@ -328,7 +328,7 @@ private fun expandFit(prototypeHistory: MutableList<AngleLine>, distanceMatrix: 
     var bestPrototype = AngleLine(1, Pair(0, 0), 1.0, 0.0)
 
     for (movement in prototypeHistory.last().movements) {
-        val startAndEnd = kotlin.Pair(movement.startPair, movement.endPair)
+        val startAndEnd = Pair(movement.startPair, movement.endPair)
         if (tabooSet.contains(startAndEnd)) {
             continue
         }
@@ -374,7 +374,7 @@ private fun expandFit(prototypeHistory: MutableList<AngleLine>, distanceMatrix: 
         }
     }
 
-    return kotlin.Pair(bestPrototype, bestScore)
+    return Pair(bestPrototype, bestScore)
 }
 
 fun fitSingleLine2(inputData: Matrix<Boolean>, startPrototype: AngleLine): AngleLine {
@@ -395,7 +395,7 @@ fun fitSingleLine2(inputData: Matrix<Boolean>, startPrototype: AngleLine): Angle
         val currentElement = processQueue.element()
 
         for (movement in currentElement.movements) {
-            val startAndEnd = kotlin.Pair(movement.startPair, movement.endPair)
+            val startAndEnd = Pair(movement.startPair, movement.endPair)
             if (tabooSet.contains(startAndEnd)) {
                 continue
             }
@@ -439,7 +439,7 @@ private fun expandFit2(prototype: AngleLine, distanceMatrix: Matrix<Int>, tabooS
     var bestPrototype = AngleLine(1, Pair(0, 0), 1.0, 0.0)
 
     for (movement in prototype.movements) {
-        val startAndEnd = kotlin.Pair(movement.startPair, movement.endPair)
+        val startAndEnd = Pair(movement.startPair, movement.endPair)
         if (tabooSet.contains(startAndEnd)) {
             continue
         }
@@ -475,7 +475,7 @@ private fun expandFit2(prototype: AngleLine, distanceMatrix: Matrix<Int>, tabooS
 
     }
 
-    return kotlin.Pair(bestPrototype, bestScore)
+    return Pair(bestPrototype, bestScore)
 }
 
 
@@ -558,7 +558,7 @@ fun fitSingleLine3(inputData: Matrix<Boolean>, startPair: kotlin.Pair<Int, Int>)
 
             derivativeRatioHistory.add(derivativeHistory.last().div(totalLength.toDouble()))
 
-            if(derivativeHistory.size > 1 && derivativeHistory.last() < -1 && derivativeHistory[derivativeHistory.lastIndex - 1] < -1) {
+            if (derivativeHistory.size > 1 && derivativeHistory.last() < -1 && derivativeHistory[derivativeHistory.lastIndex - 1] < -1) {
                 println("Score history: $scoreHistory")
                 println("Derivative history: $derivativeHistory")
                 println("Second derivative history: $secondDerivativeHistory")
@@ -625,7 +625,6 @@ fun fitSingleLine3(inputData: Matrix<Boolean>, startPair: kotlin.Pair<Int, Int>)
 }
 
 
-
 fun fitSingleLineUsingDevianceMeasure(inputData: Matrix<Boolean>, startPair: kotlin.Pair<Int, Int>): kotlin.Pair<AngleLine, Set<kotlin.Pair<Int, Int>>> {
     val distanceMap = MatchDistance.computeDistanceMap(transformToBooleanArrays(inputData))
     val distanceMatrix = transformArraysToMatrix(distanceMap)
@@ -640,34 +639,32 @@ fun fitSingleLineUsingDevianceMeasure(inputData: Matrix<Boolean>, startPair: kot
     processQueue.add(listOf(startPair))
     usedPixels.add(setOf(startPair))
 
-
     val result = mutableListOf<kotlin.Pair<AngleLine, Set<kotlin.Pair<Int, Int>>>>()
 
-//    var counter = 0
-
+    var idCounter = 0
     while (!processQueue.isEmpty()) {
-        if(linePrototypeFittingLog.isDebugEnabled) {
+        if (linePrototypeFittingLog.isDebugEnabled) {
             linePrototypeFittingLog.debug("Number of elements: ${processQueue.size}")
         }
 
         val currentElement = processQueue.poll()
         val currentUsed = usedPixels.poll()
-        val line = AngleLine(1, Pair(currentElement.first().first, currentElement.first().second), Pair(currentElement.last().first, currentElement.last().second))
-        val scoreAlongLine= line.segments[0].pairs.map { -distanceMatrix[it.row, it.column] }
+        val line = AngleLine(idCounter++, Pair(currentElement.first().first, currentElement.first().second), Pair(currentElement.last().first, currentElement.last().second))
+        val scoreAlongLine = line.segments[0].pairs.map { -distanceMatrix[it.row, it.column] }
                 .toList()
 
-        tabooSet.add(kotlin.Pair(currentElement.first(), currentElement.last()))
+        tabooSet.add(Pair(currentElement.first(), currentElement.last()))
 
-        if(linePrototypeFittingLog.isDebugEnabled) {
+        if (linePrototypeFittingLog.isDebugEnabled) {
             linePrototypeFittingLog.debug("Score along line: $scoreAlongLine")
             linePrototypeFittingLog.debug("Current element: $currentElement")
             linePrototypeFittingLog.debug("Currently used: $currentUsed")
         }
 
-        result.add(kotlin.Pair(line, currentUsed))
+        result.add(Pair(line, currentUsed))
 
-        if(scoreAlongLine.size > bestPrototype.segments[0].pairs.size
-        && scoreAlongLine.min()?: Int.MIN_VALUE > -2) {
+        if (scoreAlongLine.size > bestPrototype.segments[0].pairs.size
+                && scoreAlongLine.min() ?: Int.MIN_VALUE > -2) {
             bestPrototype = line
             bestPrototypeUsedPixels = currentUsed
         }
@@ -679,22 +676,17 @@ fun fitSingleLineUsingDevianceMeasure(inputData: Matrix<Boolean>, startPair: kot
                 continue
             }
 
-            if(!inputData[shiftedElement.first, shiftedElement.second]) {
+            if (!inputData[shiftedElement.first, shiftedElement.second]) {
                 continue
             }
 
-            if(currentUsed.contains(shiftedElement)) {
+            if (currentUsed.contains(shiftedElement)) {
                 continue
             }
 
-            if(tabooSet.contains(kotlin.Pair(currentElement.first(), shiftedElement))) {
+            if (tabooSet.contains(Pair(currentElement.first(), shiftedElement))) {
                 continue
             }
-
-
-//            if(processQueue.contains(currentElement + shiftedElement)) {
-//                println("Test23")
-//            }
 
             processQueue.add(currentElement + shiftedElement)
             usedPixels.add(currentUsed + shiftedElement)
@@ -702,13 +694,8 @@ fun fitSingleLineUsingDevianceMeasure(inputData: Matrix<Boolean>, startPair: kot
 
     }
 
-
-
     return Pair(bestPrototype, bestPrototypeUsedPixels)
-
-//    return result
 }
-
 
 
 fun fitMultipleLinesUsingDevianceMeasure(inputData: Matrix<Boolean>): List<AngleLine> {
