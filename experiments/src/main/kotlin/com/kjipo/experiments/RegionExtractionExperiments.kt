@@ -19,7 +19,10 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
+import java.util.*
+import java.util.Collections.synchronizedMap
 import java.util.stream.Collectors
+import kotlin.collections.HashMap
 import kotlin.math.absoluteValue
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -212,48 +215,139 @@ object RegionExtractionExperiments {
 
     private fun testExtraction() {
         val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"))
-        val kanjiSubImages = mutableListOf<SubImageHolder>()
+//        val kanjiSubImages = mutableListOf<SubImageHolder>()
 
-        for (encodedKanji in loadedKanji) {
+        val kanjiSubImages = loadedKanji.parallelStream().flatMap {encodedKanji ->
+            println("Checking kanji: ${encodedKanji.unicode}")
+
             val kanjiMatrix = transformArraysToMatrix(encodedKanji.image)
             val standardizedImage = makeThin(shrinkImage(kanjiMatrix, 64, 64))
             val linePrototypes = fitMultipleLinesUsingDevianceMeasure(standardizedImage)
 
             val subImages = extractRegionsAroundPrototypes3(linePrototypes)
 
-            for (subImage in subImages) {
+            subImages.stream().map {subImage ->
                 val pointsInLine = subImage.stream().flatMap { it.segments.first().pairs.stream() }.map { Pair(it.row, it.column) }.toList()
                 val rectangle = zoomRegion(createRectangleFromEncompassingPoints(pointsInLine), 64, 64)
                 val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToBooleanArrays(rectangle)))
 
-                kanjiSubImages.add(SubImageHolder(encodedKanji, subImage, distanceMatrix, rectangle))
+                SubImageHolder(encodedKanji, subImage, distanceMatrix, rectangle)
             }
-        }
 
-        val subImageDistances = mutableMapOf<String, Int>()
-        for (kanjiSubImage in kanjiSubImages) {
-            for (kanjiSubImage2 in kanjiSubImages) {
-                if (kanjiSubImage.encodedKanji.unicode == kanjiSubImage2.encodedKanji.unicode) {
-                    // Only look for similar shapes in different kanji for now
-                    continue
-                }
+//            for (subImage in subImages) {
+//                val pointsInLine = subImage.stream().flatMap { it.segments.first().pairs.stream() }.map { Pair(it.row, it.column) }.toList()
+//                val rectangle = zoomRegion(createRectangleFromEncompassingPoints(pointsInLine), 64, 64)
+//                val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToBooleanArrays(rectangle)))
+//
+//                kanjiSubImages.add(SubImageHolder(encodedKanji, subImage, distanceMatrix, rectangle))
+//            }
 
-                var distance1 = 0
-                kanjiSubImage.pixelMatrix.forEachIndexed { row, column, value ->
-                    distance1 += kanjiSubImage2.distanceMatrix[row, column]
-                }
+        }.toList()
 
-                var distance2 = 0
-                kanjiSubImage2.pixelMatrix.forEachIndexed { row, column, value ->
-                    distance2 += kanjiSubImage.distanceMatrix[row, column]
-                }
+//        for (encodedKanji in loadedKanji) {
+//
+//            println("Checking kanji: ${encodedKanji.unicode}")
+//
+//            val kanjiMatrix = transformArraysToMatrix(encodedKanji.image)
+//            val standardizedImage = makeThin(shrinkImage(kanjiMatrix, 64, 64))
+//            val linePrototypes = fitMultipleLinesUsingDevianceMeasure(standardizedImage)
+//
+//            val subImages = extractRegionsAroundPrototypes3(linePrototypes)
+//
+//            for (subImage in subImages) {
+//                val pointsInLine = subImage.stream().flatMap { it.segments.first().pairs.stream() }.map { Pair(it.row, it.column) }.toList()
+//                val rectangle = zoomRegion(createRectangleFromEncompassingPoints(pointsInLine), 64, 64)
+//                val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToBooleanArrays(rectangle)))
+//
+//                kanjiSubImages.add(SubImageHolder(encodedKanji, subImage, distanceMatrix, rectangle))
+//            }
+//        }
 
-                val id1 = kanjiSubImage.subImages.stream().map { it.id.toString() }.toList().joinToString("_")
-                val id2 = kanjiSubImage2.subImages.stream().map { it.id.toString() }.toList().joinToString("_")
-                val distance = distance1 + distance2 / 2
+        println("Number of subimages: ${kanjiSubImages.size}")
 
-                subImageDistances[kanjiSubImage.encodedKanji.unicode.toString() + "-" + kanjiSubImage2.encodedKanji.unicode.toString() + "-" + id1 + "-" + id2] = distance
+        // TODO Using a sublist for testing
+        val subList = kanjiSubImages.stream().limit(5000).toList()
+
+        val subImageDistances = synchronizedMap(HashMap<String, Int>())
+        for (kanjiSubImage in subList) {
+
+            println("Looking for subimages in ${kanjiSubImage.encodedKanji.unicode}")
+
+            subList.parallelStream().filter { kanjiSubImage2 ->
+                // Only look for similar shapes in different kanji for now
+                kanjiSubImage.encodedKanji.unicode != kanjiSubImage2.encodedKanji.unicode
             }
+                    .forEach { kanjiSubImage2 ->
+                        val id1 = kanjiSubImage.subImages.stream().map { it.id.toString() }.toList().joinToString("_")
+                        val id2 = kanjiSubImage2.subImages.stream().map { it.id.toString() }.toList().joinToString("_")
+
+                        val idPart = if (id1.compareTo(id2) <= 0) {
+                            id1 + "-" + id2
+                        } else {
+                            id2 + "-" + id1
+                        }
+                        val key = kanjiSubImage.encodedKanji.unicode.toString() + "-" + kanjiSubImage2.encodedKanji.unicode.toString() + "-" + idPart
+
+                        if (!subImageDistances.containsKey(key)) {
+                            var distance1 = 0
+                            kanjiSubImage.pixelMatrix.forEachIndexed { row, column, value ->
+                                if(value) {
+                                    distance1 += kanjiSubImage2.distanceMatrix[row, column]
+                                }
+                            }
+
+                            var distance2 = 0
+                            kanjiSubImage2.pixelMatrix.forEachIndexed { row, column, value ->
+                                if(value) {
+                                    distance2 += kanjiSubImage.distanceMatrix[row, column]
+                                }
+                            }
+
+                            val distance = distance1 + distance2 / 2
+
+//                        Pair(key, distance)
+
+                            subImageDistances[key] = distance
+                        }
+                    }
+//                    .filter { it != null }
+//                    .forEach { subImageDistances[it.first] = it.second }
+//                    .collect(Collectors.toMap({ pair -> pair.first }, { pair -> pair.second }))
+
+//            for (kanjiSubImage2 in kanjiSubImages) {
+//                if (kanjiSubImage.encodedKanji.unicode == kanjiSubImage2.encodedKanji.unicode) {
+//                    // Only look for similar shapes in different kanji for now
+//                    continue
+//                }
+//
+//                val id1 = kanjiSubImage.subImages.stream().map { it.id.toString() }.toList().joinToString("_")
+//                val id2 = kanjiSubImage2.subImages.stream().map { it.id.toString() }.toList().joinToString("_")
+//
+//                val idPart = if (id1.compareTo(id2) <= 0) {
+//                    id1 + "-" + id2
+//                } else {
+//                    id2 + "-" + id1
+//                }
+//                val key = kanjiSubImage.encodedKanji.unicode.toString() + "-" + kanjiSubImage2.encodedKanji.unicode.toString() + "-" + idPart
+//
+//                if (subImageDistances.containsKey(key)) {
+//                    continue
+//                }
+//
+//                var distance1 = 0
+//                kanjiSubImage.pixelMatrix.forEachIndexed { row, column, value ->
+//                    distance1 += kanjiSubImage2.distanceMatrix[row, column]
+//                }
+//
+//                var distance2 = 0
+//                kanjiSubImage2.pixelMatrix.forEachIndexed { row, column, value ->
+//                    distance2 += kanjiSubImage.distanceMatrix[row, column]
+//                }
+//
+//                val distance = distance1 + distance2 / 2
+//
+//                subImageDistances[key] = distance
+//            }
         }
 
         Files.newBufferedWriter(Paths.get("sub_image_distances.csv")).use { bufferedWriter ->
