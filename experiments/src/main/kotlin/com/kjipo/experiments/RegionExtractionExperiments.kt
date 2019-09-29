@@ -19,7 +19,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
-import java.util.*
 import java.util.Collections.synchronizedMap
 import java.util.stream.Collectors
 import kotlin.collections.HashMap
@@ -212,74 +211,42 @@ object RegionExtractionExperiments {
 
     }
 
-
-    private fun testExtraction() {
-        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"))
-//        val kanjiSubImages = mutableListOf<SubImageHolder>()
-
-        val kanjiSubImages = loadedKanji.parallelStream().flatMap { encodedKanji ->
+    private fun extractLinePrototypes(kanjiList: List<EncodedKanji>): List<SubImageHolder> {
+        // TODO Using a subset now for quicker testing
+        return kanjiList.subList(0, 1000).parallelStream().flatMap { encodedKanji ->
             println("Checking kanji: ${encodedKanji.unicode}")
 
             val kanjiMatrix = transformArraysToMatrix(encodedKanji.image)
             val standardizedImage = makeThin(shrinkImage(kanjiMatrix, 64, 64))
             val linePrototypes = fitMultipleLinesUsingDevianceMeasure(standardizedImage)
 
-            val subImages = extractRegionsAroundPrototypes3(linePrototypes)
-
+            val subImages = extractPrototypesOneSideOfLines(linePrototypes)
+            var subImageId = 0
             subImages.stream().map { subImage ->
                 val pointsInLine = subImage.stream().flatMap { it.segments.first().pairs.stream() }.map { Pair(it.row, it.column) }.toList()
                 val rectangle = zoomRegion(createRectangleFromEncompassingPoints(pointsInLine), 64, 64)
                 val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToBooleanArrays(rectangle)))
 
-                SubImageHolder(encodedKanji, subImage, distanceMatrix, rectangle)
+                SubImageHolder(encodedKanji, subImage, distanceMatrix, rectangle, ++subImageId)
             }
-
-//            for (subImage in subImages) {
-//                val pointsInLine = subImage.stream().flatMap { it.segments.first().pairs.stream() }.map { Pair(it.row, it.column) }.toList()
-//                val rectangle = zoomRegion(createRectangleFromEncompassingPoints(pointsInLine), 64, 64)
-//                val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToBooleanArrays(rectangle)))
-//
-//                kanjiSubImages.add(SubImageHolder(encodedKanji, subImage, distanceMatrix, rectangle))
-//            }
 
         }.toList()
 
-//        for (encodedKanji in loadedKanji) {
-//
-//            println("Checking kanji: ${encodedKanji.unicode}")
-//
-//            val kanjiMatrix = transformArraysToMatrix(encodedKanji.image)
-//            val standardizedImage = makeThin(shrinkImage(kanjiMatrix, 64, 64))
-//            val linePrototypes = fitMultipleLinesUsingDevianceMeasure(standardizedImage)
-//
-//            val subImages = extractRegionsAroundPrototypes3(linePrototypes)
-//
-//            for (subImage in subImages) {
-//                val pointsInLine = subImage.stream().flatMap { it.segments.first().pairs.stream() }.map { Pair(it.row, it.column) }.toList()
-//                val rectangle = zoomRegion(createRectangleFromEncompassingPoints(pointsInLine), 64, 64)
-//                val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToBooleanArrays(rectangle)))
-//
-//                kanjiSubImages.add(SubImageHolder(encodedKanji, subImage, distanceMatrix, rectangle))
-//            }
-//        }
+    }
 
+
+    private fun testExtraction(kanjiSubImages: List<SubImageHolder>) {
         println("Number of subimages: ${kanjiSubImages.size}")
 
         // TODO Using a sublist for testing
         val subList = kanjiSubImages.stream().limit(5000).toList()
 
-
-
-
         Files.newBufferedWriter(Paths.get("kanji_data_segments.csv")).use { outputWriter ->
             outputWriter.write("unicode, line_number, angle, length, start_x, start_y, segment")
             outputWriter.newLine()
 
-            var segmentCounter = 0
             kanjiSubImages.forEach { subImageHolder ->
-                var counter = 0
-                for (subImage in subImageHolder.subImages) {
-//                    for (prototype in linePrototypes) {
+                for ((counter, subImage) in subImageHolder.subImages.withIndex()) {
                     val length = if (subImage.length.roundToInt() == 0) {
                         1.0
                     } else {
@@ -289,68 +256,50 @@ object RegionExtractionExperiments {
                     outputWriter.write(subImageHolder.encodedKanji.unicode.toString() + "," + counter
                             + "," + subImage.angle + "," + length
                             + "," + subImage.startPair.row + "," + subImage.startPair.column
-                            + "," + segmentCounter)
+                            + "," + subImageHolder.id)
                     outputWriter.newLine()
-                    ++counter
-//                    }
                 }
+            }
+        }
+
+        val subImageDistances = synchronizedMap(HashMap<String, Int>())
+        val seenComparisons = mutableSetOf<Pair<Set<Int>, Set<Int>>>()
+
+        var counter = 0
+        for (kanjiSubImage in subList) {
+            println("Counter: ${counter++}")
+
+            for (subImageHolder in subList) {
+                // Only look for similar shapes in different kanji for now
+                if (kanjiSubImage.encodedKanji.unicode == subImageHolder.encodedKanji.unicode) {
+                    continue
+                }
+
+                val id1 = kanjiSubImage.id
+                val id2 = subImageHolder.id
+
+                val identifier = Pair(setOf(kanjiSubImage.encodedKanji.unicode, subImageHolder.encodedKanji.unicode), setOf(id1, id2))
+                if (seenComparisons.contains(identifier)) {
+                    continue
+                }
+
+                val idPart = "$id1-$id2"
+                val key = kanjiSubImage.encodedKanji.unicode.toString() + "-" + subImageHolder.encodedKanji.unicode.toString() + "-" + idPart
+
+                subImageDistances[key] = computeImageDistance(kanjiSubImage, subImageHolder)
+                seenComparisons.add(identifier)
             }
 
         }
 
-
-        // TODO Comment back in to compute distances
-
-//        val subImageDistances = synchronizedMap(HashMap<String, Int>())
-//        for (kanjiSubImage in subList) {
-//
-//            println("Looking for subimages in ${kanjiSubImage.encodedKanji.unicode}")
-//
-//            subList.parallelStream().filter { kanjiSubImage2 ->
-//                // Only look for similar shapes in different kanji for now
-//                kanjiSubImage.encodedKanji.unicode != kanjiSubImage2.encodedKanji.unicode
-//            }
-//                    .forEach { kanjiSubImage2 ->
-//                        val id1 = kanjiSubImage.subImages.stream().map { it.id.toString() }.toList().joinToString("_")
-//                        val id2 = kanjiSubImage2.subImages.stream().map { it.id.toString() }.toList().joinToString("_")
-//
-//                        val idPart = if (id1.compareTo(id2) <= 0) {
-//                            id1 + "-" + id2
-//                        } else {
-//                            id2 + "-" + id1
-//                        }
-//                        val key = kanjiSubImage.encodedKanji.unicode.toString() + "-" + kanjiSubImage2.encodedKanji.unicode.toString() + "-" + idPart
-//
-//                        if (!subImageDistances.containsKey(key)) {
-//                            var distance1 = 0
-//                            kanjiSubImage.pixelMatrix.forEachIndexed { row, column, value ->
-//                                if(value) {
-//                                    distance1 += kanjiSubImage2.distanceMatrix[row, column]
-//                                }
-//                            }
-//
-//                            var distance2 = 0
-//                            kanjiSubImage2.pixelMatrix.forEachIndexed { row, column, value ->
-//                                if(value) {
-//                                    distance2 += kanjiSubImage.distanceMatrix[row, column]
-//                                }
-//                            }
-//
-//                            val distance = distance1 + distance2 / 2
-//
-//                            subImageDistances[key] = distance
-//                        }
-//                    }
-//        }
-
-//        Files.newBufferedWriter(Paths.get("sub_image_distances.csv")).use { bufferedWriter ->
-//            subImageDistances.entries.forEach {
-//                bufferedWriter.write(it.key)
-//                bufferedWriter.write(",")
-//                bufferedWriter.write(it.value.toString())
-//                bufferedWriter.newLine();
-//            }
-//        }
+        Files.newBufferedWriter(Paths.get("sub_image_distances.csv")).use { bufferedWriter ->
+            subImageDistances.entries.forEach {
+                bufferedWriter.write(it.key)
+                bufferedWriter.write(",")
+                bufferedWriter.write(it.value.toString())
+                bufferedWriter.newLine();
+            }
+        }
 
         val colourRasters = kanjiSubImages.stream().limit(800).map { subImageHolder ->
             val pointsInLine = subImageHolder.subImages.stream().flatMap { it.segments.first().pairs.stream() }.map { Pair(it.row, it.column) }.toList()
@@ -373,35 +322,60 @@ object RegionExtractionExperiments {
         displayColourRasters(colourRasters, squareSize = 1)
     }
 
+    private fun computeImageDistance(kanjiSubImage: SubImageHolder, kanjiSubImage2: SubImageHolder): Int {
+        var distance1 = 0
+        kanjiSubImage.pixelMatrix.forEachIndexed { row, column, value ->
+            if (value) {
+                distance1 += kanjiSubImage2.distanceMatrix[row, column]
+            }
+        }
 
-    private data class SubImageHolder(val encodedKanji: EncodedKanji, val subImages: MutableList<AngleLine>, val distanceMatrix: Matrix<Int>, val pixelMatrix: Matrix<Boolean>)
+        var distance2 = 0
+        kanjiSubImage2.pixelMatrix.forEachIndexed { row, column, value ->
+            if (value) {
+                distance2 += kanjiSubImage.distanceMatrix[row, column]
+            }
+        }
+
+        return ((distance1 + distance2) / 2) * (kanjiSubImage.subImages.size + kanjiSubImage2.subImages.size)
+    }
 
 
-    private fun extractRegionsAroundPrototypes3(linePrototypes: List<AngleLine>): MutableList<MutableList<AngleLine>> {
+    private data class SubImageHolder(val encodedKanji: EncodedKanji, val subImages: MutableList<AngleLine>, val distanceMatrix: Matrix<Int>, val pixelMatrix: Matrix<Boolean>, val id: Int)
+
+
+    /**
+     * Extract sub images that lie on one side of a line
+     */
+    private fun extractPrototypesOneSideOfLines(linePrototypes: List<AngleLine>): MutableList<MutableList<AngleLine>> {
         val lineSets = mutableListOf<MutableList<AngleLine>>()
         for (linePrototype in linePrototypes) {
             if (linePrototype.length < 2) {
+                // Skip lines that are short
                 continue
             }
 
-            for (i in 2 until 10) {
-                extractLines(linePrototype, linePrototypes, true, i).let { lines ->
-                    if (lines.isNotEmpty()) {
-                        val linesInNewSet = mutableListOf<AngleLine>()
-                        linesInNewSet.add(linePrototype)
-                        lines.map {
-
-                            val rotatedStartPoint = rotateAboutPoint(it.startPair.column.toDouble(), it.startPair.row.toDouble(), linePrototype.startPair.column.toDouble(), linePrototype.startPair.row.toDouble(), -linePrototype.angle)
-                            val rotatedEndPoint = rotateAboutPoint(it.endPair.column.toDouble(), it.endPair.row.toDouble(), linePrototype.startPair.column.toDouble(), linePrototype.startPair.row.toDouble(), -linePrototype.angle)
-
-                            AngleLine(it.id, com.kjipo.raster.segment.Pair(rotatedStartPoint.second.roundToInt(), rotatedStartPoint.first.roundToInt()),
-                                    com.kjipo.raster.segment.Pair(rotatedEndPoint.second.roundToInt(), rotatedEndPoint.first.roundToInt()))
-                        }.forEach {
-                            linesInNewSet.add(it)
-                        }
-
-                        lineSets.add(linesInNewSet)
+            for (side in listOf(true, false)) {
+                for (linesToInclude in 2 until 10) {
+                    val lines = extractLines(linePrototype, linePrototypes, side, linesToInclude)
+                    if (lines.isEmpty()) {
+                        // No more lines found
+                        break
                     }
+
+                    val linesInNewSet = mutableListOf<AngleLine>()
+                    linesInNewSet.add(linePrototype)
+                    lines.map {
+                        val rotatedStartPoint = rotateAboutPoint(it.startPair.column.toDouble(), it.startPair.row.toDouble(), linePrototype.startPair.column.toDouble(), linePrototype.startPair.row.toDouble(), -linePrototype.angle)
+                        val rotatedEndPoint = rotateAboutPoint(it.endPair.column.toDouble(), it.endPair.row.toDouble(), linePrototype.startPair.column.toDouble(), linePrototype.startPair.row.toDouble(), -linePrototype.angle)
+
+                        AngleLine(it.id, com.kjipo.raster.segment.Pair(rotatedStartPoint.second.roundToInt(), rotatedStartPoint.first.roundToInt()),
+                                com.kjipo.raster.segment.Pair(rotatedEndPoint.second.roundToInt(), rotatedEndPoint.first.roundToInt()))
+                    }.forEach {
+                        linesInNewSet.add(it)
+                    }
+
+                    lineSets.add(linesInNewSet)
                 }
             }
         }
@@ -436,6 +410,10 @@ object RegionExtractionExperiments {
     }
 
 
+    /**
+     * Extracts lines that line on one side of the line given as the first input argument.
+     * If the requested number of lines cannot be extracted, an empty list is returned.
+     */
     private fun extractLines(linePrototype: AngleLine, linePrototypes: List<AngleLine>, side: Boolean, numberOfLinesToInclude: Int): MutableList<AngleLine> {
         val x1 = linePrototype.startPair.column.toDouble()
         val y1 = linePrototype.startPair.row.toDouble()
@@ -444,7 +422,6 @@ object RegionExtractionExperiments {
         val y2 = linePrototype.endPair.row.toDouble()
 
         val result = mutableListOf<AngleLine>()
-
 
         val lineDistanceMap = mutableMapOf<AngleLine, Double>()
 
@@ -462,12 +439,6 @@ object RegionExtractionExperiments {
             val d = (startx - x1) * (y2 - y1) - (starty - y1) * (x2 - x1)
             val d2 = (endx - x1) * (y2 - y1) - (endy - y1) * (x2 - x1)
 
-//            if (d.absoluteValue >= 0.01
-//                    && d2.absoluteValue >= 0.01
-//                    && d.sign == d2.sign) {
-//                continue
-//            }
-
             val lengthStartPoint = (startx * (y2 - y1) - starty * (x2 - x1) + x2 * y1 - y2 * x1).absoluteValue / linePrototype.length
             val lengthEndPoint = (endx * (y2 - y1) - endy * (x2 - x1) + x2 * y1 + y2 * x1).absoluteValue / linePrototype.length
 
@@ -484,10 +455,13 @@ object RegionExtractionExperiments {
 
         val cutOff = lineDistanceMap.values.sortedDescending().reversed().stream().skip(numberOfLinesToInclude.toLong()).findFirst().orElse(0.0)
         lineDistanceMap.entries.stream().filter {
-            it.value <= cutOff
+            it.value < cutOff
         }
                 .forEach { result.add(it.key) }
 
+        if (result.size < numberOfLinesToInclude) {
+            return mutableListOf()
+        }
         return result
     }
 
@@ -501,7 +475,8 @@ object RegionExtractionExperiments {
 //                }.toList())
 
 
-        testExtraction()
+        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"))
+        testExtraction(extractLinePrototypes(loadedKanji))
     }
 
 }
