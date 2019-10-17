@@ -1,0 +1,64 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.moowork.gradle:gradle-node-plugin:1.2.0'
+    }
+}
+
+apply plugin: 'kotlin-platform-js'
+apply plugin: 'kotlin-dce-js'
+apply plugin: 'com.moowork.node'
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    compile project(':webviewer')
+    compile libraries.kotlin_stdlib_js
+//    compile "org.jetbrains.kotlinx:kotlinx-html-js:0.6.10"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
+
+    implementation "com.github.aakira:napier:$napierVersion"
+    implementation "com.github.aakira:napier-js:$napierVersion"
+
+    testCompile "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version"
+}
+
+compileKotlin2Js {
+    kotlinOptions {
+        metaInfo = true
+        sourceMap = true
+        sourceMapEmbedSources = 'always'
+        moduleKind = project.javascriptModule
+    }
+}
+
+compileTestKotlin2Js {
+    kotlinOptions.moduleKind = project.javascriptModule
+}
+
+
+task assembleWeb(type: Sync) {
+    configurations.compile.each { File file ->
+        from(zipTree(file.absolutePath), {
+            includeEmptyDirs = false
+            include { fileTreeElement ->
+                def path = fileTreeElement.path
+                path.endsWith(".js") && (path.startsWith("META-INF/resources/") ||
+                        !path.startsWith("META-INF/"))
+            }
+        })
+    }
+    from compileKotlin2Js.destinationDir
+    into "${projectDir}/web"
+
+    dependsOn classes
+}
+
+assemble.dependsOn assembleWeb
