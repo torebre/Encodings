@@ -19,7 +19,8 @@ repositories {
 }
 
 dependencies {
-    compile project(':webviewer')
+    compile project(':encodings-js')
+//    compile project(':webviewer')
     compile libraries.kotlin_stdlib_js
 //    compile "org.jetbrains.kotlinx:kotlinx-html-js:0.6.10"
     compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"

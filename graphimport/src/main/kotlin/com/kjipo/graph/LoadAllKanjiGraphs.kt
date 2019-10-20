@@ -156,10 +156,9 @@ object LoadAllKanjiGraphs {
         val unicodeKanjiMap = LoadKanjiFromCsvFile.readKanjiFile(kanjiData)
 
         val path = pathMap.entries.stream().filter {
-            it.value.size > 2
+            it.key.clusters.size > 3
         }
-                .findAny().orElseThrow { throw java.lang.IllegalStateException("Expecting at least one path with length greater than 2") }
-
+                .findAny().orElseThrow { throw java.lang.IllegalStateException("Expecting at least one path with length greater than 4") }
 
         val colourRasters = mutableListOf<Array<Array<Color>>>()
         val texts = mutableListOf<String>()
@@ -174,13 +173,16 @@ object LoadAllKanjiGraphs {
                     Color.BLACK
                 }
 
-                lines.forEach {
-                    it.segments.flatMap { it.pairs }.forEach {
+                lines.forEach { angleLine ->
+                    angleLine.segments.flatMap { it.pairs }.forEach {
                         if (it.row >= 0 && it.row < dispImage.numberOfRows && it.column >= 0 && it.column < dispImage.numberOfColumns) {
-                            if (dispImage[it.row, it.column].brightness == 1.0) {
-                                dispImage[it.row, it.column] = Color.WHITE
-                            } else {
+//                            if (dispImage[it.row, it.column].brightness == 1.0) {
+
+                            // TODO Does this cause the correct lines to be marked?
+                            if (vertexPath.lineNumberList.contains(counter)) {
                                 dispImage[it.row, it.column] = Color.hsb(counter.toDouble().div(lines.size).times(360), 1.0, 1.0)
+                            } else {
+                                dispImage[it.row, it.column] = Color.WHITE
                             }
                         }
                     }
@@ -195,7 +197,6 @@ object LoadAllKanjiGraphs {
         displayColourRasters(colourRasters, texts, 2)
 
     }
-
 
     private data class PathElement(val vertex: Vertex, val category: Int)
 

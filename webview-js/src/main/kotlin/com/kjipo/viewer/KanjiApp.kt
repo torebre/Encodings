@@ -4,7 +4,9 @@ import Bounds
 import KanjiViewer
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
+import org.w3c.xhr.XMLHttpRequest
 import kotlin.browser.document
+import com.kjipo.representation.EncodedKanji
 
 
 class KanjiApp {
@@ -15,6 +17,20 @@ class KanjiApp {
         canvas.height = 500
         canvas.width = 500
 
+        val request = XMLHttpRequest()
+        request.open("GET", "http://0.0.0.0:8090/kanji/33253", false)
+        request.send()
+
+        val response = request.response as String
+
+        console.log("Response: $response")
+
+        val loadedKanji = loadEncodedKanjiFromString(response, 33253)
+
+        console.log("Loaded kanji: $loadedKanji")
+
+
+
         val context = canvas.getContext("2d")
 
         console.log("Canvas: $canvas")
@@ -23,8 +39,29 @@ class KanjiApp {
         val kanjiViewer = KanjiViewer(Bounds(0, 0, 500, 500),
                 context as CanvasRenderingContext2D)
 
-        kanjiViewer.drawKanji()
+        kanjiViewer.drawKanji(loadedKanji)
     }
+
+
+
+    fun loadEncodedKanjiFromString(kanjiString: String, unicode: Int) = EncodedKanji(loadEncodedKanjiFromString(kanjiString.split('\n')), unicode)
+
+    fun loadEncodedKanjiFromString(kanjiString: List<String>): Array<BooleanArray> {
+        return kanjiString.map {
+            it.map {
+                if (it.equals('1')) {
+                    true
+                } else if (it.equals('0')) {
+                    false
+                } else {
+                    null
+                }
+            }
+                    .filterNotNull()
+                    .toBooleanArray()
+        }.toTypedArray()
+    }
+
 
 
 

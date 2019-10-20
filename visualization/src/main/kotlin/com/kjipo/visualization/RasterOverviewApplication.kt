@@ -1,6 +1,5 @@
 package com.kjipo.visualization
 
-import com.kjipo.representation.EncodedKanji
 import com.kjipo.segmentation.Matrix
 import javafx.application.Application
 import javafx.scene.paint.Color
@@ -10,6 +9,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.streams.toList
+import com.kjipo.representation.EncodedKanji
 
 
 class RasterOverviewApplication : App() {
@@ -132,9 +132,26 @@ fun loadKanjisFromDirectory(path: Path, limit: Long = Long.MAX_VALUE): List<Enco
             .toList()
 }
 
+fun loadKanjisFromDirectory(path: Path, unicodesToInclude: Collection<Int>): List<EncodedKanji> {
+    return Files.list(path)
+            .filter {
+                unicodesToInclude.contains(it.fileName.toString().substringBefore('.').toInt())
+            }
+            .map {
+                loadEncodedKanji(it)
+            }
+            .toList()
+}
+
 fun loadEncodedKanji(path: Path, unicodeFunction: (String) -> Int = { name -> name.substring(0, name.indexOf('.')).toInt() }): EncodedKanji {
     val fileName = path.fileName.toString()
-    return EncodedKanji(Files.readAllLines(path).map {
+    return EncodedKanji(loadEncodedKanjiFromString(Files.readAllLines(path)), unicodeFunction(fileName))
+}
+
+fun loadEncodedKanjiFromString(kanjiString: String, unicode: Int) = EncodedKanji(loadEncodedKanjiFromString(kanjiString.split('\n')), unicode)
+
+fun loadEncodedKanjiFromString(kanjiString: List<String>): Array<BooleanArray> {
+    return kanjiString.map {
         it.map {
             if (it.equals('1')) {
                 true
@@ -146,7 +163,7 @@ fun loadEncodedKanji(path: Path, unicodeFunction: (String) -> Int = { name -> na
         }
                 .filterNotNull()
                 .toBooleanArray()
-    }.toTypedArray(), unicodeFunction(fileName))
+    }.toTypedArray()
 }
 
 
@@ -164,6 +181,11 @@ fun main(args: Array<String>) {
 //
 //    displayKanjis(encodedKanjis)
 
-    displayKanjis(loadKanjisFromDirectory(Paths.get("kanji_output8"), 50))
+
+    val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), mutableListOf(33760))
+
+//    println("Loaded kanji: ${loadedKanji.size}")
+
+    displayKanjis(loadedKanji)
 
 }

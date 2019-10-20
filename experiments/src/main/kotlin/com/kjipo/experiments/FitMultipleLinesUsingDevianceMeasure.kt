@@ -73,7 +73,6 @@ object FitMultipleLinesUsingDevianceMeasure {
             fittedPrototypes.add(fittedLine.first)
         }
 
-
         val dispImage = Matrix(shrinkImage.numberOfRows, shrinkImage.numberOfColumns, { row, column ->
             if (shrinkImage[row, column]) {
                 Color.WHITE
@@ -93,12 +92,6 @@ object FitMultipleLinesUsingDevianceMeasure {
         }
 
         displayColourMatrix(dispImage, 5)
-
-
-
-
-
-
     }
 
 
