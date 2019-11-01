@@ -33,4 +33,6 @@ repositories {
 dependencies {
 //    compile libraries.kotlin_stdlib_common
     compile "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test-common:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test-annotations-common:$kotlin_version"
 }
