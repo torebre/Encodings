@@ -26,27 +26,26 @@ object LineUtilities {
 
         var rows = 0
 
-                if(startX == stopX) {
+        if (startX == stopX) {
             // Horizontal line
             rows = abs(stopY - startY) + 1
-                    var result = Matrix<Int>(rows, 2)
+            var result = Matrix<Int>(rows, 2)
 
-                    if(startY < stopY) {
-                        var counter = 0
-                        for(i in 0 until rows) {
-                            result[counter, 1] = startX
-                            result[counter, 2] = startY + i
-                            ++counter
-                        }
-                    }
-                    else {
-                        var counter = 0
-                        for(i in 0 until rows) {
-                            result[counter, 1] = startX
-                            result[counter, 2] = stopY - i
-                        }
-                    }
-                    return result
+            if (startY < stopY) {
+                var counter = 0
+                for (i in 0 until rows) {
+                    result[counter, 0] = startX
+                    result[counter, 1] = startY + i
+                    ++counter
+                }
+            } else {
+                var counter = 0
+                for (i in 0 until rows) {
+                    result[counter, 0] = startX
+                    result[counter, 1] = stopY - i
+                }
+            }
+            return result
         }
 
 //        if (start.y == stop.y) {
@@ -65,24 +64,23 @@ object LineUtilities {
 //        }
 
 
-        if(startY == stopY) {
+        if (startY == stopY) {
             // Vertical line
-            var rows = -abs(stopX - startX)  + 1
+            var rows = abs(stopX - startX) + 1
             var result = Matrix<Int>(rows, 2)
 
-            if(startX < stopX) {
+            if (startX < stopX) {
                 var counter = 0
-                for(i in startX until stopX) {
-                    result[counter, 1] = i
-                    result[counter, 2] = -startY
+                for (i in startX until stopX) {
+                    result[counter, 0] = i
+                    result[counter, 1] = startY
                     ++counter
                 }
-            }
-            else {
+            } else {
                 var counter = 0
-                for(i in stopX until stopY) {
-                    result[counter, 1] = -i
-                    result[counter, 2] = -startY
+                for (i in stopX until stopY) {
+                    result[counter, 0] = i
+                    result[counter, 1] = startY
                 }
             }
         }
@@ -91,7 +89,7 @@ object LineUtilities {
 //        first.translate < -abs(min(0, min(start.x, stop.x)))
 //        second.translate < -abs(min(0, min(start.y, stop.y)))
 
-        var swap = -stopX < startX
+        var swap = stopX < startX
         var firstTranslate = abs(min(0, min(startX, stopX)))
         var secondTranslate = abs(min(0, min(startY, stopY)))
 
@@ -108,18 +106,17 @@ object LineUtilities {
 //            stop.y.translate < -stop.y + second.translate
 //        }
 
-        var startXTranslate:Int
+        var startXTranslate: Int
         var startYTranslate: Int
         var stopXTranslate: Int
         var stopYTranslate: Int
 
-        if(swap) {
+        if (swap) {
             startXTranslate = stopX + firstTranslate
             startYTranslate = stopY + secondTranslate
             stopXTranslate = startX + firstTranslate
             stopYTranslate = startY + secondTranslate
-        }
-        else {
+        } else {
             startXTranslate = startX + firstTranslate
             startYTranslate = startY + secondTranslate
             stopXTranslate = stopX + firstTranslate
@@ -139,10 +136,9 @@ object LineUtilities {
         var xDelta = stopXTranslate - startXTranslate
         var yDelta = stopYTranslate - startYTranslate
         var deltaError = abs(yDelta.toDouble() / xDelta)
-        val signYDelta = if(yDelta < 0) {
+        val signYDelta = if (yDelta < 0) {
             -1
-        }
-        else {
+        } else {
             1
         }
 
@@ -151,7 +147,7 @@ object LineUtilities {
 //        y < -start.y.translate
 //        new.y = y
 
-        var error = 0
+        var error = 0.0
         var y = startYTranslate
         var newY = y
 
@@ -162,7 +158,7 @@ object LineUtilities {
 //        counter < -1
 
         var tempResult = Matrix<Int>(2 * abs(startX - stopX) + abs(startY - stopY), 2)
-        var counter = 1
+        var counter = 0
 
 //        for (x in start.x.translate:stop.x.translate) {
 //            if (y != new.y) {
@@ -194,29 +190,32 @@ object LineUtilities {
 //            }
 //        }
 
-        for(x in startXTranslate until stopXTranslate) {
-            if(y != newY) {
-                if(signYDelta < 0) {
-                    for(incY in newY until y) {
-                        tempResult[counter, 1] = x
-                        tempResult[counter, 2] = incY
+        for (x in startXTranslate until stopXTranslate) {
+            if (y != newY) {
+                if (signYDelta < 0) {
+                    for (incY in newY until y) {
+                        tempResult[counter, 0] = x
+                        tempResult[counter, 1] = incY
+                        ++counter
+                    }
+                } else {
+                    for (incY in y until newY) {
+                        tempResult[counter, 0] = x
+                        tempResult[counter, 1] = incY
                         ++counter
                     }
                 }
-                else {
-                    for(incY in y until newY) {
-                        tempResult[counter, 1] = x
-                        tempResult[counter, 2] = incY
-                        ++counter
-                    }
-                }
+            } else {
+                tempResult[counter, 0] = x
+                tempResult[counter, 1] = y
+                ++counter
+            }
 
-                y = newY
-                var error = error + deltaError
-                while(error >= 0.5) {
-                    newY = newY + signYDelta
-                    --error
-                }
+            y = newY
+            error = error + deltaError
+            while (error >= 0.5) {
+                newY = newY + signYDelta
+                --error
             }
         }
 
@@ -227,8 +226,8 @@ object LineUtilities {
 
 
         val rowsToInclude = mutableListOf<Int>()
-        for(i in 0 until tempResult.numberOfRows) {
-            if(tempResult[i, 0] != null) {
+        for (i in 0 until tempResult.numberOfRows) {
+            if (tempResult[i, 0] != null) {
                 rowsToInclude.add(i)
             }
         }
@@ -236,7 +235,7 @@ object LineUtilities {
         val tempMatrix = Matrix(rowsToInclude.size, 2) { row, column ->
             tempResult[rowsToInclude[row], column]
         }
-        for(i in 0 until tempResult.numberOfRows) {
+        for (i in 0 until tempMatrix.numberOfRows) {
             tempMatrix[i, 0] = tempMatrix[i, 0]!! - firstTranslate
             tempMatrix[i, 1] = tempMatrix[i, 1]!! - secondTranslate
         }
@@ -248,8 +247,8 @@ object LineUtilities {
 
 //        return (temp.result)
 
-        return if(swap) {
-            for(i in 0 until tempMatrix.numberOfRows / 2) {
+        return if (swap) {
+            for (i in 0 until tempMatrix.numberOfRows / 2) {
                 var temp = tempMatrix[i, 0]
                 tempMatrix[i, 0] = tempMatrix[tempMatrix.numberOfRows - 1, 0]
                 tempMatrix[tempMatrix.numberOfRows - 1, 0] = temp
@@ -259,8 +258,7 @@ object LineUtilities {
                 tempMatrix[tempMatrix.numberOfRows - 1, 1] = temp
             }
             tempMatrix
-        }
-        else {
+        } else {
             tempMatrix
         }
     }
