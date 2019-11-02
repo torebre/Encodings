@@ -21,6 +21,7 @@ import io.ktor.routing.get
 import io.ktor.routing.routing
 import kotlinx.css.*
 import kotlinx.html.*
+import java.lang.StringBuilder
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.stream.Collectors
@@ -132,6 +133,33 @@ fun Application.module(testing: Boolean = false) {
 
 //                call.defaultTextContentType(ContentType.Application.Json)
                 call.respond(drawLines)
+
+            }
+        }
+
+        get("/kanji/{unicode}/segment/{segment}/drawing") {
+            val segmentData = segments[Pair(call.parameters["unicode"]?.toInt(), call.parameters["segment"]?.toInt())]
+            if (segmentData == null) {
+                call.respond(HttpStatusCode.NotFound)
+            } else {
+                val drawLines = LineUtilities.drawLines(segmentData)
+                val stringBuilder = StringBuilder()
+                for (ints in drawLines.array) {
+                    ints.forEach {
+                        if(it == 0) {
+                            stringBuilder.append(" ")
+                        }
+                        else {
+                            stringBuilder.append("x")
+                        }
+
+                    }
+                    stringBuilder.append("\n")
+
+                }
+
+//                call.defaultTextContentType(ContentType.Application.Json)
+                call.respondText { stringBuilder.toString() }
 
             }
         }

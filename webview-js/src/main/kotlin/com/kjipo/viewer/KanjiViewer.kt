@@ -20,7 +20,7 @@ class KanjiViewer(
     fun drawKanji(matrix: Matrix<Int>) {
         console.log("Test24")
 
-        setupKanjiDrawing(matrix)
+        setupKanjiDrawing(matrix, 2)
 
     }
 
@@ -102,7 +102,7 @@ class KanjiViewer(
         matrix.forEachIndexed { row, column, value ->
             if (value > 0) {
                 console.log("Test24: ${row.toDouble()}, ${column.toDouble()}")
-                context.fillRect(column.toDouble(), column.toDouble(), squareSize.toDouble(), squareSize.toDouble())
+                context.fillRect(squareSize * row.toDouble(), squareSize * column.toDouble(), squareSize.toDouble(), squareSize.toDouble())
             }
         }
     }
