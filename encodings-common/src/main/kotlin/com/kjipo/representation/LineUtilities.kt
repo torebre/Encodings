@@ -1,12 +1,11 @@
 package com.kjipo.representation
 
-import kotlin.math.abs
-import kotlin.math.min
+import kotlin.math.*
 
 object LineUtilities {
 
 
-    fun createLine(startX: Int, startY: Int, stopX: Int, stopY: Int): Matrix<Int?> {
+    fun createLine(startX: Int, startY: Int, stopX: Int, stopY: Int): List<Pair<Int, Int>> {
 
 //    if(start.x == stop.x) {
 //        # Horizontal line
@@ -24,25 +23,27 @@ object LineUtilities {
 //        return(result)
 //    }
 
-        var rows = 0
+//        var rows = 0
 
         if (startX == stopX) {
             // Horizontal line
-            rows = abs(stopY - startY) + 1
-            var result = Matrix<Int>(rows, 2)
+            var rows = abs(stopY - startY) + 1
+            var result = mutableListOf<Pair<Int, Int>>()
 
             if (startY < stopY) {
-                var counter = 0
+//                var counter = 0
                 for (i in 0 until rows) {
-                    result[counter, 0] = startX
-                    result[counter, 1] = startY + i
-                    ++counter
+                    result.add(Pair(startX, startY + i))
+//                    [counter, 0] = startX
+//                    result[counter, 1] = startY + i
+//                    ++counter
                 }
             } else {
-                var counter = 0
+//                var counter = 0
                 for (i in 0 until rows) {
-                    result[counter, 0] = startX
-                    result[counter, 1] = stopY - i
+                    result.add(Pair(startX, stopY - i))
+//                    result[counter, 0] = startX
+//                    result[counter, 1] = stopY - i
                 }
             }
             return result
@@ -66,21 +67,26 @@ object LineUtilities {
 
         if (startY == stopY) {
             // Vertical line
-            var rows = abs(stopX - startX) + 1
-            var result = Matrix<Int>(rows, 2)
+//            var rows = abs(stopX - startX) + 1
+//            var result = Matrix<Int>(rows, 2)
+            var result = mutableListOf<Pair<Int, Int>>()
 
             if (startX < stopX) {
-                var counter = 0
+//                var counter = 0
                 for (i in startX until stopX) {
-                    result[counter, 0] = i
-                    result[counter, 1] = startY
-                    ++counter
+                    result.add(Pair(i, startY))
+
+//                    result[counter, 0] = i
+//                    result[counter, 1] = startY
+//                    ++counter
                 }
             } else {
-                var counter = 0
+//                var counter = 0
                 for (i in stopX until stopY) {
-                    result[counter, 0] = i
-                    result[counter, 1] = startY
+                    result.add(Pair(i, startY))
+
+//                    result[counter, 0] = i
+//                    result[counter, 1] = startY
                 }
             }
         }
@@ -157,7 +163,8 @@ object LineUtilities {
 //        temp.result < -matrix(nrow = 2 * (abs(start.x - stop.x) + abs(start.y - stop.y)), ncol = 2)
 //        counter < -1
 
-        var tempResult = Matrix<Int>(2 * abs(startX - stopX) + abs(startY - stopY), 2)
+//        var tempResult = Matrix<Int>(2 * abs(startX - stopX) + abs(startY - stopY), 2)
+        var tempResult = mutableListOf<Pair<Int, Int>>()
         var counter = 0
 
 //        for (x in start.x.translate:stop.x.translate) {
@@ -194,20 +201,23 @@ object LineUtilities {
             if (y != newY) {
                 if (signYDelta < 0) {
                     for (incY in newY until y) {
-                        tempResult[counter, 0] = x
-                        tempResult[counter, 1] = incY
+                        tempResult.add(Pair(x, incY))
+//                        tempResult[counter, 0] = x
+//                        tempResult[counter, 1] = incY
                         ++counter
                     }
                 } else {
                     for (incY in y until newY) {
-                        tempResult[counter, 0] = x
-                        tempResult[counter, 1] = incY
+                        tempResult.add(Pair(x, incY))
+//                        tempResult[counter, 0] = x
+//                        tempResult[counter, 1] = incY
                         ++counter
                     }
                 }
             } else {
-                tempResult[counter, 0] = x
-                tempResult[counter, 1] = y
+                tempResult.add(Pair(x, y))
+//                tempResult[counter, 0] = x
+//                tempResult[counter, 1] = y
                 ++counter
             }
 
@@ -225,19 +235,26 @@ object LineUtilities {
 //        temp.result[, 2] < -temp.result[, 2] - second.translate
 
 
-        val rowsToInclude = mutableListOf<Int>()
-        for (i in 0 until tempResult.numberOfRows) {
-            if (tempResult[i, 0] != null) {
-                rowsToInclude.add(i)
-            }
-        }
+//        val rowsToInclude = mutableListOf<Int>()
+//        for (i in 0 until tempResult.numberOfRows) {
+//            if (tempResult[i, 0] != null) {
+//                rowsToInclude.add(i)
+//            }
+//        }
 
-        val tempMatrix = Matrix(rowsToInclude.size, 2) { row, column ->
-            tempResult[rowsToInclude[row], column]
-        }
-        for (i in 0 until tempMatrix.numberOfRows) {
-            tempMatrix[i, 0] = tempMatrix[i, 0]!! - firstTranslate
-            tempMatrix[i, 1] = tempMatrix[i, 1]!! - secondTranslate
+//        val tempMatrix = Matrix(rowsToInclude.size, 2) { row, column ->
+//            tempResult[rowsToInclude[row], column]
+//        }
+
+//        val tempMatrix = mutableListOf<Pair<Int, Int>>()
+
+//        for (i in 0 until tempResult.numberOfRows) {
+//            tempMatrix[i, 0] = tempMatrix[i, 0]!! - firstTranslate
+//            tempMatrix[i, 1] = tempMatrix[i, 1]!! - secondTranslate
+//        }
+
+        for (i in 0 until tempResult.size) {
+            tempResult[i] = Pair(tempResult[i].first - firstTranslate, tempResult[i].second - secondTranslate)
         }
 
 //        if (swap) {
@@ -247,21 +264,79 @@ object LineUtilities {
 
 //        return (temp.result)
 
-        return if (swap) {
-            for (i in 0 until tempMatrix.numberOfRows / 2) {
-                var temp = tempMatrix[i, 0]
-                tempMatrix[i, 0] = tempMatrix[tempMatrix.numberOfRows - 1, 0]
-                tempMatrix[tempMatrix.numberOfRows - 1, 0] = temp
+//        return if (swap) {
+//            for (i in 0 until tempMatrix.numberOfRows / 2) {
+//                var temp = tempMatrix[i, 0]
+//                tempMatrix[i, 0] = tempMatrix[tempMatrix.numberOfRows - 1, 0]
+//                tempMatrix[tempMatrix.numberOfRows - 1, 0] = temp
+//
+//                temp = tempMatrix[i, 1]
+//                tempMatrix[i, 0] = tempMatrix[tempMatrix.numberOfRows - 1, 1]
+//                tempMatrix[tempMatrix.numberOfRows - 1, 1] = temp
+//            }
+//            tempMatrix
+//        } else {
+//            tempMatrix
+//        }
 
-                temp = tempMatrix[i, 1]
-                tempMatrix[i, 0] = tempMatrix[tempMatrix.numberOfRows - 1, 1]
-                tempMatrix[tempMatrix.numberOfRows - 1, 1] = temp
-            }
-            tempMatrix
-        } else {
-            tempMatrix
+        if (swap) {
+            tempResult.reverse()
         }
+
+        return tempResult
+
     }
 
+
+    fun getBoundary(lines: Collection<List<Pair<Int, Int>>>): Boundary {
+        var xMin = 0
+        var yMin = 0
+        var xMax = 0
+        var yMax = 0
+
+        lines.flatten()
+                .forEach {
+                    if (xMin > it.first) {
+                        xMin = it.first
+                    }
+                    if (yMin > it.second) {
+                        yMin = it.second
+                    }
+                    if (xMax < it.first) {
+                        xMax = it.first
+                    }
+                    if (yMax < it.second) {
+                        yMax = it.second
+                    }
+                }
+
+        return Boundary(xMin, yMin, xMax, yMax)
+    }
+
+    fun drawLines(lines: Collection<Line>): Matrix<Int> {
+//        x.start <- unlist(line.data[5])
+//        y.start <- unlist(line.data[6])
+//        x.offset <- round(unlist(line.data[4] * sin(line.data[3])))
+//        y.offset <- round(unlist(line.data[4] * cos(line.data[3])))
+
+        val transformedLines = mutableListOf<List<Pair<Int, Int>>>()
+        for (line in lines) {
+            val xOffset = round(line.length * sin(line.angle)).toInt()
+            val yOffset = round(line.length * cos(line.angle)).toInt()
+
+            transformedLines.add(createLine(line.startX, line.startY, line.startX + xOffset, line.startY + yOffset))
+        }
+
+        val boundary = getBoundary(transformedLines)
+        val result = Matrix(boundary.xMax + 1, boundary.yMax + 1) { _, _ -> 0 }
+
+        for (transformedLine in transformedLines) {
+            for (pair in transformedLine) {
+                result[pair.first, pair.second] = 1
+            }
+        }
+
+        return result
+    }
 
 }

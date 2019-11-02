@@ -1,4 +1,5 @@
 import com.kjipo.representation.EncodedKanji
+import com.kjipo.representation.Matrix
 import com.kjipo.viewer.KanjiApp
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
@@ -16,6 +17,13 @@ class KanjiViewer(
     }
 
 
+    fun drawKanji(matrix: Matrix<Int>) {
+        console.log("Test24")
+
+        setupKanjiDrawing(matrix)
+
+    }
+
     fun drawKanji(encodedKanji: EncodedKanji) {
         // TODO
 
@@ -32,10 +40,10 @@ class KanjiViewer(
         var currentRow = 0
 
 
-        encodedKanji.image.forEach {row ->
+        encodedKanji.image.forEach { row ->
             var currentColumn = 0
             row.forEach { value ->
-                if(value) {
+                if (value) {
 
                     console.log("Test24: ${currentRow.toDouble()}, ${currentColumn.toDouble()}")
 
@@ -90,7 +98,14 @@ class KanjiViewer(
 
     }
 
-
+    private fun setupKanjiDrawing(matrix: Matrix<Int>, squareSize: Int = SQUARE_SIZE) {
+        matrix.forEachIndexed { row, column, value ->
+            if (value > 0) {
+                console.log("Test24: ${row.toDouble()}, ${column.toDouble()}")
+                context.fillRect(column.toDouble(), column.toDouble(), squareSize.toDouble(), squareSize.toDouble())
+            }
+        }
+    }
 
 }
 

@@ -1,15 +1,26 @@
 package com.kjipo
 
-import io.ktor.application.*
-import io.ktor.response.*
-import io.ktor.request.*
-import io.ktor.routing.*
-import io.ktor.http.*
-import io.ktor.html.*
-import kotlinx.html.*
-import kotlinx.css.*
-import io.ktor.client.*
+import com.kjipo.representation.Line
+import com.kjipo.representation.LineUtilities
+import io.ktor.application.Application
+import io.ktor.application.ApplicationCall
+import io.ktor.application.call
+import io.ktor.application.install
+import io.ktor.client.HttpClient
 import io.ktor.features.CORS
+import io.ktor.features.ContentNegotiation
+import io.ktor.gson.gson
+import io.ktor.html.respondHtml
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.response.defaultTextContentType
+import io.ktor.response.respond
+import io.ktor.response.respondFile
+import io.ktor.response.respondText
+import io.ktor.routing.get
+import io.ktor.routing.routing
+import kotlinx.css.*
+import kotlinx.html.*
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.stream.Collectors
@@ -20,6 +31,18 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
     val client = HttpClient() {
+
+        //        install(JsonFeature) {
+//            serializer = GsonSerializer()
+//        }
+
+        install(ContentNegotiation) {
+            gson {
+                setPrettyPrinting()
+
+            }
+        }
+
     }
 
     val segments: Map<Pair<Int, Int>, List<Line>> by lazy {
@@ -99,7 +122,21 @@ fun Application.module(testing: Boolean = false) {
                 call.respondText { segmentData.map { it.toString() }.joinToString("\n") }
             }
         }
+
+        get("/kanji/{unicode}/segment/{segment}/matrix") {
+            val segmentData = segments[Pair(call.parameters["unicode"]?.toInt(), call.parameters["segment"]?.toInt())]
+            if (segmentData == null) {
+                call.respond(HttpStatusCode.NotFound)
+            } else {
+                val drawLines = LineUtilities.drawLines(segmentData)
+
+//                call.defaultTextContentType(ContentType.Application.Json)
+                call.respond(drawLines)
+
+            }
+        }
     }
+
 }
 
 fun FlowOrMetaDataContent.styleCss(builder: CSSBuilder.() -> Unit) {
