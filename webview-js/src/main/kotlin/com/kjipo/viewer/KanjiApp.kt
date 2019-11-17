@@ -34,7 +34,7 @@ class KanjiApp {
         canvas.width = 500
 
         val request = XMLHttpRequest()
-        request.open("GET", "http://0.0.0.0:8090/kanji/33253", false)
+        request.open("GET", "http://0.0.0.0:8094/kanji/33253", false)
         request.send()
 
         val response = request.response as String
@@ -82,7 +82,7 @@ class KanjiApp {
         console.log("Test23")
 
         CoroutineScope(Dispatchers.Main).launch {
-            val response = client.get<String>("http://0.0.0.0:8090/kanji/27355/segment/1/matrix") {
+            val response = client.get<String>("http://0.0.0.0:8094/kanji/27355/segment/1/matrix") {
 
 //                contentType(ContentType.Application.Json)
 //                accept(ContentType.Application.Json)

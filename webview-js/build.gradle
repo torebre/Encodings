@@ -1,17 +1,22 @@
 buildscript {
     repositories {
         mavenCentral()
+        jcenter()
+        maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
         maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.moowork.gradle:gradle-node-plugin:1.2.0'
+//        classpath 'com.moowork.gradle:gradle-node-plugin:1.2.0'
+        classpath "org.jetbrains.kotlin:kotlin-frontend-plugin:0.0.45"
     }
 }
 
-apply plugin: 'kotlin-platform-js'
+//apply plugin: 'kotlin-platform-js'
+apply plugin: 'kotlin2js'
+apply plugin: 'org.jetbrains.kotlin.frontend'
 apply plugin: 'kotlin-dce-js'
-apply plugin: 'com.moowork.node'
+//apply plugin: 'com.moowork.node'
 
 repositories {
     jcenter()
@@ -19,7 +24,7 @@ repositories {
 }
 
 dependencies {
-    compile project(':encodings-js')
+    implementation project(':encodings-multimodule')
 //    compile project(':webviewer')
     compile libraries.kotlin_stdlib_js
 //    compile "org.jetbrains.kotlinx:kotlinx-html-js:0.6.10"
@@ -28,7 +33,7 @@ dependencies {
     implementation "com.github.aakira:napier:$napierVersion"
     implementation "com.github.aakira:napier-js:$napierVersion"
 
-    implementation("io.ktor:ktor-client-js:1.2.4")
+    implementation("io.ktor:ktor-client-js:1.2.5")
 
     testCompile "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version"
 }
@@ -37,31 +42,24 @@ compileKotlin2Js {
     kotlinOptions {
         metaInfo = true
         sourceMap = true
+        outputFile = "$project.buildDir.path/js/${project.name}.js"
         sourceMapEmbedSources = 'always'
-        moduleKind = project.javascriptModule
+        moduleKind = 'commonjs'
+        main = 'com/kjipo/viewer/Main'
     }
 }
 
-compileTestKotlin2Js {
-    kotlinOptions.moduleKind = project.javascriptModule
+kotlinFrontend {
+
+    npm {
+        dependency "text-encoding"
+        dependency "source-map-loader"
+    }
+
+    webpackBundle {
+        bundleName = "main"
+        contentPath = file("web")
+        mode = 'production'
+        port = 8093
+    }
 }
-
-
-//task assembleWeb(type: Sync) {
-//    configurations.compile.each { File file ->
-//        from(zipTree(file.absolutePath), {
-//            includeEmptyDirs = false
-//            include { fileTreeElement ->
-//                def path = fileTreeElement.path
-//                path.endsWith(".js") && (path.startsWith("META-INF/resources/") ||
-//                        !path.startsWith("META-INF/"))
-//            }
-//        })
-//    }
-//    from compileKotlin2Js.destinationDir
-//    into "${projectDir}/web"
-//
-//    dependsOn classes
-//}
-//
-//assemble.dependsOn assembleWeb

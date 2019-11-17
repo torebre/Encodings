@@ -36,17 +36,12 @@ ext {
     }
 
     println("Using Javascript module type: " + javascriptModule)
-
-
 }
 
 subprojects {
     repositories {
         mavenCentral()
     }
-
-
-
 
 }
 
