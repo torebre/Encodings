@@ -7,14 +7,10 @@ include ':visualization'
 include ':experiments'
 include ':opencv'
 include ':graphimport'
-//include ':webviewer'
 include ':webview-js'
 include ':server'
 include ':kanjiserver'
-//include ':encodings-common'
-//include ':encodings-jvm'
-//include ':encodings-js'
-include 'encodings-multimodule'
+include ':encodings-multimodule'
 
 
 enableFeaturePreview('GRADLE_METADATA')

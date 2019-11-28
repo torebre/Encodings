@@ -9,8 +9,11 @@ compileJava {
 
 
 dependencies {
-    compile project(":raster")
-    compile project(":visualization")
+    implementation project(":raster")
+    implementation project(":encodings")
+    implementation project(":visualization")
+    implementation project(":encodings-multimodule")
+
 //    compile project(":opencv")
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.7'

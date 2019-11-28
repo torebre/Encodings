@@ -15,7 +15,8 @@ repositories {
 }
 
 dependencies {
-    compile project(":raster")
-    compile group: 'org.tensorflow', name: 'tensorflow', version: '1.13.1'
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation project(":raster")
+    implementation project(":encodings")
+    implementation group: 'org.tensorflow', name: 'tensorflow', version: '1.13.1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

@@ -1,15 +1,11 @@
-import com.kjipo.parser.FontFileParser
-import com.kjipo.parser.Parsers
 import com.kjipo.prototype.CreatePrototypeDataset
 import com.kjipo.prototype.Prototype
 import com.kjipo.representation.EncodedKanji
-import com.kjipo.visualization.displayKanjis
 import com.kjipo.visualization.displayRasters
 import com.kjipo.visualization.loadKanjisFromDirectory
 import javafx.scene.paint.Color
 import org.junit.Test
 import org.slf4j.LoggerFactory
-import java.io.FileInputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths

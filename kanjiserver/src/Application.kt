@@ -13,7 +13,6 @@ import io.ktor.gson.gson
 import io.ktor.html.respondHtml
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.response.defaultTextContentType
 import io.ktor.response.respond
 import io.ktor.response.respondFile
 import io.ktor.response.respondText
@@ -21,7 +20,6 @@ import io.ktor.routing.get
 import io.ktor.routing.routing
 import kotlinx.css.*
 import kotlinx.html.*
-import java.lang.StringBuilder
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.stream.Collectors
@@ -65,6 +63,10 @@ fun Application.module(testing: Boolean = false) {
                 }.map {
                     Pair(it.key, it.value.map { it.second })
                 }.toMap()
+    }
+
+    val segmentIdToCount: Map<Int, Int> by lazy {
+        segments.keys.toMap()
     }
 
     install(CORS) {
@@ -121,6 +123,16 @@ fun Application.module(testing: Boolean = false) {
                 call.respond(HttpStatusCode.NotFound)
             } else {
                 call.respondText { segmentData.map { it.toString() }.joinToString("\n") }
+            }
+        }
+
+        get("/kanji/{unicode}/segments") {
+            val count = segmentIdToCount[call.parameters["unicode"]?.toInt()]
+            if(count == null) {
+                call.respond(HttpStatusCode.NotFound)
+            }
+            else {
+                call.respondText { count.toString() }
             }
         }
 

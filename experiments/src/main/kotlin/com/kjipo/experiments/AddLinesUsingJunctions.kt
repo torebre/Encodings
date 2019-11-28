@@ -3,7 +3,6 @@ package com.kjipo.experiments
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.shrinkImage
 import com.kjipo.setup.transformKanjiData
-import com.kjipo.setupUtilities.EncodingUtilities.transformKanjiData
 import com.kjipo.skeleton.extractJunctions
 import com.kjipo.visualization.displayColourMatrix
 import javafx.scene.paint.Color

@@ -7,16 +7,13 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-//        classpath 'com.moowork.gradle:gradle-node-plugin:1.2.0'
         classpath "org.jetbrains.kotlin:kotlin-frontend-plugin:0.0.45"
     }
 }
 
-//apply plugin: 'kotlin-platform-js'
 apply plugin: 'kotlin2js'
 apply plugin: 'org.jetbrains.kotlin.frontend'
 apply plugin: 'kotlin-dce-js'
-//apply plugin: 'com.moowork.node'
 
 repositories {
     jcenter()
@@ -25,9 +22,7 @@ repositories {
 
 dependencies {
     implementation project(':encodings-multimodule')
-//    compile project(':webviewer')
     compile libraries.kotlin_stdlib_js
-//    compile "org.jetbrains.kotlinx:kotlinx-html-js:0.6.10"
     compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
 
     implementation "com.github.aakira:napier:$napierVersion"

@@ -81,22 +81,31 @@ class KanjiApp {
 
         console.log("Test23")
 
+
+
         CoroutineScope(Dispatchers.Main).launch {
-            val response = client.get<String>("http://0.0.0.0:8094/kanji/27355/segment/1/matrix") {
+            val numberOfSegments = client.get<String>("http://0.0.0.0:8094/kanji/27355/segments").toInt()
 
-//                contentType(ContentType.Application.Json)
-//                accept(ContentType.Application.Json)
+
+            for(i in 1 until numberOfSegments) {
+                val response = client.get<String>("http://0.0.0.0:8094/kanji/27355/segment/$i/matrix")
+
+                val parsedResponse = JSON.parse<Matrix<Int>>(response)
+
+                console.log("Response: $parsedResponse")
+
+
+                val element = document.createElement("canvas")
+
+
+//                private val canvas = document.getElementById("canvas") as HTMLCanvasElement
+//
+//                private val context = canvas.getContext("2d")
+//                private val kanjiViewer = KanjiViewer(Bounds(0, 0, 500, 500),
+//                        context as CanvasRenderingContext2D)
+
+                kanjiViewer.drawKanji(parsedResponse)
             }
-
-
-            val parsedResponse = JSON.parse<Matrix<Int>>(response)
-
-
-
-            console.log("Response: $parsedResponse")
-
-            kanjiViewer.drawKanji(parsedResponse)
-
         }
 
 
