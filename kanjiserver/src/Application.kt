@@ -65,9 +65,10 @@ fun Application.module(testing: Boolean = false) {
                 }.toMap()
     }
 
-    val segmentIdToCount: Map<Int, Int> by lazy {
-        segments.keys.toMap()
+    val unicodeToSegmentCount: Map<Int, Int> by lazy {
+        segments.keys.groupBy { it.first }.map { Pair(it.key, it.value.size) }.toMap()
     }
+
 
     install(CORS) {
         anyHost()
@@ -126,8 +127,20 @@ fun Application.module(testing: Boolean = false) {
             }
         }
 
+        get("/kanji/{unicode}/segmentnumber/{segment}") {
+
+            // TODO
+
+            val segmentData = segments[Pair(call.parameters["unicode"]?.toInt(), call.parameters["segment"]?.toInt())]
+            if (segmentData == null) {
+                call.respond(HttpStatusCode.NotFound)
+            } else {
+                call.respondText { segmentData.map { it.toString() }.joinToString("\n") }
+            }
+        }
+
         get("/kanji/{unicode}/segments") {
-            val count = segmentIdToCount[call.parameters["unicode"]?.toInt()]
+            val count = unicodeToSegmentCount[call.parameters["unicode"]?.toInt()]
             if(count == null) {
                 call.respond(HttpStatusCode.NotFound)
             }

@@ -1,37 +1,34 @@
 package com.kjipo.viewer
 
-import Bounds
 import KanjiViewer
-import org.w3c.dom.CanvasRenderingContext2D
-import org.w3c.dom.HTMLCanvasElement
-import org.w3c.xhr.XMLHttpRequest
-import kotlin.browser.document
+import com.github.aakira.napier.Napier
 import com.kjipo.representation.EncodedKanji
 import com.kjipo.representation.Matrix
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.js.Js
-import io.ktor.client.request.HttpRequestBuilder
-import io.ktor.client.request.accept
+import io.ktor.client.features.ClientRequestException
 import io.ktor.client.request.get
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
+import io.ktor.client.request.request
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
+import org.w3c.dom.CanvasRenderingContext2D
+import org.w3c.dom.HTMLCanvasElement
+import org.w3c.xhr.XMLHttpRequest
+import kotlin.browser.document
 
 
 class KanjiApp {
     private val canvas = document.getElementById("canvas") as HTMLCanvasElement
 
     private val context = canvas.getContext("2d")
-    private val kanjiViewer = KanjiViewer(Bounds(0, 0, 500, 500),
-            context as CanvasRenderingContext2D)
+    private val kanjiViewer = KanjiViewer(context as CanvasRenderingContext2D)
 
 
     fun show() {
         canvas.height = 500
         canvas.width = 500
+
 
         val request = XMLHttpRequest()
         request.open("GET", "http://0.0.0.0:8094/kanji/33253", false)
@@ -47,9 +44,8 @@ class KanjiApp {
         console.log("Canvas: $canvas")
         console.log("Context: $context")
 
-        kanjiViewer.drawKanji(loadedKanji)
+        kanjiViewer.setupKanjiDrawing(loadedKanji)
     }
-
 
 
     fun loadEncodedKanjiFromString(kanjiString: String, unicode: Int) = EncodedKanji(loadEncodedKanjiFromString(kanjiString.split('\n')), unicode)
@@ -72,47 +68,43 @@ class KanjiApp {
 
 
     fun loadSegmentData() {
-
-        console.log("Test24")
-
-        val client = HttpClient(Js) {
-
-        }
-
-        console.log("Test23")
-
-
+        val client = HttpClient(Js)
 
         CoroutineScope(Dispatchers.Main).launch {
             val numberOfSegments = client.get<String>("http://0.0.0.0:8094/kanji/27355/segments").toInt()
 
+            // TODO Not using all segments when testing
+            for (i in 0 until numberOfSegments) {
+                console.log("Loading segment: $i")
 
-            for(i in 1 until numberOfSegments) {
-                val response = client.get<String>("http://0.0.0.0:8094/kanji/27355/segment/$i/matrix")
+                try {
+                    val response = client.get<String>("http://0.0.0.0:8094/kanji/27355/segment/$i/matrix")
+                    val parsedResponse = JSON.parse<Matrix<Int>>(response)
+                    val element = document.createElement("canvas") as HTMLCanvasElement
 
-                val parsedResponse = JSON.parse<Matrix<Int>>(response)
+                    document.body?.appendChild(element)
 
-                console.log("Response: $parsedResponse")
+                    val context2 = element.getContext("2d")
+                    val kanjiViewer2 = KanjiViewer(context2 as CanvasRenderingContext2D)
+
+                    with(element) {
+                        setAttribute("width", (2 * parsedResponse.numberOfColumns).toString())
+                        setAttribute("height", (2 * parsedResponse.numberOfRows).toString())
+                    }
+
+                    kanjiViewer2.setupKanjiDrawing(parsedResponse, 2)
+                }
+                catch (e: ClientRequestException) {
+                    Napier.e("Could not find segment", e)
+                    continue
+                }
 
 
-                val element = document.createElement("canvas")
-
-
-//                private val canvas = document.getElementById("canvas") as HTMLCanvasElement
-//
-//                private val context = canvas.getContext("2d")
-//                private val kanjiViewer = KanjiViewer(Bounds(0, 0, 500, 500),
-//                        context as CanvasRenderingContext2D)
-
-                kanjiViewer.drawKanji(parsedResponse)
             }
         }
 
 
-
     }
-
-
 
 
 }

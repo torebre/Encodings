@@ -6,37 +6,13 @@ import org.w3c.dom.HTMLCanvasElement
 import kotlin.browser.document
 
 
-class KanjiViewer(
-        private val bounds: Bounds,
-        private val context: CanvasRenderingContext2D) {
-
+class KanjiViewer(private val context: CanvasRenderingContext2D) {
 
     companion object {
-        private const val SQUARE_SIZE = 50
-
+        const val SQUARE_SIZE = 50
     }
 
-
-    fun drawKanji(matrix: Matrix<Int>) {
-        console.log("Test24")
-
-        setupKanjiDrawing(matrix, 2)
-
-    }
-
-    fun drawKanji(encodedKanji: EncodedKanji) {
-        // TODO
-
-        console.log("Test23")
-
-//        context.lineWidth = 10.0
-//        context.strokeRect(100.0, 100.0, 100.0, 100.0)
-
-        setupKanjiDrawing(encodedKanji)
-
-    }
-
-    private fun setupKanjiDrawing(encodedKanji: EncodedKanji, squareSize: Int = SQUARE_SIZE) {
+    fun setupKanjiDrawing(encodedKanji: EncodedKanji, squareSize: Int = SQUARE_SIZE) {
         var currentRow = 0
 
 
@@ -44,9 +20,6 @@ class KanjiViewer(
             var currentColumn = 0
             row.forEach { value ->
                 if (value) {
-
-                    console.log("Test24: ${currentRow.toDouble()}, ${currentColumn.toDouble()}")
-
                     context.fillRect(currentRow.toDouble(), currentColumn.toDouble(), squareSize.toDouble(), squareSize.toDouble())
                 }
                 ++currentColumn
@@ -98,10 +71,10 @@ class KanjiViewer(
 
     }
 
-    private fun setupKanjiDrawing(matrix: Matrix<Int>, squareSize: Int = SQUARE_SIZE) {
+    fun setupKanjiDrawing(matrix: Matrix<Int>, squareSize: Int = SQUARE_SIZE) {
         matrix.forEachIndexed { row, column, value ->
             if (value > 0) {
-                console.log("Test24: ${row.toDouble()}, ${column.toDouble()}")
+//                console.log("Test24: ${row.toDouble()}, ${column.toDouble()}")
                 context.fillRect(squareSize * row.toDouble(), squareSize * column.toDouble(), squareSize.toDouble(), squareSize.toDouble())
             }
         }

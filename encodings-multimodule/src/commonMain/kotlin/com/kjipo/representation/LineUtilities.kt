@@ -332,7 +332,11 @@ object LineUtilities {
 
         for (transformedLine in transformedLines) {
             for (pair in transformedLine) {
-                result[pair.first, pair.second] = 1
+
+                // TODO This check should not be necessary
+                if(pair.first >= 0 && pair.second >= 0) {
+                    result[pair.first, pair.second] = 1
+                }
             }
         }
 
