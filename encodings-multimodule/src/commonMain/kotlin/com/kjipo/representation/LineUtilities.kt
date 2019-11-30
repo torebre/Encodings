@@ -330,14 +330,16 @@ object LineUtilities {
         val boundary = getBoundary(transformedLines)
         val result = Matrix(boundary.xMax + 1, boundary.yMax + 1) { _, _ -> 0 }
 
+        var counter = 1
         for (transformedLine in transformedLines) {
             for (pair in transformedLine) {
 
                 // TODO This check should not be necessary
                 if(pair.first >= 0 && pair.second >= 0) {
-                    result[pair.first, pair.second] = 1
+                    result[pair.first, pair.second] = counter
                 }
             }
+            ++counter
         }
 
         return result

@@ -1,7 +1,9 @@
 package com.kjipo
 
+import com.kjipo.Constants.segmentData
 import com.kjipo.representation.Line
 import com.kjipo.representation.LineUtilities
+import com.kjipo.representation.SegmentLine
 import io.ktor.application.Application
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
@@ -38,35 +40,21 @@ fun Application.module(testing: Boolean = false) {
         install(ContentNegotiation) {
             gson {
                 setPrettyPrinting()
-
             }
         }
 
     }
 
-    val segments: Map<Pair<Int, Int>, List<Line>> by lazy {
-        val allLines = Files.readAllLines(Paths.get("kanji_data_segments.csv"))
-        allLines.subList(1, allLines.size)
-                .map {
-                    val splitString = it.split(",")
-                    val key = splitString[0].toInt()
-                    val segment = splitString[6].toInt()
-
-                    Pair(Pair(key, segment), Line(splitString[1].toInt(),
-                            splitString[2].toDouble(),
-                            splitString[3].toDouble(),
-                            splitString[4].toInt(),
-                            splitString[5].toInt()))
-                }
-                .groupBy {
-                    it.first
-                }.map {
-                    Pair(it.key, it.value.map { it.second })
-                }.toMap()
+    val segments by lazy {
+        loadLines()
     }
 
     val unicodeToSegmentCount: Map<Int, Int> by lazy {
         segments.keys.groupBy { it.first }.map { Pair(it.key, it.value.size) }.toMap()
+    }
+
+    val linesWithSegments by lazy {
+        loadSegmentLines()
     }
 
 
@@ -75,22 +63,6 @@ fun Application.module(testing: Boolean = false) {
     }
 
     routing {
-        get("/") {
-            call.respondText("HELLO WORLD!", contentType = ContentType.Text.Plain)
-        }
-
-        get("/html-dsl") {
-            call.respondHtml {
-                body {
-                    h1 { +"HTML" }
-                    ul {
-                        for (n in 1..10) {
-                            li { +"$n" }
-                        }
-                    }
-                }
-            }
-        }
 
         get("/styles.css") {
             call.respondCss {
@@ -127,24 +99,11 @@ fun Application.module(testing: Boolean = false) {
             }
         }
 
-        get("/kanji/{unicode}/segmentnumber/{segment}") {
-
-            // TODO
-
-            val segmentData = segments[Pair(call.parameters["unicode"]?.toInt(), call.parameters["segment"]?.toInt())]
-            if (segmentData == null) {
-                call.respond(HttpStatusCode.NotFound)
-            } else {
-                call.respondText { segmentData.map { it.toString() }.joinToString("\n") }
-            }
-        }
-
         get("/kanji/{unicode}/segments") {
             val count = unicodeToSegmentCount[call.parameters["unicode"]?.toInt()]
-            if(count == null) {
+            if (count == null) {
                 call.respond(HttpStatusCode.NotFound)
-            }
-            else {
+            } else {
                 call.respondText { count.toString() }
             }
         }
@@ -155,10 +114,7 @@ fun Application.module(testing: Boolean = false) {
                 call.respond(HttpStatusCode.NotFound)
             } else {
                 val drawLines = LineUtilities.drawLines(segmentData)
-
-//                call.defaultTextContentType(ContentType.Application.Json)
                 call.respond(drawLines)
-
             }
         }
 
@@ -168,28 +124,35 @@ fun Application.module(testing: Boolean = false) {
                 call.respond(HttpStatusCode.NotFound)
             } else {
                 val drawLines = LineUtilities.drawLines(segmentData)
-                val stringBuilder = StringBuilder()
-                for (ints in drawLines.array) {
-                    ints.forEach {
-                        if(it == 0) {
-                            stringBuilder.append(" ")
-                        }
-                        else {
-                            stringBuilder.append("x")
-                        }
 
+                with(StringBuilder()) {
+                    for (ints in drawLines.array) {
+                        ints.forEach { value ->
+                            if (value == 0) {
+                                append(" ")
+                            } else {
+                                append("x")
+                            }
+                        }
+                        append("\n")
                     }
-                    stringBuilder.append("\n")
-
+                    call.respondText { toString() }
                 }
-
-//                call.defaultTextContentType(ContentType.Application.Json)
-                call.respondText { stringBuilder.toString() }
 
             }
         }
-    }
 
+        get("/kanji/{unicode}/segmentdata") {
+            val data = linesWithSegments[call.parameters["unicode"]?.toInt()]
+
+            if (data == null) {
+                call.respond(HttpStatusCode.NotFound)
+            } else {
+                call.respond(data)
+            }
+        }
+
+    }
 }
 
 fun FlowOrMetaDataContent.styleCss(builder: CSSBuilder.() -> Unit) {

@@ -240,7 +240,7 @@ object RegionExtractionExperiments {
     }
 
 
-    private fun testExtraction(kanjiSubImages: List<SubImageHolder>) {
+    private fun testExtraction(kanjiSubImages: List<SubImageHolder>, outputFile: Path) {
         println("Number of subimages: ${kanjiSubImages.size}")
 
         // TODO Using a sublist for testing
@@ -251,7 +251,7 @@ object RegionExtractionExperiments {
                 }
                 .toList()
 
-        writeKanjiDataSegments(subList, Paths.get("kanji_data_segments.csv"))
+        writeKanjiDataSegments(subList, outputFile)
 
         val subImageDistances = synchronizedMap(HashMap<String, Int>())
         val seenComparisons = mutableSetOf<Pair<Set<Int>, Set<Int>>>()
@@ -288,7 +288,7 @@ object RegionExtractionExperiments {
                 bufferedWriter.write(it.key)
                 bufferedWriter.write(",")
                 bufferedWriter.write(it.value.toString())
-                bufferedWriter.newLine();
+                bufferedWriter.newLine()
             }
         }
 
@@ -534,7 +534,7 @@ object RegionExtractionExperiments {
 //        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"))
 
 
-//        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), mutableListOf(26085))
+//        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), mutableListOf(33760))
         val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), 1000)
 
 //    println("Loaded kanji: ${loadedKanji.size}")
@@ -548,7 +548,8 @@ object RegionExtractionExperiments {
         val subImages = extractSubImages(loadedKanji)
 //        displaySubImages(subImages)
 
-        testExtraction(subImages)
+        val outputFile = Paths.get("kanji_data_segments.csv")
+        testExtraction(subImages, outputFile)
     }
 
 }

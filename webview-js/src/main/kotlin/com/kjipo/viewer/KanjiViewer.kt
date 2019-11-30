@@ -26,61 +26,15 @@ class KanjiViewer(private val context: CanvasRenderingContext2D) {
             }
             ++currentRow
         }
-
-//        rasters.forEach { colourRaster ->
-//
-//            //            if (texts.isNotEmpty()) {
-////                val text = Text(currentColumn.toDouble() * colourRaster[0].size * squareSize, currentRow.toDouble() * colourRaster.size * squareSize, texts[rasterCounter])
-//////                text.font = Font(20.0)
-////                text.fill = Color.BLUE
-////
-////                rectangles.add(text)
-////            }
-//
-//            val canvas = Canvas(colourRaster[0].size.toDouble() * squareSize + 1, colourRaster.size.toDouble() * squareSize + 1)
-//            val gc = canvas.graphicsContext2D
-//
-//            canvas.layoutX = currentColumn * colourRaster[0].size.toDouble() * squareSize + currentColumn
-//            canvas.layoutY = currentRow * colourRaster.size.toDouble() * squareSize + currentRow
-//
-//            gc.fill = Color.RED
-//            gc.fillRect(0.0,
-//                    0.0,
-//                    colourRaster[0].size.toDouble() * squareSize + 1,
-//                    colourRaster.size.toDouble() * squareSize + 1)
-//
-//            for (row in colourRaster.indices) {
-//                for (column in 0 until colourRaster[0].size) {
-//                    gc.fill = colourRaster[row][column]
-//                    gc.fillRect(column * squareSize.toDouble(),
-//                            row * squareSize.toDouble(),
-//                            squareSize.toDouble(),
-//                            squareSize.toDouble())
-//                }
-//            }
-//            rectangles.add(canvas)
-//
-//            ++currentColumn
-//            if (currentColumn == rastersPerLine) {
-//                ++currentRow
-//                currentColumn = 0
-//            }
-//
-//            ++rasterCounter
-//        }
-
     }
 
     fun setupKanjiDrawing(matrix: Matrix<Int>, squareSize: Int = SQUARE_SIZE) {
         matrix.forEachIndexed { row, column, value ->
             if (value > 0) {
-//                console.log("Test24: ${row.toDouble()}, ${column.toDouble()}")
+                context.fillStyle = "#${value.toString(16)}FFFF"
                 context.fillRect(squareSize * row.toDouble(), squareSize * column.toDouble(), squareSize.toDouble(), squareSize.toDouble())
             }
         }
     }
 
 }
-
-
-data class Bounds(val xMin: Int, val yMin: Int, val xMax: Int, val yMax: Int)
