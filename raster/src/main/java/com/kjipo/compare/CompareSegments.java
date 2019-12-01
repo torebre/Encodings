@@ -1,8 +1,8 @@
 package com.kjipo.compare;
 
-import com.kjipo.raster.FlowDirection;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
+import com.kjipo.representation.raster.FlowDirection;
 
 import java.util.ArrayList;
 import java.util.Collection;

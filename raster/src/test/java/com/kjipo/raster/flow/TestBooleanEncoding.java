@@ -1,7 +1,7 @@
 package com.kjipo.raster.flow;
 
 
-import com.kjipo.raster.TileType;
+import com.kjipo.representation.raster.TileType;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.complex.ComplexUtils;
 import org.junit.Assert;

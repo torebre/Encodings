@@ -1,12 +1,12 @@
 package com.kjipo.compare;
 
 import com.google.common.collect.Lists;
-import com.kjipo.raster.FlowDirection;
 import com.kjipo.raster.attraction.SegmentMatcher;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
 import com.kjipo.raster.segment.SegmentImpl;
 import com.kjipo.recognition.RecognitionUtilities;
+import com.kjipo.representation.raster.FlowDirection;
 import com.kjipo.visualization.segmentation.SegmentationVisualizer;
 import javafx.scene.paint.Color;
 import org.junit.Test;

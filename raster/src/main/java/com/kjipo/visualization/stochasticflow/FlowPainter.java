@@ -1,7 +1,7 @@
 package com.kjipo.visualization.stochasticflow;
 
-import com.kjipo.raster.FlowDirection;
 import com.kjipo.raster.stochasticflow.StochasticCell;
+import com.kjipo.representation.raster.FlowDirection;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;

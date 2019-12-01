@@ -1,7 +1,7 @@
 package com.kjipo.raster.attraction;
 
 import com.kjipo.raster.EncodingUtilities;
-import com.kjipo.raster.FlowDirection;
+import com.kjipo.representation.raster.FlowDirection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

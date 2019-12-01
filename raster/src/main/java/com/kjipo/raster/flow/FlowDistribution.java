@@ -2,11 +2,11 @@ package com.kjipo.raster.flow;
 
 
 import com.google.common.primitives.Doubles;
+import com.kjipo.representation.raster.FlowDirection;
+import com.kjipo.representation.raster.TileType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.kjipo.raster.DissipationFunction;
-import com.kjipo.raster.FlowDirection;
-import com.kjipo.raster.TileType;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;

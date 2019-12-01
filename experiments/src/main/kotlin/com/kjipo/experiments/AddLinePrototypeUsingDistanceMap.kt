@@ -1,9 +1,9 @@
 package com.kjipo.experiments
 
 import com.kjipo.raster.EncodingUtilities
-import com.kjipo.raster.FlowDirection
-import com.kjipo.raster.TileType
 import com.kjipo.raster.match.MatchDistance
+import com.kjipo.representation.raster.FlowDirection
+import com.kjipo.representation.raster.TileType
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.computeLine
 import com.kjipo.segmentation.shrinkImage

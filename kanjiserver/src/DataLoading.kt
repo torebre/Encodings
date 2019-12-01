@@ -1,5 +1,6 @@
 package com.kjipo
 
+import com.kjipo.representation.EncodedKanji
 import com.kjipo.representation.Line
 import com.kjipo.representation.SegmentLine
 import java.nio.file.Files
@@ -45,4 +46,23 @@ internal fun loadSegmentLines(): Map<Int, List<SegmentLine>> {
             .groupBy {
                 it.unicode
             }
+}
+
+
+fun loadEncodedKanjiFromString(kanjiString: String, unicode: Int) = EncodedKanji(loadEncodedKanjiFromString(kanjiString.split('\n')), unicode)
+
+fun loadEncodedKanjiFromString(kanjiString: List<String>): Array<BooleanArray> {
+    return kanjiString.map {
+        it.map {
+            if (it == '1') {
+                true
+            } else if (it == '0') {
+                false
+            } else {
+                null
+            }
+        }
+                .filterNotNull()
+                .toBooleanArray()
+    }.toTypedArray()
 }

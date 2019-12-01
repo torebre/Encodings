@@ -153,9 +153,9 @@ fun loadEncodedKanjiFromString(kanjiString: String, unicode: Int) = EncodedKanji
 fun loadEncodedKanjiFromString(kanjiString: List<String>): Array<BooleanArray> {
     return kanjiString.map {
         it.map {
-            if (it.equals('1')) {
+            if (it == '1') {
                 true
-            } else if (it.equals('0')) {
+            } else if (it == '0') {
                 false
             } else {
                 null

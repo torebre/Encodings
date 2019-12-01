@@ -3,7 +3,6 @@ package com.kjipo.experiments
 import com.kjipo.raster.match.MatchDistance
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitLinePrototypes
-import com.kjipo.segmentation.shrinkImage
 import com.kjipo.skeleton.*
 import com.kjipo.visualization.displayColourRasters
 import com.kjipo.visualization.displayMatrix

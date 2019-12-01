@@ -1,10 +1,10 @@
 package com.kjipo.segmentation;
 
 import com.kjipo.raster.Cell;
-import com.kjipo.raster.FlowDirection;
 import com.kjipo.raster.filter.Filter;
 import com.kjipo.raster.filter.MaskFilter;
 import com.kjipo.raster.segment.Pair;
+import com.kjipo.representation.raster.FlowDirection;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;

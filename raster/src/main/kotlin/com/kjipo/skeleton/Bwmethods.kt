@@ -2,7 +2,7 @@ package com.kjipo.skeleton
 
 import com.kjipo.prototype.FitPrototype
 import com.kjipo.raster.EncodingUtilities
-import com.kjipo.raster.FlowDirection
+import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.segmentation.Matrix
 import javafx.scene.paint.Color
 import kotlin.math.abs

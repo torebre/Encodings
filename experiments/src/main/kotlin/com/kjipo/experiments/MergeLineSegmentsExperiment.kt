@@ -2,8 +2,8 @@ package com.kjipo.experiments
 
 import com.kjipo.prototype.AngleLine
 import com.kjipo.raster.EncodingUtilities
-import com.kjipo.raster.FlowDirection
 import com.kjipo.raster.match.MatchDistance
+import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitLinePrototypes
 import com.kjipo.segmentation.shrinkImage

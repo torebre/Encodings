@@ -2,16 +2,18 @@ package com.kjipo.prototype;
 
 import com.google.common.collect.Lists;
 import com.kjipo.raster.EncodingUtilities;
-import com.kjipo.raster.FlowDirection;
-import com.kjipo.raster.attraction.*;
+import com.kjipo.raster.attraction.AngleLineMoveOperation;
+import com.kjipo.raster.attraction.AngleLineMoveOperationImpl;
+import com.kjipo.raster.attraction.LineMoveOperation;
+import com.kjipo.raster.attraction.PrototypeImpl;
 import com.kjipo.raster.match.MatchDistance;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
+import com.kjipo.representation.raster.FlowDirection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class FitPrototype {

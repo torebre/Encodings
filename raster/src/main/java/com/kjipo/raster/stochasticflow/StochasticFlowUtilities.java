@@ -2,10 +2,7 @@ package com.kjipo.raster.stochasticflow;
 
 
 import com.google.common.collect.ImmutableMap;
-import org.apache.commons.math3.fraction.Fraction;
-import com.kjipo.raster.EncodingUtilities;
-import com.kjipo.raster.FlowDirection;
-import com.kjipo.raster.TileType;
+import com.kjipo.representation.raster.FlowDirection;
 
 import java.util.Map;
 

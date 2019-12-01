@@ -4,6 +4,7 @@ import com.kjipo.Constants.segmentData
 import com.kjipo.representation.Line
 import com.kjipo.representation.LineUtilities
 import com.kjipo.representation.SegmentLine
+import com.kjipo.skeleton.transformArraysToMatrix
 import io.ktor.application.Application
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
@@ -90,21 +91,20 @@ fun Application.module(testing: Boolean = false) {
             call.respondFile(Paths.get("kanji_output8").resolve("${call.parameters["unicode"]}.dat").toFile())
         }
 
+        get("/kanji/{unicode}/matrix") {
+            val unicode = call.parameters["unicode"] ?: return@get
+            val kanjiFile = Paths.get("kanji_output8").resolve("${unicode}.dat")
+            val loadEncodedKanjiFromString = loadEncodedKanjiFromString(Files.readAllLines(kanjiFile))
+
+            call.respond(transformArraysToMatrix(loadEncodedKanjiFromString))
+        }
+
         get("/kanji/{unicode}/segment/{segment}") {
             val segmentData = segments[Pair(call.parameters["unicode"]?.toInt(), call.parameters["segment"]?.toInt())]
             if (segmentData == null) {
                 call.respond(HttpStatusCode.NotFound)
             } else {
                 call.respondText { segmentData.map { it.toString() }.joinToString("\n") }
-            }
-        }
-
-        get("/kanji/{unicode}/segments") {
-            val count = unicodeToSegmentCount[call.parameters["unicode"]?.toInt()]
-            if (count == null) {
-                call.respond(HttpStatusCode.NotFound)
-            } else {
-                call.respondText { count.toString() }
             }
         }
 

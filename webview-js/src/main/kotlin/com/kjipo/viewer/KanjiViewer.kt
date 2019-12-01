@@ -1,9 +1,6 @@
 import com.kjipo.representation.EncodedKanji
 import com.kjipo.representation.Matrix
-import com.kjipo.viewer.KanjiApp
 import org.w3c.dom.CanvasRenderingContext2D
-import org.w3c.dom.HTMLCanvasElement
-import kotlin.browser.document
 
 
 class KanjiViewer(private val context: CanvasRenderingContext2D) {
@@ -14,7 +11,6 @@ class KanjiViewer(private val context: CanvasRenderingContext2D) {
 
     fun setupKanjiDrawing(encodedKanji: EncodedKanji, squareSize: Int = SQUARE_SIZE) {
         var currentRow = 0
-
 
         encodedKanji.image.forEach { row ->
             var currentColumn = 0
@@ -31,7 +27,8 @@ class KanjiViewer(private val context: CanvasRenderingContext2D) {
     fun setupKanjiDrawing(matrix: Matrix<Int>, squareSize: Int = SQUARE_SIZE) {
         matrix.forEachIndexed { row, column, value ->
             if (value > 0) {
-                context.fillStyle = "#${value.toString(16)}FFFF"
+                val hexadecimalValue = value.toString(16)
+                context.fillStyle = "#${hexadecimalValue}${hexadecimalValue}${hexadecimalValue}"
                 context.fillRect(squareSize * row.toDouble(), squareSize * column.toDouble(), squareSize.toDouble(), squareSize.toDouble())
             }
         }

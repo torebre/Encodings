@@ -1,7 +1,7 @@
 package com.kjipo.raster.stochasticflow;
 
 import com.kjipo.raster.AbstractCell;
-import com.kjipo.raster.FlowDirection;
+import com.kjipo.representation.raster.FlowDirection;
 
 import java.util.*;
 

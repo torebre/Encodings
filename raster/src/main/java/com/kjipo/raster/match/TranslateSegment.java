@@ -1,9 +1,9 @@
 package com.kjipo.raster.match;
 
-import com.kjipo.raster.FlowDirection;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
 import com.kjipo.raster.segment.SegmentImpl;
+import com.kjipo.representation.raster.FlowDirection;
 
 import java.util.List;
 import java.util.stream.Collectors;

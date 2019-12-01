@@ -2,8 +2,7 @@ package com.kjipo.raster.stochasticflow;
 
 
 import com.kjipo.raster.AbstractCell;
-import com.kjipo.raster.FlowDirection;
-import org.apache.commons.math3.analysis.function.Abs;
+import com.kjipo.representation.raster.FlowDirection;
 
 import java.util.Collection;
 import java.util.List;

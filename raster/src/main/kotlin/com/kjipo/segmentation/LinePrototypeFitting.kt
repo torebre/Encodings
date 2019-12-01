@@ -2,15 +2,13 @@ package com.kjipo.segmentation
 
 import com.kjipo.prototype.AngleLine
 import com.kjipo.prototype.FitPrototype
-import com.kjipo.raster.EncodingUtilities.validCoordinates
-import com.kjipo.raster.FlowDirection
 import com.kjipo.raster.match.MatchDistance
 import com.kjipo.raster.segment.Pair
+import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.skeleton.transformArraysToMatrix
 import com.kjipo.skeleton.transformToBooleanArrays
 import org.slf4j.LoggerFactory
 import java.util.*
-import kotlin.math.max
 import kotlin.streams.toList
 
 

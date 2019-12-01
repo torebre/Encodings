@@ -4,7 +4,6 @@ import com.kjipo.prototype.AngleLine
 import com.kjipo.raster.match.MatchDistance
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitLinePrototypes
-import com.kjipo.segmentation.linePrototypeFittingLog
 import com.kjipo.segmentation.shrinkImage
 import com.kjipo.skeleton.transformArraysToMatrix
 import com.kjipo.skeleton.transformToArrays

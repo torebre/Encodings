@@ -1,9 +1,9 @@
 package com.kjipo.raster.match;
 
 import com.kjipo.raster.EncodingUtilities;
-import com.kjipo.raster.FlowDirection;
-import com.kjipo.raster.TileType;
 import com.kjipo.raster.segment.Pair;
+import com.kjipo.representation.raster.FlowDirection;
+import com.kjipo.representation.raster.TileType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

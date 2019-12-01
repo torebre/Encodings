@@ -1,8 +1,8 @@
 package com.kjipo.skeleton
 
 import com.kjipo.raster.EncodingUtilities
-import com.kjipo.raster.FlowDirection
 import com.kjipo.representation.EncodedKanji
+import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.segmentation.Matrix
 import com.kjipo.visualization.RasterVisualizer2
 import javafx.scene.paint.Color

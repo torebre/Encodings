@@ -1,6 +1,7 @@
 package com.kjipo.raster.stochasticflow;
 
-import com.kjipo.raster.FlowDirection;
+
+import com.kjipo.representation.raster.FlowDirection;
 
 public class Source {
     private final int row;

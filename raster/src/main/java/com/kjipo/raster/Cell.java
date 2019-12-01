@@ -1,5 +1,7 @@
 package com.kjipo.raster;
 
+import com.kjipo.representation.raster.FlowDirection;
+
 public class Cell extends AbstractCell {
     private final FlowDirection flowDirection;
     private final int flowStrength;

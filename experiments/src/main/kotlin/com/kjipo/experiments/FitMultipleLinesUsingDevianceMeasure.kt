@@ -3,7 +3,6 @@ package com.kjipo.experiments
 import com.google.common.collect.ImmutableList
 import com.kjipo.prototype.AngleLine
 import com.kjipo.prototype.Prototype
-import com.kjipo.raster.EncodingUtilities
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitSingleLineUsingDevianceMeasure
 import com.kjipo.segmentation.shrinkImage
@@ -13,9 +12,7 @@ import com.kjipo.visualization.*
 import com.kjipo.visualization.segmentation.ColorCell
 import com.kjipo.visualization.segmentation.ColorPainter
 import javafx.scene.paint.Color
-import java.io.File
 import java.nio.file.Paths
-import javax.imageio.ImageIO
 import kotlin.streams.toList
 
 

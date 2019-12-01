@@ -1,18 +1,12 @@
 package com.kjipo.experiments
 
 import com.kjipo.prototype.AngleLine
-import com.kjipo.raster.match.MatchDistance
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitSingleLine3
 import com.kjipo.segmentation.shrinkImage
 import com.kjipo.skeleton.makeThin
-import com.kjipo.skeleton.transformArraysToMatrix
-import com.kjipo.skeleton.transformToBooleanArrays
-import com.kjipo.visualization.*
-import javafx.collections.ObservableList
-import javafx.scene.Node
+import com.kjipo.visualization.displayColourMatrix
 import javafx.scene.paint.Color
-import javafx.scene.shape.Rectangle
 import java.io.File
 import javax.imageio.ImageIO
 

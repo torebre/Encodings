@@ -41,47 +41,18 @@ class KanjiApp {
         }.toTypedArray()
     }
 
-
-    fun loadSegmentData() {
-        val client = HttpClient(Js)
-
-        CoroutineScope(Dispatchers.Main).launch {
-            val numberOfSegments = client.get<String>("http://0.0.0.0:8094/kanji/27355/segments").toInt()
-
-            // TODO Not using all segments when testing
-            for (i in 0 until numberOfSegments) {
-                console.log("Loading segment: $i")
-
-                try {
-                    val response = client.get<String>("http://0.0.0.0:8094/kanji/27355/segment/$i/matrix")
-                    val parsedResponse = JSON.parse<Matrix<Int>>(response)
-                    val element = document.createElement("canvas") as HTMLCanvasElement
-
-                    document.body?.appendChild(element)
-
-                    val context2 = element.getContext("2d")
-                    val kanjiViewer2 = KanjiViewer(context2 as CanvasRenderingContext2D)
-
-                    with(element) {
-                        setAttribute("width", (2 * parsedResponse.numberOfColumns).toString())
-                        setAttribute("height", (2 * parsedResponse.numberOfRows).toString())
-                    }
-
-                    kanjiViewer2.setupKanjiDrawing(parsedResponse, 2)
-                }
-                catch (e: ClientRequestException) {
-                    Napier.e("Could not find segment", e)
-                    continue
-                }
-            }
-        }
-    }
-
-
     fun loadLineSegmentData() {
         val client = HttpClient(Js)
 
         CoroutineScope(Dispatchers.Main).launch {
+            val kanjiMatrix = client.get<String>("http://0.0.0.0:8094/kanji/27355/matrix")
+            val parsedKanjiMatrix = JSON.parse<Matrix<Int>>(kanjiMatrix)
+
+//            val encodedKanji = loadEncodedKanjiFromString(kanjiMatrix, 27355)
+//            val parsedKanjiMatrix = JSON.parse<Matrix<Int>>(kanjiMatrix)
+
+            addCanvas(parsedKanjiMatrix, 3)
+
             val segmentData = client.get<String>("http://0.0.0.0:8094/kanji/27355/segmentdata")
             val parsedResponse = JSON.parse<Array<SegmentLine>>(segmentData)
             val segmentLineMap = parsedResponse.groupBy { it.segment }
@@ -94,7 +65,7 @@ class KanjiApp {
     }
 
 
-    private fun addCanvas(matrix: Matrix<Int>) {
+    private fun addCanvas(matrix: Matrix<Int>, squareSize: Int = 2) {
         try {
             val element = document.createElement("canvas") as HTMLCanvasElement
 
@@ -104,16 +75,15 @@ class KanjiApp {
             val kanjiViewer2 = KanjiViewer(context2 as CanvasRenderingContext2D)
 
             with(element) {
-                setAttribute("width", (2 * matrix.numberOfColumns).toString())
-                setAttribute("height", (2 * matrix.numberOfRows).toString())
+                setAttribute("width", (squareSize * matrix.numberOfColumns).toString())
+                setAttribute("height", (squareSize * matrix.numberOfRows).toString())
+                setAttribute("style", "border:1px solid #000000;")
             }
 
-            kanjiViewer2.setupKanjiDrawing(matrix, 2)
-        }
-        catch (e: ClientRequestException) {
+            kanjiViewer2.setupKanjiDrawing(matrix, squareSize)
+        } catch (e: ClientRequestException) {
             Napier.e("Could not find segment", e)
         }
-
 
 
     }

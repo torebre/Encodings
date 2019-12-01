@@ -4,9 +4,9 @@ package com.kjipo.raster.attraction;
 import com.google.common.collect.Lists;
 import com.kjipo.prototype.LinePrototype;
 import com.kjipo.raster.EncodingUtilities;
-import com.kjipo.raster.FlowDirection;
 import com.kjipo.raster.segment.Pair;
 import com.kjipo.raster.segment.Segment;
+import com.kjipo.representation.raster.FlowDirection;
 
 import java.util.List;
 

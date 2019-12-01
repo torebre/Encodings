@@ -1,7 +1,7 @@
 package com.kjipo.segmentation
 
 import com.kjipo.raster.EncodingUtilities
-import com.kjipo.raster.FlowDirection
+import com.kjipo.representation.raster.FlowDirection
 
 
 fun expandLine(raster: Array<BooleanArray>): List<Pair<Int, Int>> {
