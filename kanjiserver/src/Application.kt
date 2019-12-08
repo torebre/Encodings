@@ -65,26 +65,26 @@ fun Application.module(testing: Boolean = false) {
 
     routing {
 
-        get("/styles.css") {
-            call.respondCss {
-                body {
-                    backgroundColor = Color.red
-                }
-                p {
-                    fontSize = 2.em
-                }
-                rule("p.myclass") {
-                    color = Color.blue
-                }
-            }
-        }
-
         get("/kanji") {
             call.respondText(Files.list(Paths.get("kanji_output8"))
                     .map { file ->
                         file.toFile().name.substringBefore('.')
                     }.collect(Collectors.joining(",")),
                     contentType = ContentType.Text.Plain)
+        }
+
+        get("/kanji/{unicode}/linedata") {
+            val lines = Files.readAllLines(Paths.get("kanji_line_data_${call.parameters["unicode"]}.csv")).map {
+                val splitString = it.split(",")
+
+                Line(splitString[1].toInt(),
+                        splitString[2].toDouble(),
+                        splitString[3].toDouble(),
+                        splitString[4].toInt(),
+                        splitString[5].toInt())
+            }
+                    .toList()
+            call.respond(lines)
         }
 
         get("/kanji/{unicode}") {

@@ -2,10 +2,7 @@ package com.kjipo.viewer
 
 import KanjiViewer
 import com.github.aakira.napier.Napier
-import com.kjipo.representation.EncodedKanji
-import com.kjipo.representation.LineUtilities
-import com.kjipo.representation.Matrix
-import com.kjipo.representation.SegmentLine
+import com.kjipo.representation.*
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.js.Js
 import io.ktor.client.features.ClientRequestException
@@ -53,6 +50,8 @@ class KanjiApp {
 
             addCanvas(parsedKanjiMatrix, 3)
 
+            drawLines(33760, client)
+
             val segmentData = client.get<String>("http://0.0.0.0:8094/kanji/27355/segmentdata")
             val parsedResponse = JSON.parse<Array<SegmentLine>>(segmentData)
             val segmentLineMap = parsedResponse.groupBy { it.segment }
@@ -64,8 +63,15 @@ class KanjiApp {
         }
     }
 
+    private suspend fun drawLines(unicode: Int, client: HttpClient) {
+        val lineData = client.get<String>("http://0.0.0.0:8094/kanji/$unicode/linedata")
+        val parsedLines = JSON.parse<Array<Line>>(lineData)
+        val matrix = LineUtilities.drawLines(parsedLines.toList())
 
-    private fun addCanvas(matrix: Matrix<Int>, squareSize: Int = 2) {
+        addCanvas(matrix, 3, true)
+    }
+
+    private fun addCanvas(matrix: Matrix<Int>, squareSize: Int = 2, useColours: Boolean = false) {
         try {
             val element = document.createElement("canvas") as HTMLCanvasElement
 
@@ -80,12 +86,10 @@ class KanjiApp {
                 setAttribute("style", "border:1px solid #000000;")
             }
 
-            kanjiViewer2.setupKanjiDrawing(matrix, squareSize)
+            kanjiViewer2.setupKanjiDrawing(matrix, squareSize, useColours)
         } catch (e: ClientRequestException) {
             Napier.e("Could not find segment", e)
         }
-
-
     }
 
 
