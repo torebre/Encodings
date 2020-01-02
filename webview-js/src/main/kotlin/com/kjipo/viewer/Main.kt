@@ -6,5 +6,4 @@ fun main(args: Array<String>) {
 
     kanjiApp.setupKanjiSelection()
     kanjiApp.loadLineSegmentData()
-
 }

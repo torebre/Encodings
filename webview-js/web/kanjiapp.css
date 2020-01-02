@@ -4,13 +4,21 @@
 /*}*/
 
 .subimageList {
-    float: right;
 
 }
 
-/*subimages {*/
+#subimages {
 
-/*    */
-/*}*/
 
+}
+
+
+#selectedKanji {
+    position: fixed;
+    top: 0;
+    width: 500px;
+    margin: 0 auto;
+    background: white;
+    padding: 10px;
+}
 

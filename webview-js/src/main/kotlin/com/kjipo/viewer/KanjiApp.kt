@@ -51,17 +51,14 @@ class KanjiApp {
 
     fun loadLineSegmentData() {
 
-
         CoroutineScope(Dispatchers.Main).launch {
             val kanjiMatrix = client.get<String>("http://0.0.0.0:8094/kanji/27355/matrix")
             val parsedKanjiMatrix = JSON.parse<Matrix<Int>>(kanjiMatrix)
 
-//            val encodedKanji = loadEncodedKanjiFromString(kanjiMatrix, 27355)
-//            val parsedKanjiMatrix = JSON.parse<Matrix<Int>>(kanjiMatrix)
-
             addCanvas(parsedKanjiMatrix, 3)
 
-            drawLines(33760, client)
+            val lineMatrix = tranformLinesToMatrix(33760, client)
+            drawOnExistingCanvas(lineMatrix, 3, true, "selectedKanji")
 
             val segmentData = client.get<String>("http://0.0.0.0:8094/kanji/27355/segmentdata")
             val parsedResponse = JSON.parse<Array<SegmentLine>>(segmentData)
@@ -78,38 +75,57 @@ class KanjiApp {
         }
     }
 
-    private suspend fun drawLines(unicode: Int, client: HttpClient) {
+    private suspend fun tranformLinesToMatrix(unicode: Int, client: HttpClient): Matrix<Int> {
         val lineData = client.get<String>("http://0.0.0.0:8094/kanji/$unicode/linedata")
         val parsedLines = JSON.parse<Array<Line>>(lineData)
         val matrix = LineUtilities.drawLines(parsedLines.toList())
 
-        addCanvas(matrix, 3, true)
+        return matrix
+
+//        addCanvas(matrix, 3, true)
     }
 
     private fun addCanvas(matrix: Matrix<Int>, squareSize: Int = 2, useColours: Boolean = false, parent: Element? = null) {
         try {
             val element = document.createElement("canvas") as HTMLCanvasElement
 
-            if(parent != null) {
+            if (parent != null) {
                 parent.appendChild(element)
-            }
-            else {
+            } else {
                 document.body?.appendChild(element)
             }
+            drawOnExistingCanvas(matrix, squareSize, useColours, element)
+        } catch (e: ClientRequestException) {
+            Napier.e("Could not find segment", e)
+        }
+    }
 
-            val context2 = element.getContext("2d")
-            val kanjiViewer2 = KanjiViewer(context2 as CanvasRenderingContext2D)
+    private fun drawOnExistingCanvas(matrix: Matrix<Int>, squareSize: Int = 2, useColours: Boolean = false, canvasElementId: String) {
+        document.getElementById(canvasElementId)?.let {
+            val context2 = (it as HTMLCanvasElement).getContext("2d")
+            val kanjiViewer = KanjiViewer(context2 as CanvasRenderingContext2D)
 
-            with(element) {
+            with(it) {
                 setAttribute("width", (squareSize * matrix.numberOfColumns).toString())
                 setAttribute("height", (squareSize * matrix.numberOfRows).toString())
                 setAttribute("style", "border:1px solid #000000;")
             }
 
-            kanjiViewer2.setupKanjiDrawing(matrix, squareSize, useColours)
-        } catch (e: ClientRequestException) {
-            Napier.e("Could not find segment", e)
+            kanjiViewer.setupKanjiDrawing(matrix, squareSize, useColours)
         }
+
+    }
+
+    private fun drawOnExistingCanvas(matrix: Matrix<Int>, squareSize: Int = 2, useColours: Boolean = false, canvasElement: Element) {
+        val context2 = (canvasElement as HTMLCanvasElement).getContext("2d")
+        val kanjiViewer = KanjiViewer(context2 as CanvasRenderingContext2D)
+
+        with(canvasElement) {
+            setAttribute("width", (squareSize * matrix.numberOfColumns).toString())
+            setAttribute("height", (squareSize * matrix.numberOfRows).toString())
+            setAttribute("style", "border:1px solid #000000;")
+        }
+        kanjiViewer.setupKanjiDrawing(matrix, squareSize, useColours)
     }
 
 
