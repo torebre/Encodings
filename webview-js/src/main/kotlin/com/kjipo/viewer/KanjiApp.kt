@@ -7,18 +7,29 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.js.Js
 import io.ktor.client.features.ClientRequestException
 import io.ktor.client.request.get
-import io.ktor.client.request.request
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.w3c.dom.CanvasRenderingContext2D
-import org.w3c.dom.HTMLCanvasElement
-import org.w3c.xhr.XMLHttpRequest
+import org.w3c.dom.*
 import kotlin.browser.document
 
 
 class KanjiApp {
+    val client = HttpClient(Js)
 
+    fun setupKanjiSelection() {
+        CoroutineScope(Dispatchers.Main).launch {
+            val unicodes = client.get<String>("http://0.0.0.0:8094/kanji")
+
+            document.querySelector("#kanjiUnicode")?.let {
+                val selectElement = it as HTMLSelectElement
+                for (unicode in unicodes.split(",")) {
+                    selectElement.options.add(Option(text = unicode))
+                }
+            }
+        }
+
+    }
 
     fun loadEncodedKanjiFromString(kanjiString: String, unicode: Int) = EncodedKanji(loadEncodedKanjiFromString(kanjiString.split('\n')), unicode)
 
@@ -39,7 +50,7 @@ class KanjiApp {
     }
 
     fun loadLineSegmentData() {
-        val client = HttpClient(Js)
+
 
         CoroutineScope(Dispatchers.Main).launch {
             val kanjiMatrix = client.get<String>("http://0.0.0.0:8094/kanji/27355/matrix")
@@ -56,9 +67,13 @@ class KanjiApp {
             val parsedResponse = JSON.parse<Array<SegmentLine>>(segmentData)
             val segmentLineMap = parsedResponse.groupBy { it.segment }
 
+            val imageList = document.getElementById("subimages") as HTMLUListElement
             for (entry in segmentLineMap.entries) {
+                val listElement = document.createElement("li")
+                imageList.appendChild(listElement)
+
                 val dataMatrix = LineUtilities.drawLines(entry.value)
-                addCanvas(dataMatrix)
+                addCanvas(dataMatrix, parent = listElement)
             }
         }
     }
@@ -71,11 +86,16 @@ class KanjiApp {
         addCanvas(matrix, 3, true)
     }
 
-    private fun addCanvas(matrix: Matrix<Int>, squareSize: Int = 2, useColours: Boolean = false) {
+    private fun addCanvas(matrix: Matrix<Int>, squareSize: Int = 2, useColours: Boolean = false, parent: Element? = null) {
         try {
             val element = document.createElement("canvas") as HTMLCanvasElement
 
-            document.body?.appendChild(element)
+            if(parent != null) {
+                parent.appendChild(element)
+            }
+            else {
+                document.body?.appendChild(element)
+            }
 
             val context2 = element.getContext("2d")
             val kanjiViewer2 = KanjiViewer(context2 as CanvasRenderingContext2D)
