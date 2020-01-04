@@ -12,10 +12,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.w3c.dom.*
 import kotlin.browser.document
+import kotlin.dom.clear
 
 
 class KanjiApp {
-    val client = HttpClient(Js)
+    private val client = HttpClient(Js)
+    private var selectedKanji = 0 // 33760 // 27355
 
     fun setupKanjiSelection() {
         CoroutineScope(Dispatchers.Main).launch {
@@ -23,12 +25,23 @@ class KanjiApp {
 
             document.querySelector("#kanjiUnicode")?.let {
                 val selectElement = it as HTMLSelectElement
+
                 for (unicode in unicodes.split(",")) {
                     selectElement.options.add(Option(text = unicode))
                 }
+
+                selectElement.namedItem(selectedKanji.toString())?.let {elementToSelect ->
+                    selectElement.selectedIndex = elementToSelect.index
+                }
+
+                selectElement.onchange = {
+                    selectElement[selectElement.selectedIndex]?.let {option ->
+                        val optionElement = option as Option
+                        loadLineSegmentData(optionElement.text.toInt())
+                    }
+                }
             }
         }
-
     }
 
     fun loadEncodedKanjiFromString(kanjiString: String, unicode: Int) = EncodedKanji(loadEncodedKanjiFromString(kanjiString.split('\n')), unicode)
@@ -49,22 +62,29 @@ class KanjiApp {
         }.toTypedArray()
     }
 
-    fun loadLineSegmentData() {
+
+    fun selectAndLoad(unicode: Int) {
+        selectedKanji = unicode
+        loadLineSegmentData(selectedKanji)
+    }
+
+    fun loadLineSegmentData(unicode: Int) {
 
         CoroutineScope(Dispatchers.Main).launch {
-            val kanjiMatrix = client.get<String>("http://0.0.0.0:8094/kanji/27355/matrix")
+            val kanjiMatrix = client.get<String>("http://0.0.0.0:8094/kanji/${unicode}/matrix")
             val parsedKanjiMatrix = JSON.parse<Matrix<Int>>(kanjiMatrix)
 
-            addCanvas(parsedKanjiMatrix, 3)
+            drawOnExistingCanvas(parsedKanjiMatrix, 3, false, "kanjiMatrix")
 
-            val lineMatrix = tranformLinesToMatrix(33760, client)
+            val lineMatrix = tranformLinesToMatrix(unicode, client)
             drawOnExistingCanvas(lineMatrix, 3, true, "selectedKanji")
 
-            val segmentData = client.get<String>("http://0.0.0.0:8094/kanji/27355/segmentdata")
+            val segmentData = client.get<String>("http://0.0.0.0:8094/kanji/${unicode}/segmentdata")
             val parsedResponse = JSON.parse<Array<SegmentLine>>(segmentData)
             val segmentLineMap = parsedResponse.groupBy { it.segment }
 
             val imageList = document.getElementById("subimages") as HTMLUListElement
+            imageList.clear()
             for (entry in segmentLineMap.entries) {
                 val listElement = document.createElement("li")
                 imageList.appendChild(listElement)
@@ -127,6 +147,5 @@ class KanjiApp {
         }
         kanjiViewer.setupKanjiDrawing(matrix, squareSize, useColours)
     }
-
 
 }

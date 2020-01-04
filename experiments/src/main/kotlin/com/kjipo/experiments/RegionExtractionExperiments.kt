@@ -545,8 +545,9 @@ object RegionExtractionExperiments {
 //        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"))
 
 
-        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), mutableListOf(33760))
-//        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), 1000)
+        val lineDataFolder = Paths.get("linedata")
+//        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), mutableListOf(27355))
+        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"))
 
 //    println("Loaded kanji: ${loadedKanji.size}")
 
@@ -560,14 +561,12 @@ object RegionExtractionExperiments {
         val kanjiList = loadedKanji.map { Pair(it.unicode, fitLinesToKanji(transformArraysToMatrix(it.image), 10)) }.toList()
 
         for (pair in kanjiList) {
-            writeKanjiData(pair.first, pair.second, Paths.get("kanji_line_data_${pair.first}.csv"))
+            writeKanjiData(pair.first, pair.second, lineDataFolder.resolve("kanji_line_data_${pair.first}.csv"))
         }
 
-        val subImages = extractSubImages(kanjiList)
-//        displaySubImages(subImages)
-
-        val outputFile = Paths.get("kanji_data_segments_small.csv")
-        testExtraction(subImages, outputFile)
+//        val subImages = extractSubImages(kanjiList)
+//        val outputFile = Paths.get("kanji_data_segments_small.csv")
+//        testExtraction(subImages, outputFile)
     }
 
 }

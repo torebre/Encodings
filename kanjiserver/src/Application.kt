@@ -74,7 +74,7 @@ fun Application.module(testing: Boolean = false) {
         }
 
         get("/kanji/{unicode}/linedata") {
-            val lines = Files.readAllLines(Paths.get("kanji_line_data_${call.parameters["unicode"]}.csv")).map {
+            val lines = Files.readAllLines(Paths.get("linedata/kanji_line_data_${call.parameters["unicode"]}.csv")).map {
                 val splitString = it.split(",")
 
                 Line(splitString[1].toInt(),

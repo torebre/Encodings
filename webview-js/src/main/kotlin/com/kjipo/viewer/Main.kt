@@ -5,5 +5,6 @@ fun main(args: Array<String>) {
     val kanjiApp = KanjiApp()
 
     kanjiApp.setupKanjiSelection()
-    kanjiApp.loadLineSegmentData()
+    kanjiApp.selectAndLoad(27355)
+
 }
