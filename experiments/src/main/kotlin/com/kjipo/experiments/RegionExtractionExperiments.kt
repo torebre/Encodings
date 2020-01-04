@@ -5,6 +5,8 @@ import com.kjipo.prototype.CreatePrototypeDataset
 import com.kjipo.prototype.Prototype
 import com.kjipo.raster.match.MatchDistance
 import com.kjipo.representation.EncodedKanji
+import com.kjipo.representation.Line
+import com.kjipo.representation.LineUtilities.drawLines
 import com.kjipo.segmentation.*
 import com.kjipo.setup.transformKanjiData
 import com.kjipo.skeleton.makeThin
@@ -275,10 +277,12 @@ object RegionExtractionExperiments {
 
         Files.newBufferedWriter(Paths.get("sub_image_distances.csv")).use { bufferedWriter ->
             subImageDistances.entries.forEach {
-                bufferedWriter.write(it.key)
-                bufferedWriter.write(",")
-                bufferedWriter.write(it.value.toString())
-                bufferedWriter.newLine()
+                with(bufferedWriter) {
+                    write(it.key)
+                    write(",")
+                    write(it.value.toString())
+                    newLine()
+                }
             }
         }
 
@@ -525,10 +529,53 @@ object RegionExtractionExperiments {
         displayColourMatrix(dispImage, 5)
     }
 
+    private fun drawKanjiUsingLines(linePrototypes: List<AngleLine>, numberOfRows: Int, numberOfColumns: Int) {
+        val dispImage = Matrix(numberOfRows, numberOfColumns) { row, column ->
+            Color.BLACK
+        }
 
-    @JvmStatic
-    fun main(args: Array<String>) {
-//    extractRegionsAroundPrototypes2()
+        var counter = 0
+        linePrototypes.forEach {
+            it.segments.flatMap { it.pairs }.forEach {
+                if (it.row >= 0 && it.row < dispImage.numberOfRows && it.column >= 0 && it.column < dispImage.numberOfColumns) {
+                    if (dispImage[it.row, it.column].brightness == 1.0) {
+                        dispImage[it.row, it.column] = Color.WHITE
+                    } else {
+                        dispImage[it.row, it.column] = Color.hsb(counter.toDouble().div(linePrototypes.size).times(360), 1.0, 1.0)
+                    }
+                }
+            }
+            ++counter
+        }
+    }
+
+
+    private fun checkKanji() {
+        val lineDataFolder = Paths.get("linedata")
+
+        val lines = Files.readAllLines(lineDataFolder.resolve("kanji_line_data_26397.csv")).map {
+            val splitString = it.split(",")
+
+
+
+            Line(splitString[1].toInt(),
+                    splitString[2].toDouble(),
+                    splitString[3].toDouble(),
+                    splitString[4].toInt(),
+                    splitString[5].toInt())
+        }
+                .toList()
+
+        val linesMatrix = drawLines(lines)
+
+        val matrix: Matrix<Boolean> = Matrix(linesMatrix.numberOfRows, linesMatrix.numberOfColumns) { row, column ->
+            linesMatrix[row, column] > 0
+        }
+        displayMatrix(matrix, 3)
+    }
+
+    private fun setupData() {
+        //    extractRegionsAroundPrototypes2()
 //        displayKanjis(Files.list(Paths.get("fragments"))
 //                .map {
 //                    loadEncodedKanji(it, { name -> name.substring(0, name.indexOf('_')).toInt() })
@@ -553,17 +600,25 @@ object RegionExtractionExperiments {
 //        displayLinesInKanji(loadedKanji.first(), linesFitToKanji)
 
         val kanjiList = loadedKanji.map { Pair(it.unicode, fitLinesToKanji(transformArraysToMatrix(it.image), 1)) }.toList()
-//        for (pair in kanjiList) {
-//            writeKanjiData(pair.first, pair.second, lineDataFolder.resolve("kanji_line_data_${pair.first}.csv"))
-//        }
+        val kanjiSublist = kanjiList.subList(0, 500)
 
-//        val kanjiSublist = kanjiList.subList(0, 50)
+        for (pair in kanjiSublist) {
+            writeKanjiData(pair.first, pair.second, lineDataFolder.resolve("kanji_line_data_${pair.first}.csv"))
+        }
 
-        val subImages = extractSubImages(kanjiList, SubImageExtractionConfig(7, 3, 15))
+        val subImages = extractSubImages(kanjiSublist, SubImageExtractionConfig(7, 3, 15))
         val outputFile = Paths.get("kanji_data_segments_full_2.csv")
         writeKanjiDataSegments(subImages, outputFile)
 
 //        findSubimageDistances(subImages)
+
+    }
+
+
+    @JvmStatic
+    fun main(args: Array<String>) {
+//        setupData()
+        checkKanji()
     }
 
 }
