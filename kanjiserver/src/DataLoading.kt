@@ -5,9 +5,6 @@ import com.kjipo.representation.Line
 import com.kjipo.representation.SegmentLine
 import java.nio.file.Files
 
-//Map<Int, List<SegmentLine>> by lazy {
-
-
 
 internal fun loadLines(): Map<Pair<Int, Int>, List<Line>> {
     val allLines = Files.readAllLines(Constants.segmentData)

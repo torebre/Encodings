@@ -66,10 +66,14 @@ fun Application.module(testing: Boolean = false) {
     routing {
 
         get("/kanji") {
-            call.respondText(Files.list(Paths.get("kanji_output8"))
-                    .map { file ->
-                        file.toFile().name.substringBefore('.')
-                    }.collect(Collectors.joining(",")),
+            //            call.respondText(Files.list(Paths.get("kanji_output8"))
+//                    .map { file ->
+//                        file.toFile().name.substringBefore('.')
+//                    }.collect(Collectors.joining(",")),
+//                    contentType = ContentType.Text.Plain)
+
+            call.respondText(segments.map { it.key.first }
+                    .distinct().joinToString(",") { it.toString() },
                     contentType = ContentType.Text.Plain)
         }
 

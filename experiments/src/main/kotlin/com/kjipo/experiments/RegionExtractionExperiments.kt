@@ -211,7 +211,10 @@ object RegionExtractionExperiments {
 
     }
 
-    private fun extractSubImages(kanjiLineInput: List<Pair<Int, List<AngleLine>>>): List<SubImageHolder> {
+
+    private class SubImageExtractionConfig(val minimumLengthForPrototypeStart: Int = 2, val minimumNumberOfLinesToInclude: Int = 2, val maximumNumberOfLinesToInclude: Int = 10)
+
+    private fun extractSubImages(kanjiLineInput: List<Pair<Int, List<AngleLine>>>, subImageExtractionConfig: SubImageExtractionConfig): List<SubImageHolder> {
         // TODO Using a subset now for quicker testing
 
         return kanjiLineInput.parallelStream().flatMap { lineEntry ->
@@ -237,27 +240,17 @@ object RegionExtractionExperiments {
     }
 
 
-    private fun testExtraction(kanjiSubImages: List<SubImageHolder>, outputFile: Path) {
+    private fun findSubimageDistances(kanjiSubImages: List<SubImageHolder>) {
         println("Number of subimages: ${kanjiSubImages.size}")
-
-        // TODO Using a sublist for testing
-        val subList = kanjiSubImages.stream().limit(5000)
-                .filter {
-                    // Trying to include only sub images with some lines to see if interesting clusters with low distances are found
-                    it.subImages.size > 5
-                }
-                .toList()
-
-        writeKanjiDataSegments(subList, outputFile)
 
         val subImageDistances = synchronizedMap(HashMap<String, Int>())
         val seenComparisons = mutableSetOf<Pair<Set<Int>, Set<Int>>>()
 
         var counter = 0
-        for (kanjiSubImage in subList) {
+        for (kanjiSubImage in kanjiSubImages) {
             println("Counter: ${counter++}")
 
-            for (subImageHolder in subList) {
+            for (subImageHolder in kanjiSubImages) {
                 // Only look for similar shapes in different kanji for now
                 if (kanjiSubImage.unicode == subImageHolder.unicode) {
                     continue
@@ -375,16 +368,16 @@ object RegionExtractionExperiments {
     /**
      * Extract sub images that lie on one side of a line
      */
-    private fun extractPrototypesOneSideOfLines(linePrototypes: List<AngleLine>): MutableList<MutableList<AngleLine>> {
+    private fun extractPrototypesOneSideOfLines(linePrototypes: List<AngleLine>, minimumLengthForPrototypeStart: Int = 2, minimumNumberOfLinesToInclude: Int = 2, maximumNumberOfLinesToInclude: Int = 10): MutableList<MutableList<AngleLine>> {
         val lineSets = mutableListOf<MutableList<AngleLine>>()
         for (linePrototype in linePrototypes) {
-            if (linePrototype.length < 2) {
+            if (linePrototype.length < minimumLengthForPrototypeStart) {
                 // Skip lines that are short
                 continue
             }
 
             for (side in listOf(true, false)) {
-                for (linesToInclude in 2 until 10) {
+                for (linesToInclude in minimumNumberOfLinesToInclude until maximumNumberOfLinesToInclude) {
                     val lines = extractLines(linePrototype, linePrototypes, side, linesToInclude)
                     if (lines.isEmpty()) {
                         // No more lines found
@@ -546,27 +539,31 @@ object RegionExtractionExperiments {
 
 
         val lineDataFolder = Paths.get("linedata")
-//        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), mutableListOf(27355))
+//        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), mutableListOf(35387))
         val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"))
+
+        // Show the kanji after lines have been fitted to it
+//        AddMultipleLinesUsingDevianceMeasureToCollectionOfKanji.addLinePrototypes(loadedKanji)
 
 //    println("Loaded kanji: ${loadedKanji.size}")
 
 //        displayKanjis(loadedKanji)
 
-//        val linesFitToKanji = fitLinesToKanji(loadedKanji.first(), 10)
-
+//        val linesFitToKanji = fitLinesToKanji(transformArraysToMatrix(loadedKanji.first().image), 2)
 //        displayLinesInKanji(loadedKanji.first(), linesFitToKanji)
 
+        val kanjiList = loadedKanji.map { Pair(it.unicode, fitLinesToKanji(transformArraysToMatrix(it.image), 1)) }.toList()
+//        for (pair in kanjiList) {
+//            writeKanjiData(pair.first, pair.second, lineDataFolder.resolve("kanji_line_data_${pair.first}.csv"))
+//        }
 
-        val kanjiList = loadedKanji.map { Pair(it.unicode, fitLinesToKanji(transformArraysToMatrix(it.image), 10)) }.toList()
+//        val kanjiSublist = kanjiList.subList(0, 50)
 
-        for (pair in kanjiList) {
-            writeKanjiData(pair.first, pair.second, lineDataFolder.resolve("kanji_line_data_${pair.first}.csv"))
-        }
+        val subImages = extractSubImages(kanjiList, SubImageExtractionConfig(7, 3, 15))
+        val outputFile = Paths.get("kanji_data_segments_full_2.csv")
+        writeKanjiDataSegments(subImages, outputFile)
 
-//        val subImages = extractSubImages(kanjiList)
-//        val outputFile = Paths.get("kanji_data_segments_small.csv")
-//        testExtraction(subImages, outputFile)
+//        findSubimageDistances(subImages)
     }
 
 }

@@ -2,6 +2,7 @@ package com.kjipo.experiments
 
 import com.kjipo.prototype.AngleLine
 import com.kjipo.raster.match.MatchDistance
+import com.kjipo.representation.EncodedKanji
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitMultipleLinesUsingDevianceMeasure
 import com.kjipo.segmentation.shrinkImage
@@ -17,21 +18,12 @@ import java.nio.file.Paths
 
 object AddMultipleLinesUsingDevianceMeasureToCollectionOfKanji {
 
-    private fun addLinePrototypes() {
-        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"))
+    fun addLinePrototypes(loadedKanji: Collection<EncodedKanji>) {
         val colourRasters = mutableListOf<Array<Array<Color>>>()
         val texts = mutableListOf<String>()
-
-
         val kanjiPrototypeMap = mutableMapOf<Int, Collection<AngleLine>>()
 
-
         loadedKanji.stream()
-                .limit(5)
-//            .filter {
-////                it.unicode == 33550 ||
-////                it.unicode == 33897
-//            }
                 .forEach {
                     val image = transformArraysToMatrix(it.image)
                     val shrinkImage = shrinkImage(image, 64, 64)
@@ -45,15 +37,13 @@ object AddMultipleLinesUsingDevianceMeasureToCollectionOfKanji {
                         }
                     }
 
-                    val dispImage = Matrix(shrinkImage.numberOfRows, shrinkImage.numberOfColumns, { row, column ->
-                        //                        val distance = distanceMatrix[row, column]
-//                        Color.hsb(distance.toDouble().div(maxValue).times(360), 0.5, 0.2)
+                    val dispImage = Matrix(shrinkImage.numberOfRows, shrinkImage.numberOfColumns) { row, column ->
                         if (image[row, column]) {
                             Color.WHITE
                         } else {
                             Color.BLACK
                         }
-                    })
+                    }
 
                     var counter = 0
                     linePrototypes.forEach {
@@ -84,13 +74,22 @@ object AddMultipleLinesUsingDevianceMeasureToCollectionOfKanji {
             println("Unicode: $unicode. Number of prototypes: ${prototypes.size}")
         }
 
+    }
 
+
+    private fun addLinePrototypes() {
+        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"))
+        addLinePrototypes(loadedKanji.subList(0, 5))
     }
 
 
     @JvmStatic
     fun main(args: Array<String>) {
-        AddMultipleLinesUsingDevianceMeasureToCollectionOfKanji.addLinePrototypes()
+//        addLinePrototypes()
+
+        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), mutableListOf(35387))
+        addLinePrototypes(loadedKanji)
+
     }
 
 
