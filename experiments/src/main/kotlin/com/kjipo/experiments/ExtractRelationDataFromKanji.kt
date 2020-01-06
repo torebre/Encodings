@@ -1,6 +1,7 @@
 package com.kjipo.experiments
 
 import com.kjipo.prototype.AngleLine
+import com.kjipo.representation.EncodedKanji
 import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitMultipleLinesUsingDevianceMeasure
@@ -9,6 +10,7 @@ import com.kjipo.skeleton.makeThin
 import com.kjipo.skeleton.transformArraysToMatrix
 import com.kjipo.visualization.loadKanjisFromDirectory
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.math.roundToInt
 
@@ -19,15 +21,14 @@ import kotlin.math.roundToInt
 private object ExtractRelationDataFromKanji {
 
 
-    fun extractRelationData(lineExtractFunction: (image: Matrix<Boolean>) -> Collection<AngleLine>, squareSide: Int) {
-        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"))
+    fun extractRelationData(lineExtractFunction: (image: Matrix<Boolean>) -> Collection<AngleLine>, squareSide: Int, outputFile: Path, kanjiToProcess: List<EncodedKanji>) {
         val kanjiPrototypeMap = mutableMapOf<Int, Collection<AngleLine>>()
 
-        Files.newBufferedWriter(Paths.get("position_data_5.csv")).use { outputWriter ->
+        Files.newBufferedWriter(outputFile).use { outputWriter ->
             outputWriter.write("unicode, relative_length, angle_diff, start_pair_distance, relative_distance, start_pair_angle_diff, id_line1, id_line2")
             outputWriter.newLine()
 
-            loadedKanji.stream()
+            kanjiToProcess.stream()
 //                .filter { t: EncodedKanji ->  t.unicode == 25022}
                     .limit(5000)
                     .forEach {
@@ -252,15 +253,16 @@ private object ExtractRelationDataFromKanji {
 
     @JvmStatic
     fun main(args: Array<String>) {
-//        extractRelationData({ fitMultipleLinesUsingDevianceMeasure(makeThin(shrinkImage(it, 64, 64))) }, 64)
+        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8")).filter { it.unicode == 33541 }.toList()
+        extractRelationData({ fitMultipleLinesUsingDevianceMeasure(makeThin(shrinkImage(it, 64, 64))) }, 64, Paths.get("position_data_test.csv"), loadedKanji)
 
 //        extractLineFittedKanji {
 //            fitMultipleLinesUsingDevianceMeasure(makeThin(shrinkImage(it, 64, 64)))
 //        }
 
-        findRelevantLines({
-            fitMultipleLinesUsingDevianceMeasure(makeThin(shrinkImage(it, 64, 64)))
-        }, 64)
+//        findRelevantLines({
+//            fitMultipleLinesUsingDevianceMeasure(makeThin(shrinkImage(it, 64, 64)))
+//        }, 64)
 
     }
 

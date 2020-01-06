@@ -67,14 +67,14 @@ object LineUtilities {
 
         if (startY == stopY) {
             // Vertical line
-//            var rows = abs(stopX - startX) + 1
+            var rows = abs(stopX - startX) + 1
 //            var result = Matrix<Int>(rows, 2)
             var result = mutableListOf<Pair<Int, Int>>()
 
             if (startX < stopX) {
 //                var counter = 0
-                for (i in startX until stopX) {
-                    result.add(Pair(i, startY))
+                for (i in 0 until rows) {
+                    result.add(Pair(startX + i, startY))
 
 //                    result[counter, 0] = i
 //                    result[counter, 1] = startY
@@ -82,8 +82,8 @@ object LineUtilities {
                 }
             } else {
 //                var counter = 0
-                for (i in stopX until stopY) {
-                    result.add(Pair(i, startY))
+                for (i in 0 until rows) {
+                    result.add(Pair(stopX - i, startY))
 
 //                    result[counter, 0] = i
 //                    result[counter, 1] = startY
