@@ -32,16 +32,16 @@ object LineUtilities {
 
             if (startY < stopY) {
 //                var counter = 0
-                for (i in 0 until rows) {
-                    result.add(Pair(startX, startY + i))
+                for (i in startY..stopY) {
+                    result.add(Pair(startX, i))
 //                    [counter, 0] = startX
 //                    result[counter, 1] = startY + i
 //                    ++counter
                 }
             } else {
 //                var counter = 0
-                for (i in 0 until rows) {
-                    result.add(Pair(startX, stopY - i))
+                for (i in stopY..startY) {
+                    result.add(Pair(startX, i))
 //                    result[counter, 0] = startX
 //                    result[counter, 1] = stopY - i
                 }
@@ -73,8 +73,8 @@ object LineUtilities {
 
             if (startX < stopX) {
 //                var counter = 0
-                for (i in 0 until rows) {
-                    result.add(Pair(startX + i, startY))
+                for (i in startX..startY) {
+                    result.add(Pair(i, startY))
 
 //                    result[counter, 0] = i
 //                    result[counter, 1] = startY
@@ -82,8 +82,8 @@ object LineUtilities {
                 }
             } else {
 //                var counter = 0
-                for (i in 0 until rows) {
-                    result.add(Pair(stopX - i, startY))
+                for (i in stopX..startY) {
+                    result.add(Pair(i, startY))
 
 //                    result[counter, 0] = i
 //                    result[counter, 1] = startY
@@ -165,7 +165,7 @@ object LineUtilities {
 
 //        var tempResult = Matrix<Int>(2 * abs(startX - stopX) + abs(startY - stopY), 2)
         var tempResult = mutableListOf<Pair<Int, Int>>()
-        var counter = 0
+//        var counter = 0
 
 //        for (x in start.x.translate:stop.x.translate) {
 //            if (y != new.y) {
@@ -197,34 +197,34 @@ object LineUtilities {
 //            }
 //        }
 
-        for (x in startXTranslate until stopXTranslate) {
+        for (x in startXTranslate..stopXTranslate) {
             if (y != newY) {
                 if (signYDelta < 0) {
-                    for (incY in newY until y) {
+                    for (incY in newY..y) {
                         tempResult.add(Pair(x, incY))
 //                        tempResult[counter, 0] = x
 //                        tempResult[counter, 1] = incY
-                        ++counter
+//                        ++counter
                     }
                 } else {
-                    for (incY in y until newY) {
+                    for (incY in y..newY) {
                         tempResult.add(Pair(x, incY))
 //                        tempResult[counter, 0] = x
 //                        tempResult[counter, 1] = incY
-                        ++counter
+//                        ++counter
                     }
                 }
             } else {
                 tempResult.add(Pair(x, y))
 //                tempResult[counter, 0] = x
 //                tempResult[counter, 1] = y
-                ++counter
+//                ++counter
             }
 
             y = newY
-            error = error + deltaError
+            error += deltaError
             while (error >= 0.5) {
-                newY = newY + signYDelta
+                newY += signYDelta
                 --error
             }
         }

@@ -552,10 +552,8 @@ object RegionExtractionExperiments {
     private fun checkKanji() {
         val lineDataFolder = Paths.get("linedata")
 
-        val lines = Files.readAllLines(lineDataFolder.resolve("kanji_line_data_33541.csv")).map {
+        val lines = Files.readAllLines(lineDataFolder.resolve("kanji_line_data_35649.csv")).map {
             val splitString = it.split(",")
-
-
 
             Line(splitString[1].toInt(),
                     splitString[2].toDouble(),
@@ -617,8 +615,8 @@ object RegionExtractionExperiments {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        setupData()
-//        checkKanji()
+//        setupData()
+        checkKanji()
     }
 
 }
