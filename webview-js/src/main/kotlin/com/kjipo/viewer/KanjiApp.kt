@@ -30,12 +30,12 @@ class KanjiApp {
                     selectElement.options.add(Option(text = unicode))
                 }
 
-                selectElement.namedItem(selectedKanji.toString())?.let {elementToSelect ->
+                selectElement.namedItem(selectedKanji.toString())?.let { elementToSelect ->
                     selectElement.selectedIndex = elementToSelect.index
                 }
 
                 selectElement.onchange = {
-                    selectElement[selectElement.selectedIndex]?.let {option ->
+                    selectElement[selectElement.selectedIndex]?.let { option ->
                         val optionElement = option as Option
                         loadLineSegmentData(optionElement.text.toInt())
                     }
@@ -69,11 +69,9 @@ class KanjiApp {
     }
 
     fun loadLineSegmentData(unicode: Int) {
-
         CoroutineScope(Dispatchers.Main).launch {
             val kanjiMatrix = client.get<String>("http://0.0.0.0:8094/kanji/${unicode}/matrix")
             val parsedKanjiMatrix = JSON.parse<Matrix<Int>>(kanjiMatrix)
-
             drawOnExistingCanvas(parsedKanjiMatrix, 3, false, "kanjiMatrix")
 
             val lineMatrix = tranformLinesToMatrix(unicode, client)
@@ -90,7 +88,7 @@ class KanjiApp {
                 imageList.appendChild(listElement)
 
                 val dataMatrix = LineUtilities.drawLines(entry.value)
-                addCanvas(dataMatrix, parent = listElement)
+                addCanvas(dataMatrix, parent = listElement, useColours = true)
             }
         }
     }
@@ -98,11 +96,7 @@ class KanjiApp {
     private suspend fun tranformLinesToMatrix(unicode: Int, client: HttpClient): Matrix<Int> {
         val lineData = client.get<String>("http://0.0.0.0:8094/kanji/$unicode/linedata")
         val parsedLines = JSON.parse<Array<Line>>(lineData)
-        val matrix = LineUtilities.drawLines(parsedLines.toList())
-
-        return matrix
-
-//        addCanvas(matrix, 3, true)
+        return LineUtilities.drawLines(parsedLines.toList())
     }
 
     private fun addCanvas(matrix: Matrix<Int>, squareSize: Int = 2, useColours: Boolean = false, parent: Element? = null) {

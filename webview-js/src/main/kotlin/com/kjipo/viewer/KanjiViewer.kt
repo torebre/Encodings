@@ -29,18 +29,18 @@ class KanjiViewer(private val context: CanvasRenderingContext2D) {
             val colours = mutableSetOf<Int>()
             matrix.forEach { colours.add(it) }
 
-            var hueChange = colours.size / 360
+            var hueChange = 360 / colours.size
             if (hueChange == 0) {
                 hueChange = 1
             }
 
-            var colourMap = colours.map { value ->
+            val colourMap = colours.map { value ->
                 Pair(value, hsvToRgb(value * hueChange, 1.0, 1.0))
             }.toMap()
 
             matrix.forEachIndexed { row, column, value ->
                 if (value > 0) {
-                    context.fillStyle = colourMap[value]
+                    context.fillStyle = colourMap[value]?.toHexadecimalString()
                     context.fillRect(squareSize * row.toDouble(), squareSize * column.toDouble(), squareSize.toDouble(), squareSize.toDouble())
                 }
             }
@@ -63,8 +63,19 @@ class KanjiViewer(private val context: CanvasRenderingContext2D) {
                 this(red.toInt(), green.toInt(), blue.toInt())
 
         fun toHexadecimalString(): String {
-            return "#${red.toString(16)}${green.toString(16)}${blue.toString(16)}"
+            val redFormatted = addLeadingZeroIfNecessary(red.toString(16))
+            val greenFormatted = addLeadingZeroIfNecessary(green.toString(16))
+            val blueFormatted = addLeadingZeroIfNecessary(blue.toString(16))
+
+            return "#${redFormatted}${greenFormatted}${blueFormatted}"
         }
+
+        private fun addLeadingZeroIfNecessary(number: String) =
+                if (number.length == 1) {
+                    "0$number"
+                } else {
+                    number
+                }
     }
 
 
