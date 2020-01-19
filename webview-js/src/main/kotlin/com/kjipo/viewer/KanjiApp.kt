@@ -77,18 +77,26 @@ class KanjiApp {
             val lineMatrix = tranformLinesToMatrix(unicode, client)
             drawOnExistingCanvas(lineMatrix, 3, true, "selectedKanji")
 
-            val segmentData = client.get<String>("http://0.0.0.0:8094/kanji/${unicode}/segmentdata")
-            val parsedResponse = JSON.parse<Array<SegmentLine>>(segmentData)
-            val segmentLineMap = parsedResponse.groupBy { it.segment }
-
             val imageList = document.getElementById("subimages") as HTMLUListElement
             imageList.clear()
-            for (entry in segmentLineMap.entries) {
-                val listElement = document.createElement("li")
-                imageList.appendChild(listElement)
 
-                val dataMatrix = LineUtilities.drawLines(entry.value)
-                addCanvas(dataMatrix, parent = listElement, useColours = true)
+            try {
+                console.log("Loading data for $unicode")
+
+                val segmentData = client.get<String>("http://0.0.0.0:8094/kanji/${unicode}/segmentdata")
+                val parsedResponse = JSON.parse<Array<SegmentLine>>(segmentData)
+                val segmentLineMap = parsedResponse.groupBy { it.segment }
+
+                for (entry in segmentLineMap.entries) {
+                    val listElement = document.createElement("li")
+                    imageList.appendChild(listElement)
+
+                    val dataMatrix = LineUtilities.drawLines(entry.value)
+                    addCanvas(dataMatrix, parent = listElement, useColours = true)
+                }
+            }
+            catch(exception: Exception) {
+                Napier.e(exception.message.orEmpty(), exception)
             }
         }
     }

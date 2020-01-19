@@ -16,6 +16,8 @@ import com.kjipo.skeleton.transformToBooleanArrays
 import com.kjipo.visualization.*
 import javafx.scene.paint.Color
 import org.slf4j.LoggerFactory
+import java.io.BufferedWriter
+import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
@@ -317,14 +319,21 @@ object RegionExtractionExperiments {
                 for ((counter, subImage) in subImageHolder.subImages.withIndex()) {
                     val length = extractLengthMinimumSetToOne(subImage)
 
-                    outputWriter.write(subImageHolder.unicode.toString() + "," + counter
-                            + "," + subImage.angle + "," + length
-                            + "," + subImage.startPair.row + "," + subImage.startPair.column
-                            + "," + subImageHolder.id)
-                    outputWriter.newLine()
+//                    outputWriter.write(subImageHolder.unicode.toString() + "," + counter
+//                            + "," + subImage.angle + "," + length
+//                            + "," + subImage.startPair.row + "," + subImage.startPair.column
+//                            + "," + subImageHolder.id)
+//                    outputWriter.newLine()
+
+                    writeSegmentLine(subImageHolder.unicode, counter, subImage.angle, length, subImage.startPair.row, subImage.startPair.column, subImageHolder.id, outputWriter)
                 }
             }
         }
+    }
+
+    fun writeSegmentLine(unicode: Int, lineNumber: Int, angle: Double, length: Double, startX: Int, startY: Int, segment: Int, writer: BufferedWriter) {
+        writer.write("${unicode},${lineNumber},${angle},${length},${startX},${startY},${segment}")
+        writer.newLine()
     }
 
     private fun extractLengthMinimumSetToOne(angleLine: AngleLine) = if (angleLine.length.roundToInt() == 0) {
