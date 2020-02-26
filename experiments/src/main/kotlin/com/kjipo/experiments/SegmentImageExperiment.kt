@@ -36,14 +36,14 @@ object SegmentImageExperiment {
     private fun extractSegments(kanjiImage: Matrix<Boolean>, startRow: Int, startColumn: Int, length: Int) =
             Matrix(length, length) { row, column ->
                 when {
-                    row >= kanjiImage.numberOfRows -> {
+                    startRow + row >= kanjiImage.numberOfRows -> {
                         false
                     }
-                    column >= kanjiImage.numberOfColumns -> {
+                    startColumn + column >= kanjiImage.numberOfColumns -> {
                         false
                     }
                     else -> {
-                        kanjiImage[row, column]
+                        kanjiImage[startRow + row, startColumn + column]
                     }
                 }
             }
@@ -52,6 +52,7 @@ object SegmentImageExperiment {
         val segmentCounts = mutableMapOf<Long, Int>()
         segments.forEach {
             val key = generateKey(it)
+
             if (segmentCounts.containsKey(key)) {
                 segmentCounts[key]?.let {
                     segmentCounts[key] = it + 1
@@ -68,6 +69,7 @@ object SegmentImageExperiment {
 
     private fun generateKey(matrix: Matrix<Boolean>): Long {
         var key = 0L
+
         matrix.forEach { value ->
             key = key.shl(1).plus(if (value) 1 else 0)
         }
@@ -89,16 +91,14 @@ object SegmentImageExperiment {
 
     @JvmStatic
     fun main(args: Array<String>) {
-//        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8")).filter { it.unicode == 33541 }.toList()
-        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8")).stream().limit(100).toList()
+        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8")).filter { it.unicode == 33541 }.toList()
+//        val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8")).stream().limit(100).toList()
 
 //        val transformedImage = transformImage(loadedKanji)
 
         groupSegments(examineSegments(loadedKanji.map { transformImage(it) }, 3).asSequence())
 
-//        val lines = fitMultipleLinesUsingDevianceMeasure(transformedImage)
 
-//        findClosestNeighbours(33541, lines, transformedImage, Paths.get("new_segment_extraction.csv"))
     }
 
 
