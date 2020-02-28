@@ -1,6 +1,7 @@
 package com.kjipo
 
 import com.kjipo.Constants.segmentData
+import com.kjipo.experiments.SegmentImageExperiment
 import com.kjipo.representation.Line
 import com.kjipo.representation.LineUtilities
 import com.kjipo.representation.SegmentLine
@@ -91,9 +92,7 @@ fun Application.module(testing: Boolean = false) {
 
         get("/kanji/{unicode}/matrix") {
             val unicode = call.parameters["unicode"] ?: return@get
-            val kanjiFile = Paths.get("kanji_output8").resolve("${unicode}.dat")
-            val loadEncodedKanjiFromString = loadEncodedKanjiFromString(Files.readAllLines(kanjiFile))
-
+            val loadEncodedKanjiFromString = loadKanjiFromFile(unicode)
             call.respond(transformArraysToMatrix(loadEncodedKanjiFromString))
         }
 
@@ -150,8 +149,24 @@ fun Application.module(testing: Boolean = false) {
             }
         }
 
+        get("/kanji/{unicode}/encodedsegments") {
+            val unicode = call.parameters["unicode"] ?: return@get
+            val kanjiFromFile = loadKanjiFromFile(unicode)
+            val segments = SegmentImageExperiment.examineSegments(SegmentImageExperiment.transformImage(kanjiFromFile), 3)
+            val segmentMatrix = SegmentImageExperiment.combineSegments(SegmentImageExperiment.transformSegmentToGroups(segments))
+
+            call.respond(segmentMatrix)
+        }
+
     }
+
 }
+
+private fun loadKanjiFromFile(unicode: String) =
+        unicode.let {
+            val kanjiFile = Paths.get("kanji_output8").resolve("${unicode}.dat")
+            loadEncodedKanjiFromString(Files.readAllLines(kanjiFile))
+        }
 
 fun FlowOrMetaDataContent.styleCss(builder: CSSBuilder.() -> Unit) {
     style(type = ContentType.Text.CSS.toString()) {

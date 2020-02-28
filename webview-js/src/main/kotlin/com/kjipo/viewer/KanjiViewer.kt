@@ -54,10 +54,22 @@ class KanjiViewer(private val context: CanvasRenderingContext2D) {
             }
 
         }
+    }
+
+    fun drawSquares(matrix: Matrix<Int>, squareSize: Int = SQUARE_SIZE) {
+        context.globalAlpha = 0.1
+
+        matrix.forEachIndexed { row, column, value ->
+            if (value > 0) {
+                val hexadecimalValue = value.toString(16)
+                context.fillStyle = "#${hexadecimalValue}${hexadecimalValue}${hexadecimalValue}"
+                context.fillRect(squareSize * row.toDouble(), squareSize * column.toDouble(), squareSize.toDouble(), squareSize.toDouble())
+            }
+        }
 
     }
 
-    class RgbColour(val red: Int, val green: Int, val blue: Int) {
+        class RgbColour(val red: Int, val green: Int, val blue: Int) {
 
         constructor(red: Double, green: Double, blue: Double) :
                 this(red.toInt(), green.toInt(), blue.toInt())

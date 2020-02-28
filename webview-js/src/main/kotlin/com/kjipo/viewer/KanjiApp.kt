@@ -94,8 +94,12 @@ class KanjiApp {
                     val dataMatrix = LineUtilities.drawLines(entry.value)
                     addCanvas(dataMatrix, parent = listElement, useColours = true)
                 }
-            }
-            catch(exception: Exception) {
+
+                val segmentData2 = client.get<String>("http://0.0.0.0:8094/kanji/${unicode}/encodedsegments")
+                val parsedResponse2 = JSON.parse<Matrix<Int>>(segmentData2)
+                drawSquaresOnExistingCanvas(parsedResponse2, 3, "selectedKanji")
+
+            } catch (exception: Exception) {
                 Napier.e(exception.message.orEmpty(), exception)
             }
         }
@@ -149,5 +153,16 @@ class KanjiApp {
         }
         kanjiViewer.setupKanjiDrawing(matrix, squareSize, useColours)
     }
+
+    private fun drawSquaresOnExistingCanvas(matrix: Matrix<Int>, squareSize: Int = 2, canvasElementId: String) {
+        document.getElementById(canvasElementId)?.let {
+            val context2 = (it as HTMLCanvasElement).getContext("2d")
+            val kanjiViewer = KanjiViewer(context2 as CanvasRenderingContext2D)
+
+            kanjiViewer.drawSquares(matrix, squareSize)
+        }
+    }
+
+
 
 }
