@@ -3,54 +3,29 @@ package com.kjipo.experiments
 import com.kjipo.experiments.RegionExtractionExperiments.writeSegmentLine
 import com.kjipo.prototype.AngleLine
 import com.kjipo.raster.match.MatchDistance
+import com.kjipo.raster.segment.Pair
+import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitMultipleLinesUsingDevianceMeasure
 import com.kjipo.segmentation.shrinkImage
 import com.kjipo.skeleton.makeThin
 import com.kjipo.skeleton.transformArraysToMatrix
 import com.kjipo.skeleton.transformToBooleanArrays
 import com.kjipo.visualization.loadKanjisFromDirectory
-import java.nio.file.Paths
-
-import com.kjipo.segmentation.Matrix
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 
 
-private object FindClosestNeighbours {
+internal object FindClosestNeighbours {
 
 
-    private fun findClosestNeighbours(unicode: Int, lines : List<AngleLine>, image: Matrix<Boolean>, outputFile: Path) {
+    private fun findClosestNeighbours(unicode: Int, lines: List<AngleLine>, image: Matrix<Boolean>, outputFile: Path) {
         Files.newBufferedWriter(outputFile).use { outputWriter ->
-            var counter = 0
-            var segmentCounter = 0
             for (line in lines) {
-                val pairsInLine = line.segments.first().pairs
-                val lineMatrix = Matrix(image.numberOfRows, image.numberOfColumns) { row, column ->
-                    pairsInLine.contains(com.kjipo.raster.segment.Pair(row, column))
-                }
-
-                val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToBooleanArrays(lineMatrix)))
-
-                val lineToMinimumDistanceMap = mutableMapOf<AngleLine, Int>()
-
-                for (potentialNeighbour in lines) {
-                    if (line == potentialNeighbour) {
-                        continue
-                    }
-
-                    val linesInPotentialNeighbour = potentialNeighbour.segments.first()
-
-                    val distances = linesInPotentialNeighbour.pairs.map {
-                        distanceMatrix[it.row, it.column]
-                    }
-
-                    distances.min()?.let { minimumDistance ->
-                        lineToMinimumDistanceMap[potentialNeighbour] = minimumDistance
-                    }
-                }
-
+                val lineToMinimumDistanceMap = extractNeighboursForLine(line, image, lines)
                 val sortedDistances = lineToMinimumDistanceMap.values.sorted().distinct()
 
+                var segmentCounter = 0
                 for (i in 0..4) {
                     val cutoff = sortedDistances[i]
 
@@ -61,10 +36,34 @@ private object FindClosestNeighbours {
                     }
                     ++segmentCounter
                 }
-
             }
         }
+    }
 
+    fun extractNeighboursForLine(line: AngleLine, image: Matrix<Boolean>, lines: List<AngleLine>): MutableMap<AngleLine, Int> {
+        val pairsInLine = line.segments.first().pairs
+        val lineMatrix = Matrix(image.numberOfRows, image.numberOfColumns) { row, column ->
+            pairsInLine.contains(Pair(row, column))
+        }
+
+        val distanceMatrix = transformArraysToMatrix(MatchDistance.computeDistanceMap(transformToBooleanArrays(lineMatrix)))
+        val lineToMinimumDistanceMap = mutableMapOf<AngleLine, Int>()
+
+        for (potentialNeighbour in lines) {
+            if (line == potentialNeighbour) {
+                continue
+            }
+
+            val linesInPotentialNeighbour = potentialNeighbour.segments.first()
+            val distances = linesInPotentialNeighbour.pairs.map {
+                distanceMatrix[it.row, it.column]
+            }
+
+            distances.min()?.let { minimumDistance ->
+                lineToMinimumDistanceMap[potentialNeighbour] = minimumDistance
+            }
+        }
+        return lineToMinimumDistanceMap
     }
 
 
