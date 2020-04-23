@@ -11,6 +11,10 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
 import java.util.stream.Collectors
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 
 object ReadLineDataFromR {
@@ -73,9 +77,107 @@ object ReadLineDataFromR {
         for (line in lines) {
             val neighbours = FindClosestNeighbours.extractNeighboursForLine(line, imageMatrix, lines)
 
-            println("Neighbours: $neighbours")
+            for (neighbour in neighbours) {
+                val classification = classifyNeighbour(line, neighbour.key)
+
+                println(classification)
+
+            }
+
+//            println("Neighbours: $neighbours")
 
         }
+    }
+
+
+    private fun classifyNeighbour(inputLine: AngleLine, otherLine: AngleLine): RelativePositionInformation {
+//        line2 <- all.lines.in.kanji[i, ]
+//
+//        # If a line has a length less than 1, round it up to 1
+//        if (round(input.line$length) == 0) {
+//            from.length <- 1
+//        } else {
+//            from.length <- input.line$length
+//        }
+//
+//        if (round(line2$length) == 0) {
+//            to.length <- 1
+//        } else {
+//            to.length <- line2$length
+//        }
+
+        val inputLineLength = if(inputLine.length < 1.0) 1.0 else inputLine.length
+        val otherLineLength = if(otherLine.length < 1.0) 1.0 else otherLine.length
+
+//
+//        relative.length <- from.length / to.length
+//        row.diff <- line2$start_y - input.line$start_y
+//        column.diff <- line2$start_x - input.line$start_x
+//        start.pair.distance <- sqrt(row.diff ^ 2 + column.diff ^ 2)
+
+        val relativeLength = inputLineLength / otherLineLength
+        val rowDiff = (otherLine.startPair.row - inputLine.startPair.row).toDouble()
+        val columnDiff = (otherLine.startPair.column - inputLine.startPair.column).toDouble()
+
+        val startPairDistance = sqrt(rowDiff * rowDiff + columnDiff * columnDiff)
+
+//        line2.stop.x <- line2$start_x * cos(line2$angle)
+//        line2.stop.y <- line2$start_y * sin(line2$angle)
+
+        val otherLineStopX = otherLine.endPair.column
+        val otherLineStopY = otherLine.endPair.row
+
+//        switched.length <- sqrt((input.line$start_x - line2.stop.x)^2 + (input.line$start_y - line2.stop.y)^2)
+
+        val switchedLength = sqrt((inputLine.startPair.column - otherLine.endPair.column.toDouble()).pow(2) + (inputLine.startPair.row - otherLine.endPair.row.toDouble()).pow(2))
+
+//        # The smallest line is set to be one the is horizontal, and then the
+//        # longer line is drawn relative to it
+//        if(switched.length < start.pair.distance) {
+//            start.pair.distance <- switched.length
+//            start.pair.angle.diff <- pi/2 + atan2(row.diff, column.diff)
+//        }
+//        else {
+//            start.pair.angle.diff <- atan2(row.diff, column.diff)
+//        }
+
+        val (distanceToUse, angleToUse) = if(switchedLength < startPairDistance) {
+            Pair(switchedLength, Math.PI.div(2) + atan2(rowDiff, columnDiff))
+        }
+        else {
+            Pair(startPairDistance, atan2(rowDiff, columnDiff))
+        }
+
+//        second.line.angle <- line2$angle - input.line$angle
+//        start.pair.second.line.angle <- start.pair.angle.diff + input.line$angle
+//
+//        if(start.pair.second.line.angle < 0) {
+//            start.pair.second.line.angle <- start.pair.second.line.angle + 2*pi
+//        }
+
+        val otherLineAngle = otherLine.angle - inputLine.angle
+        val startPairSecondLineAngle = (angleToUse + inputLine.angle).let {
+            if(it < 0) {
+                2 * Math.PI
+            }
+            else {
+                it
+            }
+        }
+
+//        if(use.relative.distance) {
+//            result[counter, 1] <- abs(row.diff) / input.line$length
+//            result[counter, 2] <- abs(column.diff) / input.line$length
+//        }
+//        else {
+//            result[counter, 1] <- abs(row.diff)
+//            result[counter, 2] <- abs(column.diff)
+//        }
+
+//        result[counter, 3] <- start.pair.second.line.angle
+//        result[counter, 4] <- line.number.input
+
+        return RelativePositionInformation(abs(rowDiff).div(inputLineLength), abs(columnDiff).div(inputLineLength), startPairSecondLineAngle, inputLine.id, otherLine.id)
     }
 
     private fun createMatrix(lines: List<AngleLine>): Matrix<Boolean> {
@@ -99,6 +201,8 @@ object ReadLineDataFromR {
 
         return dispImage
     }
+
+    data class RelativePositionInformation(val rowDiff: Double, val colDiff: Double, val angle: Double, val inputLine: Int, val otherLine: Int)
 
 
     @JvmStatic
