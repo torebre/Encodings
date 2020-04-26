@@ -8,17 +8,19 @@ import java.nio.file.Paths
 
 object ReadEtlData {
 
-    const val BASE_FILE_NAME = "/home/student/Downloads/ETL/ETL9B/ETL9B_"
+    private const val BASE_FILE_NAME = "/home/student/Downloads/ETL/ETL9B/ETL9B_"
     private const val STRUCT_LENGTH = 576
+
+    private data class KanjiData(val sheetNumber: Int, val kanjiCode: Int, val kanjiData: Matrix<Boolean>)
 
 
     @ExperimentalStdlibApi
-    private fun readData(): List<Pair<Int, Matrix<Boolean>>> {
+    private fun readData(): List<KanjiData> {
         return (1..5).map { Paths.get(BASE_FILE_NAME + it) }.map { parseFile(it) }.flatten().toList()
     }
 
     @ExperimentalStdlibApi
-    private fun parseFile(file: Path): MutableList<Pair<Int, Matrix<Boolean>>> {
+    private fun parseFile(file: Path, limit: Int? = null): MutableList<KanjiData> {
         val allInputData = Files.readAllBytes(file)
         val byteIterator = allInputData.iterator()
 
@@ -27,7 +29,7 @@ object ReadEtlData {
         }
 
         var recordCounter = 1
-        val result = mutableListOf<Pair<Int, Matrix<Boolean>>>()
+        val result = mutableListOf<KanjiData>()
 
         while (byteIterator.hasNext()) {
 
@@ -38,20 +40,42 @@ object ReadEtlData {
                 record[j] = byteIterator.nextByte()
             }
 
-            val serialSheetNumber = record[0].toInt().shl(8).plus(record[1])
-            val jisKanjiCode = record[2].toInt().shl(8).plus(record[3])
+            val serialSheetNumber = record[1].toInt().shl(8).plus(record[0])
+            val jisKanjiCode = record[3].toInt().shl(8).plus(record[2])
 
-            //                println("Serial sheet number: $serialSheetNumber. JIS kanji code: $jisKanjiCode")
+            println("Serial sheet number: $serialSheetNumber. JIS kanji code: $jisKanjiCode")
 
             // The data is 63x64, but use a 64x64 matrix so that it is square
             val kanjiMatrix = Matrix(64, 64) { _, _ -> false }
-            (0 until 63).map { row ->
-                (0 until 8).map { offset -> decodeByte(record[8 + row * 8 + offset])
-                        .forEachIndexed { index, b -> kanjiMatrix[row, offset * 8 + index] = b } }
+
+            val booleanValues = (0 until 504).map { it + 8 }
+                    .map { decodeByte(record[it]) }
+                    .flatMap { it.asIterable() }
+                    .toList()
+
+//            if(serialSheetNumber == 9219 && jisKanjiCode == 12068) {
+//                println("Sum: ${booleanValues.map { if(it) { 1 } else { 0 }}.sum()}")
+//            }
+
+
+            for(row in 0 until 63) {
+                for(column in 0 until 64) {
+                    kanjiMatrix[row, column] = booleanValues[row * 64 + column]
+                }
             }
 
-            result.add(Pair(jisKanjiCode, kanjiMatrix))
+//            (0 until 63).map { row ->
+//                (0 until 8).map { offset ->
+//                    decodeByte(record[8 + row * 8 + offset])
+//                            .forEachIndexed { index, b -> kanjiMatrix[row, offset * 8 + index] = b }
+//                }
+//            }
 
+            result.add(KanjiData(serialSheetNumber, jisKanjiCode, kanjiMatrix))
+
+            if(limit == recordCounter) {
+                break
+            }
         }
 
         return result
@@ -64,15 +88,11 @@ object ReadEtlData {
         var transformedInput = input
 
         for (i in 0 until 8) {
-            result[i] = transformedInput % 2 == 1
-
-            if (result[i]) {
-                transformedInput - 1
-            }
+            result[7 - i] = transformedInput.rem(2) != 0
             transformedInput = transformedInput.rotateRight(1)
         }
 
-        return result.reversedArray()
+        return result
     }
 
 
@@ -81,10 +101,16 @@ object ReadEtlData {
     fun main(args: Array<String>) {
 //        readData()
 
-        val parseFile = parseFile(Paths.get(BASE_FILE_NAME + 1))
+        val parseFile = parseFile(Paths.get(BASE_FILE_NAME + 2))
 
-        displayMatrix(parseFile[200].second, 5)
+//        parseFile.take(10).forEach {
+//            println("Sheet number: ${it.sheetNumber}. Kanji code: ${it.kanjiCode}")
+//        }
 
+        val kanjiExample = parseFile.first() {
+            it.sheetNumber == 9219 && it.kanjiCode == 12068
+        }
+        displayMatrix(kanjiExample.kanjiData, 5)
 
     }
 
