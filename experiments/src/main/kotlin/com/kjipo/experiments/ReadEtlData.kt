@@ -2,9 +2,12 @@ package com.kjipo.experiments
 
 import com.kjipo.segmentation.Matrix
 import com.kjipo.visualization.displayMatrix
+import java.awt.Transparency
+import java.awt.image.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import javax.imageio.ImageIO
 
 object ReadEtlData {
 
@@ -95,22 +98,51 @@ object ReadEtlData {
         return result
     }
 
+    private fun writeImage(kanjiData: KanjiData, outputFile: Path) {
+        val byteArray = ByteArray(3 * kanjiData.kanjiData.numberOfRows * kanjiData.kanjiData.numberOfColumns)
+        kanjiData.kanjiData.forEachIndexed { row, column, value ->
+            byteArray[row * kanjiData.kanjiData.numberOfRows + column] = if(value) {
+                0
+            }
+            else {
+                127
+            }
+            byteArray[row * kanjiData.kanjiData.numberOfRows + column + 1] = byteArray[row * kanjiData.kanjiData.numberOfRows + column]
+            byteArray[row * kanjiData.kanjiData.numberOfRows + column + 2] = byteArray[row * kanjiData.kanjiData.numberOfRows + column]
+        }
+
+        val buffer = DataBufferByte(byteArray, byteArray.size)
+
+        val bands = IntArray(3)
+        bands[0] = 0
+        bands[1] = 1
+        bands[2] = 2
+
+        val raster = Raster.createInterleavedRaster(buffer, kanjiData.kanjiData.numberOfRows, kanjiData.kanjiData.numberOfColumns, kanjiData.kanjiData.numberOfColumns * 3, 3, bands, null)
+        val colourModel = ComponentColorModel(ColorModel.getRGBdefault().colorSpace, false, true, Transparency.OPAQUE, DataBuffer.TYPE_BYTE)
+        val image = BufferedImage(colourModel, raster, true, null)
+
+        ImageIO.write(image, "png", outputFile.toFile())
+    }
+
 
     @ExperimentalStdlibApi
     @JvmStatic
     fun main(args: Array<String>) {
 //        readData()
 
-        val parseFile = parseFile(Paths.get(BASE_FILE_NAME + 2))
+        val parseFile = parseFile(Paths.get(BASE_FILE_NAME + 2), 1)
+
+        writeImage(parseFile.first(), Paths.get("test_output.png"))
 
 //        parseFile.take(10).forEach {
 //            println("Sheet number: ${it.sheetNumber}. Kanji code: ${it.kanjiCode}")
 //        }
 
-        val kanjiExample = parseFile.first() {
-            it.sheetNumber == 9219 && it.kanjiCode == 12068
-        }
-        displayMatrix(kanjiExample.kanjiData, 5)
+//        val kanjiExample = parseFile.first() {
+//            it.sheetNumber == 9219 && it.kanjiCode == 12068
+//        }
+//        displayMatrix(kanjiExample.kanjiData, 5)
 
     }
 
