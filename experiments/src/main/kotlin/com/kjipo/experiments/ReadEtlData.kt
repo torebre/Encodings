@@ -34,7 +34,7 @@ object ReadEtlData {
         var recordCounter = 1
         val result = mutableListOf<KanjiData>()
 
-        while (byteIterator.hasNext()) {
+        byteLoop@ while (byteIterator.hasNext()) {
 
             println("Reading record: ${++recordCounter}")
 
@@ -61,8 +61,8 @@ object ReadEtlData {
 //            }
 
 
-            for(row in 0 until 63) {
-                for(column in 0 until 64) {
+            for (row in 0 until 63) {
+                for (column in 0 until 64) {
                     kanjiMatrix[row, column] = booleanValues[row * 64 + column]
                 }
             }
@@ -76,8 +76,8 @@ object ReadEtlData {
 
             result.add(KanjiData(serialSheetNumber, jisKanjiCode, kanjiMatrix))
 
-            if(limit == recordCounter) {
-                break
+            if (limit == result.size) {
+                break@byteLoop
             }
         }
 
@@ -100,25 +100,29 @@ object ReadEtlData {
 
     private fun writeImage(kanjiData: KanjiData, outputFile: Path) {
         val byteArray = ByteArray(3 * kanjiData.kanjiData.numberOfRows * kanjiData.kanjiData.numberOfColumns)
-        kanjiData.kanjiData.forEachIndexed { row, column, value ->
-            byteArray[row * kanjiData.kanjiData.numberOfRows + column] = if(value) {
-                0
+
+        for (row in 0 until kanjiData.kanjiData.numberOfRows) {
+            for (column in 0 until kanjiData.kanjiData.numberOfColumns) {
+                val pixelValue: Byte = if (kanjiData.kanjiData[row, column]) {
+                    0
+                } else {
+                    -127
+                }
+                val offset = 3 * (row * kanjiData.kanjiData.numberOfRows + column)
+                byteArray[offset] = pixelValue
+                byteArray[offset + 1] = pixelValue
+                byteArray[offset + 1] = pixelValue
             }
-            else {
-                127
-            }
-            byteArray[row * kanjiData.kanjiData.numberOfRows + column + 1] = byteArray[row * kanjiData.kanjiData.numberOfRows + column]
-            byteArray[row * kanjiData.kanjiData.numberOfRows + column + 2] = byteArray[row * kanjiData.kanjiData.numberOfRows + column]
         }
 
         val buffer = DataBufferByte(byteArray, byteArray.size)
-
         val bands = IntArray(3)
         bands[0] = 0
         bands[1] = 1
         bands[2] = 2
 
-        val raster = Raster.createInterleavedRaster(buffer, kanjiData.kanjiData.numberOfRows, kanjiData.kanjiData.numberOfColumns, kanjiData.kanjiData.numberOfColumns * 3, 3, bands, null)
+        val raster = Raster.createInterleavedRaster(buffer, kanjiData.kanjiData.numberOfColumns, kanjiData.kanjiData.numberOfRows,
+                kanjiData.kanjiData.numberOfColumns * 3, 3, bands, null)
         val colourModel = ComponentColorModel(ColorModel.getRGBdefault().colorSpace, false, true, Transparency.OPAQUE, DataBuffer.TYPE_BYTE)
         val image = BufferedImage(colourModel, raster, true, null)
 
@@ -131,9 +135,17 @@ object ReadEtlData {
     fun main(args: Array<String>) {
 //        readData()
 
-        val parseFile = parseFile(Paths.get(BASE_FILE_NAME + 2), 1)
+        val parseFile = parseFile(Paths.get(BASE_FILE_NAME + 2))
+        var counter = 0
+        val outputDirectory = Paths.get("etl_output")
+        if(!Files.exists(outputDirectory)) {
+            Files.createDirectory(outputDirectory)
+        }
 
-        writeImage(parseFile.first(), Paths.get("test_output.png"))
+        parseFile.forEach {
+            val fileName = "${it.kanjiCode}_${it.sheetNumber}_${counter++}.png"
+            writeImage(it, outputDirectory.resolve(fileName))
+        }
 
 //        parseFile.take(10).forEach {
 //            println("Sheet number: ${it.sheetNumber}. Kanji code: ${it.kanjiCode}")
