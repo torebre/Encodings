@@ -14,7 +14,7 @@ object ReadEtlData {
     private const val BASE_FILE_NAME = "/home/student/Downloads/ETL/ETL9B/ETL9B_"
     private const val STRUCT_LENGTH = 576
 
-    private data class KanjiData(val sheetNumber: Int, val kanjiCode: Int, val kanjiData: Matrix<Boolean>)
+    data class KanjiData(val sheetNumber: Int, val kanjiCode: Int, val kanjiData: Matrix<Boolean>)
 
 
     @ExperimentalStdlibApi
@@ -129,6 +129,11 @@ object ReadEtlData {
         ImageIO.write(image, "png", outputFile.toFile())
     }
 
+    @ExperimentalStdlibApi
+    fun getEtlKanjiData(limit: Int? = null): List<KanjiData> {
+        return parseFile(Paths.get(BASE_FILE_NAME + 2), limit)
+    }
+
 
     @ExperimentalStdlibApi
     @JvmStatic
@@ -138,7 +143,7 @@ object ReadEtlData {
         val parseFile = parseFile(Paths.get(BASE_FILE_NAME + 2))
         var counter = 0
         val outputDirectory = Paths.get("etl_output")
-        if(!Files.exists(outputDirectory)) {
+        if (!Files.exists(outputDirectory)) {
             Files.createDirectory(outputDirectory)
         }
 

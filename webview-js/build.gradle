@@ -12,7 +12,7 @@ buildscript {
 }
 
 apply plugin: 'kotlin2js'
-apply plugin: 'org.jetbrains.kotlin.frontend'
+//apply plugin: 'org.jetbrains.kotlin.frontend'
 apply plugin: 'kotlin-dce-js'
 
 repositories {
@@ -44,17 +44,17 @@ compileKotlin2Js {
     }
 }
 
-kotlinFrontend {
-
-    npm {
-        dependency "text-encoding"
-        dependency "source-map-loader"
-    }
-
-    webpackBundle {
-        bundleName = "main"
-        contentPath = file("web")
-        mode = 'production'
-        port = 8093
-    }
-}
+//kotlinFrontend {
+//
+//    npm {
+//        dependency "text-encoding"
+//        dependency "source-map-loader"
+//    }
+//
+//    webpackBundle {
+//        bundleName = "main"
+//        contentPath = file("web")
+//        mode = 'production'
+//        port = 8093
+//    }
+//}
