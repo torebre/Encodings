@@ -5,10 +5,9 @@ import com.kjipo.experiments.ReadEtlData
 import com.kjipo.segmentation.fitMultipleLinesUsingDevianceMeasure
 import com.kjipo.segmentation.shrinkImage
 import com.kjipo.skeleton.makeThin
-import com.kjipo.visualization.loadKanjisFromDirectory
+import com.kjipo.utilities.DisplayUtilities
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 
 
 object ExtractRelationDataForEtlDataset {
@@ -57,9 +56,20 @@ object ExtractRelationDataForEtlDataset {
 
 
     @ExperimentalStdlibApi
+    private fun displayEtlTestImages() {
+        val etlKanjiData = ReadEtlData.getEtlKanjiData(50)
+        val kanjiLines = etlKanjiData.map { fitMultipleLinesUsingDevianceMeasure(makeThin(shrinkImage(it.kanjiData, 64, 64))) }.toList()
+        val kanjiTexts = etlKanjiData.map { it.kanjiCode.toString() }.toList()
+
+        DisplayUtilities.displayLinesUsingColourPalette(kanjiLines, kanjiTexts, etlKanjiData[0].kanjiData.numberOfRows, etlKanjiData[0].kanjiData.numberOfColumns)
+    }
+
+
+    @ExperimentalStdlibApi
     @JvmStatic
     fun main(args: Array<String>) {
-        extractData(Paths.get("etl_line_data"))
+//        extractData(Paths.get("etl_line_data"))
+        displayEtlTestImages()
     }
 
 
