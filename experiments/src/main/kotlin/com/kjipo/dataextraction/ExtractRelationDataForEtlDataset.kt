@@ -8,6 +8,7 @@ import com.kjipo.skeleton.makeThin
 import com.kjipo.utilities.DisplayUtilities
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.random.Random
 
 
 object ExtractRelationDataForEtlDataset {
@@ -64,12 +65,24 @@ object ExtractRelationDataForEtlDataset {
         DisplayUtilities.displayLinesUsingColourPalette(kanjiLines, kanjiTexts, etlKanjiData[0].kanjiData.numberOfRows, etlKanjiData[0].kanjiData.numberOfColumns)
     }
 
+    @ExperimentalStdlibApi
+    private fun displayRandomKanjiFromDataset9(numberOfKanjiToExtract: Int = 50) {
+        val etlKanjiData = ReadEtlData.getEtlKanjiData()
+        val indicesToExtract = (0 .. numberOfKanjiToExtract).map { Random.nextInt(0, etlKanjiData.size) }.toSet()
+        val kanjiSubset = etlKanjiData.filterIndexed { index, _ -> indicesToExtract.contains(index) }
+
+        val kanjiLines = kanjiSubset.map { fitMultipleLinesUsingDevianceMeasure(makeThin(shrinkImage(it.kanjiData, 64, 64))) }.toList()
+        val kanjiTexts = kanjiSubset.map { it.kanjiCode.toString() }.toList()
+
+        DisplayUtilities.displayLinesUsingColourPalette(kanjiLines, kanjiTexts, kanjiSubset[0].kanjiData.numberOfRows, kanjiSubset[0].kanjiData.numberOfColumns)
+    }
 
     @ExperimentalStdlibApi
     @JvmStatic
     fun main(args: Array<String>) {
 //        extractData(Paths.get("etl_line_data"))
-        displayEtlTestImages()
+//        displayEtlTestImages()
+        displayRandomKanjiFromDataset9()
     }
 
 
