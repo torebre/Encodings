@@ -1,12 +1,13 @@
 package com.kjipo.experiments
 
 
-import com.google.common.base.Functions
+import com.google.gson.Gson
 import com.kjipo.prototype.AngleLine
 import com.kjipo.segmentation.Matrix
 import com.kjipo.skeleton.transformToArrays
 import com.kjipo.visualization.displayColourRasters
 import javafx.scene.paint.Color
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
@@ -72,25 +73,27 @@ object ReadLineDataFromR {
         displayColourRasters(colourRasters, texts, 2)
     }
 
-    private fun groupLines(lines: List<AngleLine>) {
-        val imageMatrix = createMatrix(lines, 0, 65, 0, 65)
-        for (line in lines) {
-            val neighbours = FindClosestNeighbours.extractNeighboursForLine(line, imageMatrix, lines)
+    private fun groupLines(lines: List<AngleLine>, cutoff: Int = Int.MAX_VALUE) =
+            createMatrix(lines, 0, 65, 0, 65).let { imageMatrix ->
+                lines.map { line ->
+                    val neighbours = FindClosestNeighbours.extractNeighboursForLine(line, imageMatrix, lines)
 
-            for (neighbour in neighbours) {
-                val classification = classifyNeighbour(line, neighbour.key)
+                    val sortedDistances = neighbours.values.sorted().distinct()
+                    val cleanedCutoff = if (cutoff >= sortedDistances.size) {
+                        Int.MAX_VALUE
+                    } else {
+                        sortedDistances[cutoff]
+                    }
 
-                println(classification)
+                    val relationData = neighbours.filter { it.value < cleanedCutoff }.map {
+                        extractRelativePositionInformation(line, it.key)
+                    }.toList()
 
+                    Line(line.id, relationData)
+                }.toList()
             }
 
-//            println("Neighbours: $neighbours")
-
-        }
-    }
-
-
-    private fun classifyNeighbour(inputLine: AngleLine, otherLine: AngleLine): RelativePositionInformation {
+    private fun extractRelativePositionInformation(inputLine: AngleLine, otherLine: AngleLine): RelativePositionInformation {
 //        line2 <- all.lines.in.kanji[i, ]
 //
 //        # If a line has a length less than 1, round it up to 1
@@ -106,8 +109,8 @@ object ReadLineDataFromR {
 //            to.length <- line2$length
 //        }
 
-        val inputLineLength = if(inputLine.length < 1.0) 1.0 else inputLine.length
-        val otherLineLength = if(otherLine.length < 1.0) 1.0 else otherLine.length
+        val inputLineLength = if (inputLine.length < 1.0) 1.0 else inputLine.length
+        val otherLineLength = if (otherLine.length < 1.0) 1.0 else otherLine.length
 
 //
 //        relative.length <- from.length / to.length
@@ -141,10 +144,9 @@ object ReadLineDataFromR {
 //            start.pair.angle.diff <- atan2(row.diff, column.diff)
 //        }
 
-        val (distanceToUse, angleToUse) = if(switchedLength < startPairDistance) {
+        val (distanceToUse, angleToUse) = if (switchedLength < startPairDistance) {
             Pair(switchedLength, Math.PI.div(2) + atan2(rowDiff, columnDiff))
-        }
-        else {
+        } else {
             Pair(startPairDistance, atan2(rowDiff, columnDiff))
         }
 
@@ -157,10 +159,9 @@ object ReadLineDataFromR {
 
         val otherLineAngle = otherLine.angle - inputLine.angle
         val startPairSecondLineAngle = (angleToUse + inputLine.angle).let {
-            if(it < 0) {
+            if (it < 0) {
                 2 * Math.PI
-            }
-            else {
+            } else {
                 it
             }
         }
@@ -202,15 +203,23 @@ object ReadLineDataFromR {
         return dispImage
     }
 
+
+    data class Line(val id: Int, val relativePositions: Collection<RelativePositionInformation>)
+
     data class RelativePositionInformation(val rowDiff: Double, val colDiff: Double, val angle: Double, val inputLine: Int, val otherLine: Int)
 
 
     @JvmStatic
     fun main(args: Array<String>) {
         val inputData = readData()
-        val lineImage = inputData.iterator().next()
+//        val lineImage = inputData.iterator().next()
 
-        groupLines(lineImage.value)
+        val linesWithRelativePositionInformation = inputData.flatMap { entry ->
+            groupLines(entry.value, 3)
+        }.toList()
+
+        val gson = Gson()
+        Files.write(Paths.get("line_relative_position_information_rectangle_v2.json"), gson.toJson(linesWithRelativePositionInformation).toByteArray(StandardCharsets.UTF_8))
     }
 
 

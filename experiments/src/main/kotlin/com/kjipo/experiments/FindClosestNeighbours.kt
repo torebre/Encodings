@@ -36,10 +36,16 @@ internal object FindClosestNeighbours {
                     }
                     ++segmentCounter
                 }
+
+                println("Number of segments: $segmentCounter")
             }
         }
     }
 
+    /**
+     * Finds the shortest distance from {@param line} to each of the other lines. The result is
+     * returned as a mapping between the lines and the shortest distances.
+     */
     fun extractNeighboursForLine(line: AngleLine, image: Matrix<Boolean>, lines: List<AngleLine>): MutableMap<AngleLine, Int> {
         val pairsInLine = line.segments.first().pairs
         val lineMatrix = Matrix(image.numberOfRows, image.numberOfColumns) { row, column ->
