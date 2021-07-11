@@ -7,12 +7,10 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.jetbrains.kotlin:kotlin-frontend-plugin:0.0.45"
     }
 }
 
 apply plugin: 'kotlin2js'
-//apply plugin: 'org.jetbrains.kotlin.frontend'
 apply plugin: 'kotlin-dce-js'
 
 repositories {
@@ -43,18 +41,3 @@ compileKotlin2Js {
         main = 'com/kjipo/viewer/Main'
     }
 }
-
-//kotlinFrontend {
-//
-//    npm {
-//        dependency "text-encoding"
-//        dependency "source-map-loader"
-//    }
-//
-//    webpackBundle {
-//        bundleName = "main"
-//        contentPath = file("web")
-//        mode = 'production'
-//        port = 8093
-//    }
-//}

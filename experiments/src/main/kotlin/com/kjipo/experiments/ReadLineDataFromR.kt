@@ -26,8 +26,15 @@ object ReadLineDataFromR {
 //        "unicode","line_number","angle","length","start_x","start_y"
         return inputData.stream().skip(1).map { line ->
             line.split(",").let {
-                Pair(it[0].toInt(),
-                        AngleLine(it[1].toInt(), com.kjipo.raster.segment.Pair(it[5].toInt(), it[4].toInt()), it[3].toDouble(), it[2].toDouble()))
+                Pair(
+                    it[0].toInt(),
+                    AngleLine(
+                        it[1].toInt(),
+                        com.kjipo.raster.segment.Pair(it[5].toInt(), it[4].toInt()),
+                        it[3].toDouble(),
+                        it[2].toDouble()
+                    )
+                )
             }
         }.collect(Collectors.toMap({
             it.first
@@ -59,7 +66,8 @@ object ReadLineDataFromR {
                         if (dispImage[it.row, it.column].brightness == 1.0) {
                             dispImage[it.row, it.column] = Color.WHITE
                         } else {
-                            dispImage[it.row, it.column] = Color.hsb(counter.toDouble().div(lines.size).times(360), 1.0, 1.0)
+                            dispImage[it.row, it.column] =
+                                Color.hsb(counter.toDouble().div(lines.size).times(360), 1.0, 1.0)
                         }
                     }
                 }
@@ -73,27 +81,65 @@ object ReadLineDataFromR {
         displayColourRasters(colourRasters, texts, 2)
     }
 
-    private fun groupLines(lines: List<AngleLine>, cutoff: Int = Int.MAX_VALUE) =
-            createMatrix(lines, 0, 65, 0, 65).let { imageMatrix ->
-                lines.map { line ->
-                    val neighbours = FindClosestNeighbours.extractNeighboursForLine(line, imageMatrix, lines)
+    private fun groupLines(unicode: Int, lines: List<AngleLine>, cutoff: Int = Int.MAX_VALUE) =
+        createMatrix(lines, 0, 65, 0, 65).let { imageMatrix ->
+            lines.map { line ->
+                val neighbours = FindClosestNeighbours.extractNeighboursForLine(line, imageMatrix, lines)
 
-                    val sortedDistances = neighbours.values.sorted().distinct()
-                    val cleanedCutoff = if (cutoff >= sortedDistances.size) {
-                        Int.MAX_VALUE
-                    } else {
-                        sortedDistances[cutoff]
-                    }
+                val sortedDistances = neighbours.values.sorted().distinct()
+                val cleanedCutoff = if (cutoff >= sortedDistances.size) {
+                    Int.MAX_VALUE
+                } else {
+                    sortedDistances[cutoff]
+                }
 
-                    val relationData = neighbours.filter { it.value < cleanedCutoff }.map {
-                        extractRelativePositionInformation(line, it.key)
-                    }.toList()
-
-                    Line(line.id, relationData)
+                val relationData = neighbours.filter { it.value < cleanedCutoff }.map {
+                    extractRelativePositionInformation(line, it.key)
                 }.toList()
-            }
 
-    private fun extractRelativePositionInformation(inputLine: AngleLine, otherLine: AngleLine): RelativePositionInformation {
+                Line(unicode, line.id, relationData)
+            }.toList()
+        }
+
+    private fun extractRelativePositionInformation(
+        inputLine: AngleLine,
+        otherLine: AngleLine
+    ): RelativePositionInformation {
+        val inputLineLength = if (inputLine.length < 1.0) 1.0 else inputLine.length
+
+        val rowOffset = inputLine.startPair.row
+        val columnOffset = inputLine.startPair.column
+
+        val inputLineRowMidPoint = (inputLine.endPair.row - inputLine.startPair.row) / 2
+        val inputLineColumnMidPoint = (inputLine.endPair.column - inputLine.startPair.column) / 2
+
+        val otherLineRowMidPoint = (otherLine.endPair.row - otherLine.startPair.row) / 2
+        val otherLineColumnMidPoint = (otherLine.endPair.column - otherLine.startPair.column) / 2
+
+        val rowDiff = inputLineRowMidPoint - otherLineRowMidPoint - 2 * rowOffset
+        val columnDiff = inputLineColumnMidPoint - otherLineColumnMidPoint - 2 * columnOffset
+
+        var angleDiff = inputLine.angle - otherLine.angle
+        while(angleDiff <= -Math.PI) {
+            angleDiff += Math.PI
+        }
+        while(angleDiff >= Math.PI) {
+            angleDiff -= Math.PI
+        }
+
+        return RelativePositionInformation(
+            abs(rowDiff).div(inputLineLength),
+            abs(columnDiff).div(inputLineLength),
+            angleDiff,
+            inputLine.id,
+            otherLine.id
+        )
+    }
+
+    private fun extractRelativePositionInformation2(
+        inputLine: AngleLine,
+        otherLine: AngleLine
+    ): RelativePositionInformation {
 //        line2 <- all.lines.in.kanji[i, ]
 //
 //        # If a line has a length less than 1, round it up to 1
@@ -132,7 +178,11 @@ object ReadLineDataFromR {
 
 //        switched.length <- sqrt((input.line$start_x - line2.stop.x)^2 + (input.line$start_y - line2.stop.y)^2)
 
-        val switchedLength = sqrt((inputLine.startPair.column - otherLine.endPair.column.toDouble()).pow(2) + (inputLine.startPair.row - otherLine.endPair.row.toDouble()).pow(2))
+        val switchedLength = sqrt(
+            (inputLine.startPair.column - otherLine.endPair.column.toDouble()).pow(2) + (inputLine.startPair.row - otherLine.endPair.row.toDouble()).pow(
+                2
+            )
+        )
 
 //        # The smallest line is set to be one the is horizontal, and then the
 //        # longer line is drawn relative to it
@@ -178,7 +228,13 @@ object ReadLineDataFromR {
 //        result[counter, 3] <- start.pair.second.line.angle
 //        result[counter, 4] <- line.number.input
 
-        return RelativePositionInformation(abs(rowDiff).div(inputLineLength), abs(columnDiff).div(inputLineLength), startPairSecondLineAngle, inputLine.id, otherLine.id)
+        return RelativePositionInformation(
+            abs(rowDiff).div(inputLineLength),
+            abs(columnDiff).div(inputLineLength),
+            startPairSecondLineAngle,
+            inputLine.id,
+            otherLine.id
+        )
     }
 
     private fun createMatrix(lines: List<AngleLine>): Matrix<Boolean> {
@@ -204,9 +260,19 @@ object ReadLineDataFromR {
     }
 
 
-    data class Line(val id: Int, val relativePositions: Collection<RelativePositionInformation>)
+    /**
+     * The {@param lineCode} parameter specifies the kanji the line is taken from and {@param id} specifies
+     * the ID of the line within the kanji.
+     */
+    data class Line(val lineCode: Int, val id: Int, val relativePositions: Collection<RelativePositionInformation>)
 
-    data class RelativePositionInformation(val rowDiff: Double, val colDiff: Double, val angle: Double, val inputLine: Int, val otherLine: Int)
+    data class RelativePositionInformation(
+        val rowDiff: Double,
+        val colDiff: Double,
+        val angle: Double,
+        val inputLine: Int,
+        val otherLine: Int
+    )
 
 
     @JvmStatic
@@ -215,11 +281,14 @@ object ReadLineDataFromR {
 //        val lineImage = inputData.iterator().next()
 
         val linesWithRelativePositionInformation = inputData.flatMap { entry ->
-            groupLines(entry.value, 3)
+            groupLines(entry.key, entry.value, 3)
         }.toList()
 
         val gson = Gson()
-        Files.write(Paths.get("line_relative_position_information_rectangle_v2.json"), gson.toJson(linesWithRelativePositionInformation).toByteArray(StandardCharsets.UTF_8))
+        Files.write(
+            Paths.get("line_relative_position_information_rectangle_v3.json"),
+            gson.toJson(linesWithRelativePositionInformation).toByteArray(StandardCharsets.UTF_8)
+        )
     }
 
 

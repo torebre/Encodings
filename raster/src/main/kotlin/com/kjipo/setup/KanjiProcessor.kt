@@ -5,6 +5,7 @@ import com.kjipo.parser.KanjiDicParser
 import com.kjipo.parser.Parsers
 import com.kjipo.representation.EncodedKanji
 import com.kjipo.skeleton.makeThin
+import com.kjipo.skeleton.transformArraysToMatrix
 import org.slf4j.LoggerFactory
 import java.awt.Font
 import java.nio.charset.StandardCharsets
@@ -20,14 +21,14 @@ private val numberOfRows = 400
 private val numberOfColumns = 400
 
 
-fun processDictionaryFile(outputDir: Path) {
+fun processDictionaryFile(outputDir: Path, makeThinImage: Boolean = true) {
     if(!Files.exists(outputDir)) {
         Files.createDirectories(outputDir)
     }
     val parseKanjidicFile = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION)
 
     val characterKanjiMap: Map<String, KanjiDicParser.KanjiDicEntry> = parseKanjidicFile.map { Pair(it.identifier, it) }
-            .collect(Collectors.toMap({ it -> it.first }, { it.second }))
+            .collect(Collectors.toMap({ it.first }, { it.second }))
 
     val charactersFoundInFile = characterKanjiMap.values.flatMap {
         it.kanji.codePoints().boxed().collect(Collectors.toList())
@@ -43,32 +44,35 @@ fun processDictionaryFile(outputDir: Path) {
     val fontRenderContext = FontFileParser.getFontRenderContext()
 
     val unicodeKanjiMap: Map<Int, EncodedKanji> = charactersFoundInFile.stream()
-            .map({ unicode ->
+            .map { unicode ->
                 logger.info("Character: $unicode")
-                FontFileParser.createEncodedKanji(unicode, font, fontRenderContext, numberOfRows, numberOfColumns).let {
-                    Pair(unicode, it)
-                }
-            }).filter({ it != null })
-            .collect(Collectors.toMap({ it -> it!!.first }, { it -> it!!.second },
+                Pair(unicode,
+                    FontFileParser.createEncodedKanji(unicode, font, fontRenderContext, numberOfRows, numberOfColumns)
+                )
+            }.filter { it != null }
+        .collect(Collectors.toMap({ it!!.first }, { it!!.second },
                     { old, new ->
                         logger.warn("Found duplicate. Old: $old. New: $new")
                         new}))
 
-    unicodeKanjiMap.forEach({
+    unicodeKanjiMap.forEach {
         val unicode = it.key
         val encodedKanji = it.value
 
-        val transformedKanji = makeThin(encodedKanji.image)
+        val transformedKanji = if(makeThinImage) {
+            makeThin(encodedKanji.image)
+        }
+        else {
+            transformArraysToMatrix(encodedKanji.image)
+        }
 
         Files.newBufferedWriter(outputDir.resolve(unicode.toString().plus(".dat")), StandardCharsets.UTF_8).use {
             it.write(transformKanjiData(transformedKanji, numberOfRows, numberOfColumns))
         }
-    })
-
+    }
 }
 
 
 fun main(args: Array<String>) {
-    processDictionaryFile(Paths.get("/home/student/workspace/testEncodings/kanji_output8"))
-
+    processDictionaryFile(Paths.get("/home/student/workspace/testEncodings/kanji_output8_raw"), false)
 }
