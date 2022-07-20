@@ -1,43 +1,70 @@
-buildscript {
-    repositories {
-        mavenCentral()
-        jcenter()
-        maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
-        maven { url "https://plugins.gradle.org/m2/" }
-    }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
+//buildscript {
+//    repositories {
+//        mavenCentral()
+//        jcenter()
+//        maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
+//        maven { url "https://plugins.gradle.org/m2/" }
+//    }
+//    dependencies {
+//        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+//    }
+//}
+
+//apply plugin: 'kotlin2js'
+//apply plugin: 'kotlin-dce-js'
+
+plugins {
+    id 'org.jetbrains.kotlin.js'
 }
 
-apply plugin: 'kotlin2js'
-apply plugin: 'kotlin-dce-js'
-
 repositories {
-    jcenter()
+//    jcenter()
     mavenCentral()
 }
 
+
 dependencies {
     implementation project(':encodings-multimodule')
-    compile libraries.kotlin_stdlib_js
-    compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
+    implementation libraries.kotlin_stdlib_js
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
 
-    implementation "com.github.aakira:napier:$napierVersion"
-    implementation "com.github.aakira:napier-js:$napierVersion"
+//    implementation "com.github.aakira:napier:$napierVersion"
+//    implementation "com.github.aakira:napier-js:$napierVersion"
 
     implementation("io.ktor:ktor-client-js:1.2.5")
 
-    testCompile "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version"
+    testImplementation "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version"
 }
 
-compileKotlin2Js {
-    kotlinOptions {
-        metaInfo = true
-        sourceMap = true
-        outputFile = "$project.buildDir.path/js/${project.name}.js"
-        sourceMapEmbedSources = 'always'
-        moduleKind = 'commonjs'
-        main = 'com/kjipo/viewer/Main'
+//compileKotlin2Js {
+//    kotlinOptions {
+//        metaInfo = true
+//        sourceMap = true
+//        outputFile = "$project.buildDir.path/js/${project.name}.js"
+//        sourceMapEmbedSources = 'always'
+//        moduleKind = 'commonjs'
+//        main = 'com/kjipo/viewer/Main'
+//    }
+//}
+
+kotlin {
+    js {
+        browser {
+            webpackTask {
+                cssSupport.enabled = true
+            }
+
+            runTask {
+                cssSupport.enabled = true
+            }
+
+            testTask {
+                useKarma {
+                    useChromeHeadless()
+                    webpackConfig.cssSupport.enabled = true
+                }
+            }
+        }
+        binaries.executable()
     }
 }

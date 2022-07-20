@@ -1,11 +1,20 @@
-apply plugin: 'kotlin'
+//apply plugin: 'kotlin'
 
 
-
-compileJava {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+plugins {
+    id 'kotlin'
+    id 'org.openjfx.javafxplugin' version '0.0.10'
 }
+
+javafx {
+    version = "18.0.1"
+    modules = [ 'javafx.graphics' ]
+}
+
+//compileJava {
+//    sourceCompatibility = JavaVersion.VERSION_1_8
+//    targetCompatibility = JavaVersion.VERSION_1_8
+//}
 
 
 dependencies {
@@ -15,9 +24,10 @@ dependencies {
     implementation project(":encodings-multimodule")
 
 //    compile project(":opencv")
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.7'
-    compile group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.7'
-    compile group: 'com.google.code.gson', name: 'gson', version: '2.8.6'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation group: 'org.slf4j', name: 'slf4j-api', version:'1.7.7'
+    implementation group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.7'
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.6'
+    implementation group: 'com.google.guava', name: 'guava', version:'17.0'
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
 }

@@ -144,7 +144,6 @@ object SegmentImageExperiment {
         val segments = examineSegments(transformImage(loadedKanji[0]), 3)
         combineSegments(transformSegmentToGroups(segments))
 
-
     }
 
 

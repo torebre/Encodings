@@ -13,4 +13,4 @@ include ':kanjiserver'
 include ':encodings-multimodule'
 
 
-enableFeaturePreview('GRADLE_METADATA')
+//enableFeaturePreview('GRADLE_METADATA')
