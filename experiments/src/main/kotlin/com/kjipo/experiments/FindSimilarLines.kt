@@ -6,10 +6,28 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.min
 
+
 class SimilarSamples() {
+
+    private val searchPaths = mutableListOf<SearchPath>()
+
+
+    fun getPathsEndingWithLineId(sampleId: Int, lineId: Int): List<LinePair> {
+        return searchPaths.map { searchPath ->
+            searchPath.path.last().let {
+                if (it.sampleId == sampleId && it.line2Index == lineId) {
+                    it
+                } else {
+                    null
+                }
+            }
+        }.filterNotNull()
+    }
 
 
 }
+
+class SearchPath(val path: MutableList<LinePair> = mutableListOf())
 
 
 class SearchDescription {
@@ -17,7 +35,18 @@ class SearchDescription {
 
 }
 
-data class LinePair(val sampleId: Int, val line1Index: Int, val line2Index: Int, val linePairDescription: LinePairDescription)
+
+class LookupSample(val id: Int, val linePrototypes: List<LinePrototypeWithAngle>) {
+
+
+}
+
+data class LinePair(
+    val sampleId: Int,
+    val line1Index: Int,
+    val line2Index: Int,
+    val linePairDescription: LinePairDescription
+)
 
 data class LinePairDescription(
     val angleDiff: Double, val midPointRowLine1: Double, val midPointColumnLine1: Double,
@@ -70,7 +99,10 @@ object FindSimilarLines {
     }
 
 
-    private fun findSimilarPaths(prototypesWithAngles: List<LinePrototypeWithAngle>) {
+    private fun findSimilarPaths(
+        prototypesWithAngles: List<LinePrototypeWithAngle>,
+        lookupSamples: List<LookupSample>
+    ) {
 //        '''
 //
 //        :param test_sample:
@@ -81,6 +113,23 @@ object FindSimilarLines {
 //        '''
 //        current_index = indices_of_lines_to_use[0]
 //        similar_samples: SimilarSamples = SimilarSamples(input_sample_id, test_sample, indices_of_lines_to_use)
+
+        val similarSamples = SimilarSamples()
+        val searchDescription = SearchDescription()
+
+        val linePairLookupData = lookupSamples.flatMap { lookupSample ->
+            describeLinePairs(lookupSample.id, lookupSample.linePrototypes)
+        }.toList()
+
+        for (index in 0 until prototypesWithAngles.size - 1) {
+            val lineRelation = describeLinePair(prototypesWithAngles[index], prototypesWithAngles[index + 1])
+            val closestLines = findClosestLinesInData(lineRelation, linePairLookupData)
+
+            closestLines.subList(0, 10)
+
+        }
+
+
 //
 //        similar_samples.input_sample_id = input_sample_id
 //
@@ -142,9 +191,9 @@ object FindSimilarLines {
     private fun describeLinePairs(sampleId: Int, lineSample: List<LinePrototypeWithAngle>): MutableList<LinePair> {
         val linePairs = mutableListOf<LinePair>()
         var index = 0
-        for(line in lineSample) {
+        for (line in lineSample) {
             var index2 = 0
-            for(line2 in lineSample) {
+            for (line2 in lineSample) {
                 linePairs.add(LinePair(sampleId, index, index2, describeLinePair(line, line2)))
             }
         }
@@ -152,7 +201,10 @@ object FindSimilarLines {
     }
 
 
-    private fun findClosestLinesInData(linePairDescription: LinePairDescription, linePairDescriptionsInOtherSamples: List<LinePairDescription>) {
+    private fun findClosestLinesInData(
+        linePairDescription: LinePairDescription,
+        linePairs: List<LinePair>
+    ): List<LinePair> {
 //        '''
 //        Returns a tuple where the first array contains the indices of the closest lines, and the
 //        second array contains the distances.
@@ -165,23 +217,26 @@ object FindSimilarLines {
 //                return (sorted_angle_diffs_indices[0:number_of_closest_lines_to_return],
 //        angle_diffs[sorted_angle_diffs_indices[0:number_of_closest_lines_to_return]])
 
-        linePairDescriptionsInOtherSamples.map {linePair ->
-            val angleDiff = abs(linePairDescription.angleDiff - linePair.angleDiff)
+        val linePairsSortedByDistance = linePairs.sortedBy { linePair ->
+            val angleDiff = abs(linePairDescription.angleDiff - linePair.linePairDescription.angleDiff)
 
-            // TODO
-
-
+            angleDiff
         }
 
-
+        return linePairsSortedByDistance
     }
 
 
     @JvmStatic
     fun main(args: Array<String>) {
-        val sample = CreateSamples.generateSample(10, true, 64, 64, 10)
+        val sample = CreateSamples.generateSample(true, 64, 64, 10)
+        val description = describeLinePairs(0, sample)
 
-        val description = describeLinePairs(1, sample)
+        val lookupSamples = (1 until 10).map { id ->
+            LookupSample(id, CreateSamples.generateSample(true, 64, 64, 10))
+        }.toList()
+
+        findSimilarPaths(sample, lookupSamples)
 
         println("Description: $description")
 

@@ -1,7 +1,6 @@
 package com.kjipo.datageneration
 
 import com.kjipo.prototype.LinePrototype
-import java.lang.Math.pow
 import kotlin.math.*
 import kotlin.random.Random
 
@@ -17,16 +16,14 @@ object CreateSamples {
 
     private val random = Random.Default
 
-    fun generateSample(
-        numberOfSamplesToGenerate: Int, includeRectangle: Boolean,
+    fun generateSample(includeRectangle: Boolean,
         numberOfRows: Int, numberOfColumns: Int, numberOfRandomLines: Int
     ): List<LinePrototypeWithAngle> {
         val sample = mutableListOf<LinePrototypeWithAngle>()
 
         // Include four more lines if no rectangle should be drawn, so that the number of
         // lines returned is the same
-        val numberOfLines = numberOfSamplesToGenerate + if(!includeRectangle) 4 else 0
-
+        val numberOfLines = numberOfRandomLines + if(!includeRectangle) 4 else 0
 
 //        training_samples = np.zeros((number_of_random_lines + 4, 6))
 //
@@ -39,11 +36,13 @@ object CreateSamples {
 //        start_x = random.sample(range(0, number_of_rows), 1)[0]
 //        start_y = random.sample(range(0, number_of_columns), 1)[0]
 
-        val xStart = random.nextInt(0, numberOfRows)
-        val yStart = random.nextInt(0, numberOfColumns)
 
-        val xStop = random.nextInt(0, numberOfRows)
-        val yStop = random.nextInt(0, numberOfColumns)
+        for(i in 0 until numberOfLines) {
+            val xStart = random.nextInt(0, numberOfRows)
+            val yStart = random.nextInt(0, numberOfColumns)
+
+            val xStop = random.nextInt(0, numberOfRows)
+            val yStop = random.nextInt(0, numberOfColumns)
 //
 //        stop_x = random.sample(range(0, number_of_rows), 1)[0]
 //        stop_y = random.sample(range(0, number_of_columns), 1)[0]
@@ -51,16 +50,24 @@ object CreateSamples {
 //        x_delta = stop_x - start_x
 //        y_delta = stop_y - start_y
 
-        val xDelta = xStop - xStart
-        val yDelta = yStop - yStart
+            val xDelta = xStop - xStart
+            val yDelta = yStop - yStart
 
 //        # TODO Check that this is the correct function to use
 //        angle = math.atan2(y_delta, x_delta)
 //        line_length = math.sqrt(x_delta * x_delta + y_delta * y_delta)
-        val angle = atan2(yDelta.toDouble(), xDelta.toDouble())
-        val length = sqrt(xDelta.toDouble() * xDelta + yDelta * yDelta)
+            val angle = atan2(yDelta.toDouble(), xDelta.toDouble())
+            val length = sqrt(xDelta.toDouble() * xDelta + yDelta * yDelta)
 
-        sample.add(LinePrototypeWithAngle(com.kjipo.raster.segment.Pair(xStart, yStart), com.kjipo.raster.segment.Pair(xStop, yStop), angle, length))
+            sample.add(
+                LinePrototypeWithAngle(
+                    com.kjipo.raster.segment.Pair(xStart, yStart),
+                    com.kjipo.raster.segment.Pair(xStop, yStop),
+                    angle,
+                    length
+                )
+            )
+        }
 
 //
 //        training_samples[i, 0] = angle
