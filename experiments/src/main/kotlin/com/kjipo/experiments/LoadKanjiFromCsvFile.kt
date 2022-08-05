@@ -1,6 +1,6 @@
 package com.kjipo.experiments
 
-import com.kjipo.prototype.AngleLine
+import com.kjipo.representation.prototype.AngleLine
 import com.kjipo.segmentation.Matrix
 import com.kjipo.skeleton.transformToArrays
 import com.kjipo.visualization.displayColourRasters
@@ -9,7 +9,6 @@ import java.lang.Math.abs
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.streams.toList
 
 object LoadKanjiFromCsvFile {
 
@@ -90,7 +89,9 @@ object LoadKanjiFromCsvFile {
                     .skip(1)
                     .map {
                         val split = it.split(",")
-                        val angleLine = Pair(split[0].toInt(), AngleLine(counter++, com.kjipo.raster.segment.Pair(split[4].toInt(), split[5].toInt()), split[3].toDouble(), split[2].toDouble()))
+                        val angleLine = Pair(split[0].toInt(), AngleLine(counter++,
+                            com.kjipo.representation.segment.Pair(split[4].toInt(), split[5].toInt()), split[3].toDouble(), split[2].toDouble())
+                        )
 
                         println("Unicode: ${angleLine.first}.  Line number: ${split[1]}. Start: ${angleLine.second.startPair}. End: ${angleLine.second.endPair}")
                         angleLine.second.segments[0].pairs.forEach { println("Line: $it") }

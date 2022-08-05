@@ -1,8 +1,8 @@
 package com.kjipo.raster.attraction;
 
 
-import com.kjipo.prototype.Prototype;
-import com.kjipo.raster.segment.Segment;
+import com.kjipo.representation.prototype.Prototype;
+import com.kjipo.representation.segment.Segment;
 
 import java.util.Collection;
 import java.util.List;

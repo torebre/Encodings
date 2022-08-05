@@ -19,6 +19,7 @@ ext {
     qunitVersion = '2.6.0'
     napierVersion = "0.0.3"
     assert4jVersion = '3.12.2'
+    kotlinLogging = '2.0.2'
     libraries = [
             junit                         : "junit:junit:4.12",
             kotlin_stdlib                 : "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version",

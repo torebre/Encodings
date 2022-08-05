@@ -1,8 +1,8 @@
 package com.kjipo.visualization.segmentation;
 
 import com.google.common.collect.ImmutableList;
-import com.kjipo.raster.segment.Pair;
-import com.kjipo.raster.segment.Segment;
+import com.kjipo.representation.segment.Pair;
+import com.kjipo.representation.segment.Segment;
 import com.kjipo.representation.EncodedKanji;
 import com.kjipo.visualization.RasterRun;
 import com.kjipo.visualization.RasterVisualizer2;

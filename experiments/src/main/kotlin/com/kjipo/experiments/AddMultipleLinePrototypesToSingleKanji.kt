@@ -1,10 +1,10 @@
 package com.kjipo.experiments
 
-import com.kjipo.prototype.AngleLine
-import com.kjipo.prototype.FitPrototype
-import com.kjipo.prototype.Prototype
+import com.kjipo.representation.prototype.AngleLine
+import com.kjipo.representation.prototype.FitPrototype
+import com.kjipo.representation.prototype.Prototype
 import com.kjipo.raster.match.MatchDistance
-import com.kjipo.raster.segment.Pair
+import com.kjipo.representation.segment.Pair
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.shrinkImage
 import com.kjipo.skeleton.transformArraysToMatrix
@@ -15,7 +15,6 @@ import javafx.scene.Node
 import javafx.scene.paint.Color
 import javafx.scene.shape.Rectangle
 import java.nio.file.Paths
-import kotlin.streams.toList
 
 
 fun addMultipleLinesPrototypesToSingleKanji() {

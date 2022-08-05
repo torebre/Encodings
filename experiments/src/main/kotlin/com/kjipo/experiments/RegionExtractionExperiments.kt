@@ -1,8 +1,8 @@
 package com.kjipo.experiments
 
-import com.kjipo.prototype.AngleLine
-import com.kjipo.prototype.CreatePrototypeDataset
-import com.kjipo.prototype.Prototype
+import com.kjipo.representation.prototype.AngleLine
+import com.kjipo.representation.prototype.CreatePrototypeDataset
+import com.kjipo.representation.prototype.Prototype
 import com.kjipo.raster.match.MatchDistance
 import com.kjipo.representation.EncodedKanji
 import com.kjipo.representation.Line
@@ -17,7 +17,6 @@ import com.kjipo.visualization.*
 import javafx.scene.paint.Color
 import org.slf4j.LoggerFactory
 import java.io.BufferedWriter
-import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
@@ -30,7 +29,6 @@ import kotlin.math.absoluteValue
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.sign
-import kotlin.streams.toList
 
 
 object RegionExtractionExperiments {
@@ -402,8 +400,16 @@ object RegionExtractionExperiments {
                         val rotatedStartPoint = rotateAboutPoint(it.startPair.column.toDouble(), it.startPair.row.toDouble(), linePrototype.startPair.column.toDouble(), linePrototype.startPair.row.toDouble(), -linePrototype.angle)
                         val rotatedEndPoint = rotateAboutPoint(it.endPair.column.toDouble(), it.endPair.row.toDouble(), linePrototype.startPair.column.toDouble(), linePrototype.startPair.row.toDouble(), -linePrototype.angle)
 
-                        AngleLine(it.id, com.kjipo.raster.segment.Pair(rotatedStartPoint.second.roundToInt(), rotatedStartPoint.first.roundToInt()),
-                                com.kjipo.raster.segment.Pair(rotatedEndPoint.second.roundToInt(), rotatedEndPoint.first.roundToInt()))
+                        AngleLine(it.id,
+                            com.kjipo.representation.segment.Pair(
+                                rotatedStartPoint.second.roundToInt(),
+                                rotatedStartPoint.first.roundToInt()
+                            ),
+                            com.kjipo.representation.segment.Pair(
+                                rotatedEndPoint.second.roundToInt(),
+                                rotatedEndPoint.first.roundToInt()
+                            )
+                        )
                     }.forEach {
                         linesInNewSet.add(it)
                     }

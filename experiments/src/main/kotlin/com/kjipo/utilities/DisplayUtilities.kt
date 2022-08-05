@@ -1,6 +1,6 @@
 package com.kjipo.utilities
 
-import com.kjipo.prototype.AngleLine
+import com.kjipo.representation.prototype.AngleLine
 import com.kjipo.segmentation.Matrix
 import com.kjipo.skeleton.transformToArrays
 import com.kjipo.visualization.displayColourRasters

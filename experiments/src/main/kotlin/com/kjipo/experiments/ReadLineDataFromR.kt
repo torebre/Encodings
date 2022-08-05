@@ -2,7 +2,7 @@ package com.kjipo.experiments
 
 
 import com.google.gson.Gson
-import com.kjipo.prototype.AngleLine
+import com.kjipo.representation.prototype.AngleLine
 import com.kjipo.segmentation.Matrix
 import com.kjipo.skeleton.transformToArrays
 import com.kjipo.visualization.displayColourRasters
@@ -30,7 +30,7 @@ object ReadLineDataFromR {
                     it[0].toInt(),
                     AngleLine(
                         it[1].toInt(),
-                        com.kjipo.raster.segment.Pair(it[5].toInt(), it[4].toInt()),
+                        com.kjipo.representation.segment.Pair(it[5].toInt(), it[4].toInt()),
                         it[3].toDouble(),
                         it[2].toDouble()
                     )

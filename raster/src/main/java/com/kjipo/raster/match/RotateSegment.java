@@ -2,8 +2,8 @@ package com.kjipo.raster.match;
 
 
 import com.kjipo.raster.attraction.MoveOperation;
-import com.kjipo.raster.segment.Pair;
-import com.kjipo.raster.segment.SegmentWithOriginal;
+import com.kjipo.representation.segment.Pair;
+import com.kjipo.raster.attraction.SegmentWithOriginal;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.complex.ComplexUtils;
 import org.slf4j.Logger;

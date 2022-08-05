@@ -1,6 +1,6 @@
 package com.kjipo.experiments
 
-import com.kjipo.prototype.AngleLine
+import com.kjipo.representation.prototype.AngleLine
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitSingleLine3
 import com.kjipo.segmentation.shrinkImage

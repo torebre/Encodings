@@ -3,7 +3,9 @@ package com.kjipo.prototype;
 
 import com.kjipo.parser.KanjiDicParser;
 import com.kjipo.parser.Parsers;
-import com.kjipo.raster.segment.Segment;
+import com.kjipo.representation.segment.Segment;
+import com.kjipo.representation.prototype.CreatePrototypeDataset;
+import com.kjipo.representation.prototype.Prototype;
 import kotlin.Pair;
 import org.junit.Test;
 

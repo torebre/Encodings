@@ -2,10 +2,10 @@ package com.kjipo.raster.attraction;
 
 
 import com.google.common.collect.Lists;
-import com.kjipo.prototype.LinePrototype;
+import com.kjipo.representation.prototype.LinePrototype;
 import com.kjipo.raster.EncodingUtilities;
-import com.kjipo.raster.segment.Pair;
-import com.kjipo.raster.segment.Segment;
+import com.kjipo.representation.segment.Pair;
+import com.kjipo.representation.segment.Segment;
 import com.kjipo.representation.raster.FlowDirection;
 
 import java.util.List;
@@ -29,7 +29,7 @@ public class ScaleOperation implements LineMoveOperation {
             FlowDirection flowDirection = EncodingUtilities.computeDirection(nextToLastPair, lastPair);
 
             // A line prototype has only one segment
-            return new LinePrototype(pairs.get(0), Pair.of(lastPair.getRow() + scaling * flowDirection.getRowShift(), lastPair.getColumn() + scaling * flowDirection.getColumnShift())).getSegments().get(0);
+            return new LinePrototype(pairs.get(0), new Pair(lastPair.getRow() + scaling * flowDirection.getRowShift(), lastPair.getColumn() + scaling * flowDirection.getColumnShift())).getSegments().get(0);
 
         } else if (scaling < 0) {
             return new LinePrototype(pairs.get(0), pairs.get(pairs.size() - scaling)).getSegments().get(0);

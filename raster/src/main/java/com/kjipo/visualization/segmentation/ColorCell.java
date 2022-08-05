@@ -1,6 +1,6 @@
 package com.kjipo.visualization.segmentation;
 
-import com.kjipo.raster.segment.Pair;
+import com.kjipo.representation.segment.Pair;
 import com.kjipo.visualization.CellType;
 import javafx.scene.paint.Color;
 

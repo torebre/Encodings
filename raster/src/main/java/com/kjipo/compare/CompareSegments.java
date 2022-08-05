@@ -1,13 +1,11 @@
 package com.kjipo.compare;
 
-import com.kjipo.raster.segment.Pair;
-import com.kjipo.raster.segment.Segment;
+import com.kjipo.representation.segment.Pair;
+import com.kjipo.representation.segment.Segment;
 import com.kjipo.representation.raster.FlowDirection;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 public class CompareSegments {
 

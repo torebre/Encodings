@@ -1,6 +1,6 @@
 package com.kjipo.experiments
 
-import com.kjipo.prototype.AngleLine
+import com.kjipo.representation.prototype.AngleLine
 import com.kjipo.representation.EncodedKanji
 import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.segmentation.Matrix

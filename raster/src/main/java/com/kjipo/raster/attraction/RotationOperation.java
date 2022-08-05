@@ -1,15 +1,7 @@
 package com.kjipo.raster.attraction;
 
 
-import com.kjipo.raster.match.RotateSegment;
-import com.kjipo.raster.segment.Pair;
-import com.kjipo.raster.segment.Segment;
-import com.kjipo.raster.segment.SegmentImpl;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static com.kjipo.raster.RasterConstants.SQUARE_SIDE;
+import com.kjipo.representation.segment.Segment;
 
 public class RotationOperation implements LineMoveOperation {
     private final double rotation;

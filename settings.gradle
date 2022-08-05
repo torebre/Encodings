@@ -1,3 +1,13 @@
+//pluginManagement {
+//    repositories {
+//        mavenCentral()
+//        gradlePluginPortal()
+//        maven {
+//            url = uri("https://dl.bintray.com/kotlin/kotlin-eap")
+//        }
+//    }
+//}
+
 rootProject.name = 'KanjiRecognizer'
 
 include ':raster'
@@ -11,6 +21,9 @@ include ':webview-js'
 include ':server'
 include ':kanjiserver'
 include ':encodings-multimodule'
+include ':experiments-common'
+include ':experiments-visualization-js'
+//include ':skia-visualization'
 
 
 //enableFeaturePreview('GRADLE_METADATA')

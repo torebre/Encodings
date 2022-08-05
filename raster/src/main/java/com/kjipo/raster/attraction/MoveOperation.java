@@ -1,10 +1,9 @@
 package com.kjipo.raster.attraction;
 
-import com.kjipo.prototype.LinePrototype;
 import com.kjipo.raster.match.RotateSegment;
-import com.kjipo.raster.segment.Pair;
-import com.kjipo.raster.segment.Segment;
-import com.kjipo.raster.segment.SegmentImpl;
+import com.kjipo.representation.segment.Pair;
+import com.kjipo.representation.segment.Segment;
+import com.kjipo.representation.segment.SegmentImpl;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -58,7 +57,7 @@ public class MoveOperation implements LineMoveOperation {
     @Override
     public Segment applyToLine(Segment linePrototype) {
         List<Pair> translatedCoordinates = linePrototype.getPairs().stream()
-                .map(pair -> Pair.of(pair.getRow() + rowOffset, pair.getColumn() + columnOffset))
+                .map(pair -> new Pair(pair.getRow() + rowOffset, pair.getColumn() + columnOffset))
                 .collect(Collectors.toList());
         List<Pair> rotatedCoordinates;
 

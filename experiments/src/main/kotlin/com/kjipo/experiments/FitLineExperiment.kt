@@ -1,6 +1,6 @@
 package com.kjipo.experiments
 
-import com.kjipo.prototype.AngleLine
+import com.kjipo.representation.prototype.AngleLine
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitSingleLine2
 import com.kjipo.segmentation.shrinkImage
@@ -32,7 +32,7 @@ object FitLineExperiment {
             }
         }
 
-        val startLine = AngleLine(1, com.kjipo.raster.segment.Pair(startPair.first, startPair.second), 0.0, 0.0)
+        val startLine = AngleLine(1, com.kjipo.representation.segment.Pair(startPair.first, startPair.second), 0.0, 0.0)
 
         val fittedLine = fitSingleLine2(shrinkImage, startLine)
 

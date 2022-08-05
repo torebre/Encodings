@@ -3,9 +3,9 @@ package com.kjipo.raster.attraction;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.kjipo.prototype.FitPrototype;
-import com.kjipo.prototype.LinePrototype;
-import com.kjipo.prototype.Prototype;
-import com.kjipo.raster.segment.Pair;
+import com.kjipo.representation.prototype.LinePrototype;
+import com.kjipo.representation.prototype.Prototype;
+import com.kjipo.representation.segment.Pair;
 import com.kjipo.visualization.RasterRun;
 import com.kjipo.visualization.RasterVisualizer2;
 import com.kjipo.visualization.segmentation.ColorCell;
@@ -22,7 +22,7 @@ public class MoveOperationTest {
     @Test
     public void rotationTest() throws InterruptedException {
         boolean raster[][] = new boolean[20][20];
-        LinePrototype right = new LinePrototype(Pair.of(10, 10), Pair.of(14, 10));
+        LinePrototype right = new LinePrototype(new Pair(10, 10), new Pair(14, 10));
 
         MoveOperation moveOperation = new MoveOperation(0, 0, Math.PI / 4, 10, 10);
 

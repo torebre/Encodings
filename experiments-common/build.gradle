@@ -1,0 +1,28 @@
+plugins {
+    id 'org.jetbrains.kotlin.multiplatform'
+}
+repositories {
+    mavenCentral()
+}
+
+
+kotlin {
+    jvm()
+
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation project(":encodings-multimodule")
+                implementation kotlin('stdlib-common')
+
+                implementation "io.github.microutils:kotlin-logging:$kotlinLogging"
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation kotlin('test-common')
+                implementation kotlin('test-annotations-common')
+            }
+        }
+    }
+}

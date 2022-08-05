@@ -1,12 +1,13 @@
 package com.kjipo.datageneration
 
-import com.kjipo.prototype.LinePrototype
+import com.kjipo.representation.prototype.LinePrototype
+import com.kjipo.representation.segment.Pair
 import kotlin.math.*
 import kotlin.random.Random
 
 
-class LinePrototypeWithAngle(startPair: com.kjipo.raster.segment.Pair,
-stopPair: com.kjipo.raster.segment.Pair, val angle: Double, val length: Double): LinePrototype(startPair, stopPair) {
+class LinePrototypeWithAngle(startPair: Pair,
+stopPair: Pair, val angle: Double, val length: Double): LinePrototype(startPair, stopPair) {
 
 }
 
@@ -61,8 +62,8 @@ object CreateSamples {
 
             sample.add(
                 LinePrototypeWithAngle(
-                    com.kjipo.raster.segment.Pair(xStart, yStart),
-                    com.kjipo.raster.segment.Pair(xStop, yStop),
+                    Pair(xStart, yStart),
+                    Pair(xStop, yStop),
                     angle,
                     length
                 )
@@ -178,10 +179,10 @@ object CreateSamples {
         val angle34 = PI + rotation
 
         return listOf(
-            LinePrototypeWithAngle(com.kjipo.raster.segment.Pair(x1, y1), com.kjipo.raster.segment.Pair(x2, y2), angle12, length12),
-            LinePrototypeWithAngle(com.kjipo.raster.segment.Pair(x2, y2), com.kjipo.raster.segment.Pair(x4, y4), angle24, length24),
-            LinePrototypeWithAngle(com.kjipo.raster.segment.Pair(x1, y1), com.kjipo.raster.segment.Pair(x3, y3), angle13, length13),
-            LinePrototypeWithAngle(com.kjipo.raster.segment.Pair(x3, y3), com.kjipo.raster.segment.Pair(x4, y4), angle34, length34))
+            LinePrototypeWithAngle(Pair(x1, y1), Pair(x2, y2), angle12, length12),
+            LinePrototypeWithAngle(Pair(x2, y2), Pair(x4, y4), angle24, length24),
+            LinePrototypeWithAngle(Pair(x1, y1), Pair(x3, y3), angle13, length13),
+            LinePrototypeWithAngle(Pair(x3, y3), Pair(x4, y4), angle34, length34))
 
 //
 //    return np.array([[angle_12, length_12, x1, y1, x2, y2],

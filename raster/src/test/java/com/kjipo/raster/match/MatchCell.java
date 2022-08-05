@@ -1,6 +1,6 @@
 package com.kjipo.raster.match;
 
-import com.kjipo.raster.segment.Pair;
+import com.kjipo.representation.segment.Pair;
 import com.kjipo.visualization.CellType;
 
 import java.util.List;

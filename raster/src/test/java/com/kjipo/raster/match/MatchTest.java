@@ -2,12 +2,12 @@ package com.kjipo.raster.match;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.kjipo.prototype.Prototype;
+import com.kjipo.representation.prototype.Prototype;
 import com.kjipo.raster.attraction.PrototypeImpl;
 import com.kjipo.raster.attraction.SegmentMatcher;
-import com.kjipo.raster.segment.Pair;
-import com.kjipo.raster.segment.Segment;
-import com.kjipo.raster.segment.SegmentImpl;
+import com.kjipo.representation.segment.Pair;
+import com.kjipo.representation.segment.Segment;
+import com.kjipo.representation.segment.SegmentImpl;
 import com.kjipo.recognition.RecognitionUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

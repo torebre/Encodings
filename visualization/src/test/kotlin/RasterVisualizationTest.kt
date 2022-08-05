@@ -1,5 +1,5 @@
-import com.kjipo.prototype.CreatePrototypeDataset
-import com.kjipo.prototype.Prototype
+import com.kjipo.representation.prototype.CreatePrototypeDataset
+import com.kjipo.representation.prototype.Prototype
 import com.kjipo.representation.EncodedKanji
 import com.kjipo.visualization.displayRasters
 import com.kjipo.visualization.loadKanjisFromDirectory

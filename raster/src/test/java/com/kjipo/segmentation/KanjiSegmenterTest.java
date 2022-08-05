@@ -1,11 +1,11 @@
 package com.kjipo.segmentation;
 
-import com.kjipo.prototype.Prototype;
+import com.kjipo.representation.prototype.Prototype;
 import com.kjipo.raster.Cell;
 import com.kjipo.raster.attraction.SegmentMatcher;
 import com.kjipo.raster.match.MatchTest;
-import com.kjipo.raster.segment.Pair;
-import com.kjipo.raster.segment.Segment;
+import com.kjipo.representation.segment.Pair;
+import com.kjipo.representation.segment.Segment;
 import com.kjipo.recognition.RecognitionUtilities;
 import com.kjipo.representation.EncodedKanji;
 import com.kjipo.visualization.segmentation.SegmentationVisualizer;

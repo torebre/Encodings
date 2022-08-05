@@ -1,6 +1,6 @@
 package com.kjipo.raster.attraction;
 
-import com.kjipo.raster.segment.Segment;
+import com.kjipo.representation.segment.Segment;
 
 public interface LineMoveOperation {
 

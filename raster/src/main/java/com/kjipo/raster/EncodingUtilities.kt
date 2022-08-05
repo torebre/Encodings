@@ -1,6 +1,6 @@
 package com.kjipo.raster
 
-import com.kjipo.raster.segment.Pair
+import com.kjipo.representation.segment.Pair
 import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.representation.raster.TileType
 import java.util.function.Consumer

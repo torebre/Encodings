@@ -1,8 +1,8 @@
 package com.kjipo.raster.attraction;
 
 
-import com.kjipo.prototype.AngleLine;
-import com.kjipo.raster.segment.Pair;
+import com.kjipo.representation.prototype.AngleLine;
+import com.kjipo.representation.segment.Pair;
 
 public class AngleLineMoveOperationImpl implements AngleLineMoveOperation {
     private final int rowOffset;
@@ -20,7 +20,7 @@ public class AngleLineMoveOperationImpl implements AngleLineMoveOperation {
 
     @Override
     public void apply(AngleLine angleLine) {
-        angleLine.setStartPair(Pair.of(angleLine.getStartPair().getRow() + rowOffset,
+        angleLine.setStartPair(new Pair(angleLine.getStartPair().getRow() + rowOffset,
                 angleLine.getStartPair().getColumn() + columnOffset));
         angleLine.setLength(angleLine.getLength() + deltaLength);
         angleLine.setAngleOffset(angleLine.getAngleOffset() + deltaAngle);

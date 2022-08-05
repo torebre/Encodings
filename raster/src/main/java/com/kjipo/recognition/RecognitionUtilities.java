@@ -1,7 +1,7 @@
 package com.kjipo.recognition;
 
 import com.kjipo.raster.match.UnionSegment;
-import com.kjipo.raster.segment.Segment;
+import com.kjipo.representation.segment.Segment;
 
 import java.util.ArrayList;
 import java.util.List;

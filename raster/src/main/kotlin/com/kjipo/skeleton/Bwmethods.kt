@@ -1,6 +1,6 @@
 package com.kjipo.skeleton
 
-import com.kjipo.prototype.FitPrototype
+import com.kjipo.representation.prototype.FitPrototype
 import com.kjipo.raster.EncodingUtilities
 import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.segmentation.Matrix

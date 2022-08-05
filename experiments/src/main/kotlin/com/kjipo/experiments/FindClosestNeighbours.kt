@@ -1,9 +1,9 @@
 package com.kjipo.experiments
 
 import com.kjipo.experiments.RegionExtractionExperiments.writeSegmentLine
-import com.kjipo.prototype.AngleLine
+import com.kjipo.representation.prototype.AngleLine
 import com.kjipo.raster.match.MatchDistance
-import com.kjipo.raster.segment.Pair
+import com.kjipo.representation.segment.Pair
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitMultipleLinesUsingDevianceMeasure
 import com.kjipo.segmentation.shrinkImage

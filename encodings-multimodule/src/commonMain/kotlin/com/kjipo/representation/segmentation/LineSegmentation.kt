@@ -1,7 +1,12 @@
 package com.kjipo.segmentation
 
-import com.kjipo.raster.EncodingUtilities
+import com.kjipo.representation.Matrix
+import com.kjipo.representation.raster.EncodingUtilities
 import com.kjipo.representation.raster.FlowDirection
+import kotlin.math.abs
+import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 
 fun expandLine(raster: Array<BooleanArray>): List<Pair<Int, Int>> {
@@ -194,8 +199,8 @@ fun addSingleSegment(matrix: Matrix<Boolean>, seenCells: Matrix<Boolean>, start:
 
 
 fun distance(start: Pair<Int, Int>, stop: Pair<Int, Int>) =
-        Math.sqrt(Math.pow(Math.abs(stop.first.minus(start.first).toDouble()), 2.0)
-                + Math.pow(Math.abs(stop.second.minus(start.second).toDouble()), 2.0))
+        sqrt(abs(stop.first.minus(start.first).toDouble()).pow(2.0)
+                + abs(stop.second.minus(start.second).toDouble()).pow(2.0))
 
 
 fun computeLine(start: Pair<Int, Int>, stop: Pair<Int, Int>): List<Pair<Int, Int>> {
@@ -219,8 +224,8 @@ fun computeLine(start: Pair<Int, Int>, stop: Pair<Int, Int>): List<Pair<Int, Int
 
     val swap = stop.first < start.first
 
-    val firstTranslate = Math.abs(Math.min(0, Math.min(start.first, stop.first)))
-    val secondTranslate = Math.abs(Math.min(0, Math.min(start.second, stop.second)))
+    val firstTranslate = abs(min(0, min(start.first, stop.first)))
+    val secondTranslate = abs(min(0, min(start.second, stop.second)))
 
     val (startPair, stopPair) = if (swap) {
         Pair(Pair(stop.first + firstTranslate, stop.second + secondTranslate),
@@ -232,7 +237,7 @@ fun computeLine(start: Pair<Int, Int>, stop: Pair<Int, Int>): List<Pair<Int, Int
 
     val xDelta = stopPair.first.minus(startPair.first).toDouble()
     val yDelta = stopPair.second.minus(startPair.second).toDouble()
-    val deltaError = Math.abs(yDelta / xDelta)
+    val deltaError = abs(yDelta / xDelta)
     val signYDelta = if (yDelta < 0) -1 else 1
 
 

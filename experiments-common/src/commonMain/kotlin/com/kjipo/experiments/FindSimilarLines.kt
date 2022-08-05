@@ -1,6 +1,5 @@
 package com.kjipo.experiments
 
-import com.kjipo.datageneration.CreateSamples
 import com.kjipo.datageneration.LinePrototypeWithAngle
 import kotlin.math.PI
 import kotlin.math.abs
@@ -9,28 +8,57 @@ import kotlin.math.min
 
 class SimilarSamples() {
 
-    private val searchPaths = mutableListOf<SearchPath>()
+    private val searchPaths = mutableMapOf<Int, MutableList<SearchPath>>()
 
 
     fun getPathsEndingWithLineId(sampleId: Int, lineId: Int): List<LinePair> {
-        return searchPaths.map { searchPath ->
-            searchPath.path.last().let {
-                if (it.sampleId == sampleId && it.line2Index == lineId) {
-                    it
-                } else {
-                    null
+        val paths = searchPaths[sampleId]?.mapNotNull { searchPath ->
+            getLastLinePairIfMatch(searchPath, sampleId, lineId)
+        }
+        return paths ?: emptyList()
+    }
+
+    private fun getLastLinePairIfMatch(searchPath: SearchPath, sampleId: Int, lineId: Int): LinePair? {
+        return searchPath.path.last().let {
+            if (it.sampleId == sampleId && it.line2Index == lineId) {
+                it
+            } else {
+                null
+            }
+        }
+    }
+
+    fun extendPaths(linePairs: List<LinePair>) {
+        linePairs.forEach { linePair ->
+            val existingPathsForSample = searchPaths[linePair.sampleId]
+
+            if (existingPathsForSample == null) {
+                searchPaths[linePair.sampleId] = mutableListOf(SearchPath(linePair.sampleId, mutableListOf(linePair)))
+            }
+
+            existingPathsForSample?.forEach { searchPath ->
+                getLastLinePairIfMatch(searchPath, linePair.sampleId, linePair.line2Index)?.let {
+                    searchPath.path.add(linePair)
                 }
             }
-        }.filterNotNull()
+
+        }
+    }
+
+
+    fun listPathLengths(): List<Pair<Int, SearchPath>> {
+        return searchPaths.values.flatten().map {
+            Pair(it.path.size, it)
+        }.toList().sortedBy { it.first }
     }
 
 
 }
 
-class SearchPath(val path: MutableList<LinePair> = mutableListOf())
+class SearchPath(val sampleId: Int, val path: MutableList<LinePair> = mutableListOf())
 
 
-class SearchDescription {
+class SearchDescription(val similarSamples: SimilarSamples) {
 
 
 }
@@ -57,7 +85,7 @@ data class LinePairDescription(
 object FindSimilarLines {
 
 
-    private fun describeLinePair(line1: LinePrototypeWithAngle, line2: LinePrototypeWithAngle): LinePairDescription {
+    fun describeLinePair(line1: LinePrototypeWithAngle, line2: LinePrototypeWithAngle): LinePairDescription {
 //        angle_diff = abs(line1[0] - line2[0])
 
         val angleDiff = (line1.angle - line2.angle).let { diff ->
@@ -99,10 +127,10 @@ object FindSimilarLines {
     }
 
 
-    private fun findSimilarPaths(
+    fun findSimilarPaths(
         prototypesWithAngles: List<LinePrototypeWithAngle>,
         lookupSamples: List<LookupSample>
-    ) {
+    ): SearchDescription {
 //        '''
 //
 //        :param test_sample:
@@ -115,7 +143,7 @@ object FindSimilarLines {
 //        similar_samples: SimilarSamples = SimilarSamples(input_sample_id, test_sample, indices_of_lines_to_use)
 
         val similarSamples = SimilarSamples()
-        val searchDescription = SearchDescription()
+        val searchDescription = SearchDescription(similarSamples)
 
         val linePairLookupData = lookupSamples.flatMap { lookupSample ->
             describeLinePairs(lookupSample.id, lookupSample.linePrototypes)
@@ -125,7 +153,8 @@ object FindSimilarLines {
             val lineRelation = describeLinePair(prototypesWithAngles[index], prototypesWithAngles[index + 1])
             val closestLines = findClosestLinesInData(lineRelation, linePairLookupData)
 
-            closestLines.subList(0, 10)
+            similarSamples.extendPaths(closestLines.subList(0, 10))
+
 
         }
 
@@ -184,11 +213,12 @@ object FindSimilarLines {
 //
 //        current_index = line_index
 
+        return searchDescription
 
     }
 
 
-    private fun describeLinePairs(sampleId: Int, lineSample: List<LinePrototypeWithAngle>): MutableList<LinePair> {
+    fun describeLinePairs(sampleId: Int, lineSample: List<LinePrototypeWithAngle>): MutableList<LinePair> {
         val linePairs = mutableListOf<LinePair>()
         var index = 0
         for (line in lineSample) {
@@ -224,22 +254,6 @@ object FindSimilarLines {
         }
 
         return linePairsSortedByDistance
-    }
-
-
-    @JvmStatic
-    fun main(args: Array<String>) {
-        val sample = CreateSamples.generateSample(true, 64, 64, 10)
-        val description = describeLinePairs(0, sample)
-
-        val lookupSamples = (1 until 10).map { id ->
-            LookupSample(id, CreateSamples.generateSample(true, 64, 64, 10))
-        }.toList()
-
-        findSimilarPaths(sample, lookupSamples)
-
-        println("Description: $description")
-
     }
 
 

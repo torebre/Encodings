@@ -1,14 +1,13 @@
 package com.kjipo.raster.attraction;
 
-import com.kjipo.prototype.Prototype;
+import com.kjipo.representation.prototype.Prototype;
 import com.kjipo.raster.EncodingUtilities;
 import com.kjipo.raster.match.MatchDistance;
 import com.kjipo.raster.match.RotateSegment;
 import com.kjipo.raster.match.TranslateSegment;
-import com.kjipo.raster.segment.Pair;
-import com.kjipo.raster.segment.Segment;
-import com.kjipo.raster.segment.SegmentImpl;
-import com.kjipo.raster.segment.SegmentWithOriginal;
+import com.kjipo.representation.segment.Pair;
+import com.kjipo.representation.segment.Segment;
+import com.kjipo.representation.segment.SegmentImpl;
 import com.kjipo.representation.raster.FlowDirection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -276,7 +275,7 @@ public class SegmentMatcher {
 
     private static Segment applyMoveOperation(Segment segment, MoveOperation moveOperation, int numberOfRows, int numberOfColumns) {
         List<Pair> translatedCoordinates = segment.getPairs().stream()
-                .map(pair -> Pair.of(pair.getRow() + moveOperation.getRowOffset(), pair.getColumn() + moveOperation.getColumnOffset()))
+                .map(pair -> new Pair(pair.getRow() + moveOperation.getRowOffset(), pair.getColumn() + moveOperation.getColumnOffset()))
                 .collect(Collectors.toList());
         List<Pair> rotatedCoordinates;
 

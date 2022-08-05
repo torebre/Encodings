@@ -1,10 +1,10 @@
 package com.kjipo.experiments
 
 import com.google.common.collect.ImmutableList
-import com.kjipo.prototype.AngleLine
-import com.kjipo.prototype.FitPrototype
-import com.kjipo.prototype.Prototype
-import com.kjipo.raster.segment.Pair
+import com.kjipo.representation.prototype.AngleLine
+import com.kjipo.representation.prototype.FitPrototype
+import com.kjipo.representation.prototype.Prototype
+import com.kjipo.representation.segment.Pair
 import com.kjipo.segmentation.shrinkImage
 import com.kjipo.skeleton.transformArraysToMatrix
 import com.kjipo.skeleton.transformToBooleanArrays
@@ -16,7 +16,6 @@ import com.kjipo.visualization.segmentation.ColorCell
 import com.kjipo.visualization.segmentation.ColorPainter
 import javafx.scene.paint.Color
 import java.nio.file.Paths
-import kotlin.streams.toList
 
 
 fun addPrototypesToSingleKanji() {

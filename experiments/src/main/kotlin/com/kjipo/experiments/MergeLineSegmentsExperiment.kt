@@ -1,9 +1,10 @@
 package com.kjipo.experiments
 
-import com.kjipo.prototype.AngleLine
+import com.kjipo.representation.prototype.AngleLine
 import com.kjipo.raster.EncodingUtilities
 import com.kjipo.raster.match.MatchDistance
 import com.kjipo.representation.raster.FlowDirection
+import com.kjipo.representation.segment.Pair
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitLinePrototypes
 import com.kjipo.segmentation.shrinkImage
@@ -84,7 +85,7 @@ private object MergeLineSegmentsExperiment {
                                         if(mergeLines(line, updatedLinePrototypes[it])) {
                                             println("Merging: ${line} and ${updatedLinePrototypes[it]}")
 
-                                            updatedLinePrototypes[it].startPair = com.kjipo.raster.segment.Pair(line.startPair.row, line.startPair.column)
+                                            updatedLinePrototypes[it].startPair = Pair(line.startPair.row, line.startPair.column)
                                             linesToRemove.add(index)
                                             expandedLines.add(it)
                                         }

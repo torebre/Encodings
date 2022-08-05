@@ -1,8 +1,8 @@
 package com.kjipo.experiments
 
 import com.google.common.collect.ImmutableList
-import com.kjipo.prototype.AngleLine
-import com.kjipo.prototype.Prototype
+import com.kjipo.representation.prototype.AngleLine
+import com.kjipo.representation.prototype.Prototype
 import com.kjipo.segmentation.Matrix
 import com.kjipo.segmentation.fitSingleLineUsingDevianceMeasure
 import com.kjipo.segmentation.shrinkImage

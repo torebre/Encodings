@@ -1,6 +1,6 @@
 package com.kjipo.raster.attraction;
 
-import com.kjipo.prototype.AngleLine;
+import com.kjipo.representation.prototype.AngleLine;
 
 public interface AngleLineMoveOperation {
 

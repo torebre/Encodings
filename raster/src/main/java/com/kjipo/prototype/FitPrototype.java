@@ -7,9 +7,13 @@ import com.kjipo.raster.attraction.AngleLineMoveOperationImpl;
 import com.kjipo.raster.attraction.LineMoveOperation;
 import com.kjipo.raster.attraction.PrototypeImpl;
 import com.kjipo.raster.match.MatchDistance;
-import com.kjipo.raster.segment.Pair;
-import com.kjipo.raster.segment.Segment;
+import com.kjipo.representation.prototype.AdjustablePrototype;
+import com.kjipo.representation.prototype.AngleLine;
+import com.kjipo.representation.prototype.LinePrototype;
+import com.kjipo.representation.prototype.Prototype;
 import com.kjipo.representation.raster.FlowDirection;
+import com.kjipo.representation.segment.Pair;
+import com.kjipo.representation.segment.Segment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +53,7 @@ public class FitPrototype {
         AngleLine originalFirst = new AngleLine(prototype.iterator().next());
 
         AngleLine shiftedFirst = new AngleLine(originalFirst);
-        shiftedFirst.setStartPair(Pair.of(originalFirst.getStartPair().getRow() + initialRowOffset,
+        shiftedFirst.setStartPair(new Pair(originalFirst.getStartPair().getRow() + initialRowOffset,
                 originalFirst.getStartPair().getColumn() + initialColumnOffset));
 
         // Fit line segment in prototype
@@ -243,8 +247,7 @@ public class FitPrototype {
                 bestScorePairs.add(nextPrototype);
             }
 
-            nextPrototype.component1().getMovements()
-                    .map(linePrototype1 -> {
+            nextPrototype.component1().getMovements().stream().map(linePrototype1 -> {
                         Segment segment1 = linePrototype1.getSegments().get(0);
 
                         for (Pair pair : segment1.getPairs()) {
@@ -415,7 +418,7 @@ public class FitPrototype {
             for (int column = 0; column < inputData[0].length; ++column) {
                 if (inputData[row][column]
                         && !occupiedData[row][column]) {
-                    return new LinePrototype(Pair.of(row, column), Pair.of(row, column));
+                    return new LinePrototype(new Pair(row, column), new Pair(row, column));
                 }
             }
         }
@@ -427,7 +430,7 @@ public class FitPrototype {
             for (int column = 0; column < inputData[0].length; ++column) {
                 if (inputData[row][column]
                         && !occupiedData[row][column]) {
-                    return Pair.of(row, column);
+                    return new Pair(row, column);
                 }
             }
         }
@@ -441,7 +444,7 @@ public class FitPrototype {
                 if (inputData[row][column]
                         && !occupiedData[row][column]
                         && regionData[row][column] == regionValue) {
-                    return new LinePrototype(Pair.of(row, column), Pair.of(row, column));
+                    return new LinePrototype(new Pair(row, column), new Pair(row, column));
                 }
             }
         }
@@ -508,7 +511,7 @@ public class FitPrototype {
     private static void spreadAcrossRegion(int startRow, int startColumn, int fillValue,
                                            boolean inputData[][], int regionData[][]) {
         Deque<Pair> cellsToVisit = new ArrayDeque<>();
-        cellsToVisit.add(Pair.of(startRow, startColumn));
+        cellsToVisit.add(new Pair(startRow, startColumn));
 
         while (!cellsToVisit.isEmpty()) {
             Pair pair = cellsToVisit.poll();
@@ -524,7 +527,7 @@ public class FitPrototype {
             for (FlowDirection flowDirection : FlowDirection.values()) {
                 int nextRow = row + flowDirection.getRowShift();
                 int nextColumn = column + flowDirection.getColumnShift();
-                Pair nextPair = Pair.of(nextRow, nextColumn);
+                Pair nextPair = new Pair(nextRow, nextColumn);
 
                 if (EncodingUtilities.validCoordinates(nextRow, nextColumn, inputData.length, inputData[0].length)
                         && inputData[nextRow][nextColumn]
