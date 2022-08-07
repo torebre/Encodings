@@ -295,20 +295,20 @@ object LineUtilities {
         var yMax = 0
 
         lines.flatten()
-                .forEach {
-                    if (xMin > it.first) {
-                        xMin = it.first
-                    }
-                    if (yMin > it.second) {
-                        yMin = it.second
-                    }
-                    if (xMax < it.first) {
-                        xMax = it.first
-                    }
-                    if (yMax < it.second) {
-                        yMax = it.second
-                    }
+            .forEach {
+                if (xMin > it.first) {
+                    xMin = it.first
                 }
+                if (yMin > it.second) {
+                    yMin = it.second
+                }
+                if (xMax < it.first) {
+                    xMax = it.first
+                }
+                if (yMax < it.second) {
+                    yMax = it.second
+                }
+            }
 
         return Boundary(xMin, yMin, xMax, yMax)
     }
@@ -319,30 +319,52 @@ object LineUtilities {
 //        x.offset <- round(unlist(line.data[4] * sin(line.data[3])))
 //        y.offset <- round(unlist(line.data[4] * cos(line.data[3])))
 
-        val transformedLines = mutableListOf<List<Pair<Int, Int>>>()
-        for (line in lines) {
-            val xOffset = round(line.length * sin(line.angle)).toInt()
-            val yOffset = round(line.length * cos(line.angle)).toInt()
-
-            transformedLines.add(createLine(line.startX, line.startY, line.startX + xOffset, line.startY + yOffset))
+        val transformedLines = lines.map {
+            drawSingleLine(it)
         }
 
-        val boundary = getBoundary(transformedLines)
-        val result = Matrix(boundary.xMax + 1, boundary.yMax + 1) { _, _ -> 0 }
+        return createMatrixContainingLines(transformedLines)
+    }
+
+    fun createMatrixContainingLines(transformedLines: List<List<Pair<Int, Int>>>): Matrix<Int> {
+        val result = setupEmptyMatrix(transformedLines)
 
         var counter = 1
         for (transformedLine in transformedLines) {
-            for (pair in transformedLine) {
-
-                // TODO This check should not be necessary
-                if(pair.first >= 0 && pair.second >= 0) {
-                    result[pair.first, pair.second] = counter
-                }
-            }
+            addLineToMatrix(transformedLine, result, counter)
             ++counter
         }
 
         return result
+    }
+
+    fun addLineToMatrix(
+        transformedLine: List<Pair<Int, Int>>,
+        result: Matrix<Int>,
+        counter: Int
+    ) {
+        for (pair in transformedLine) {
+
+            // TODO This check should not be necessary
+            if (pair.first >= 0 && pair.second >= 0) {
+                result[pair.first, pair.second] = counter
+            }
+        }
+    }
+
+    fun setupEmptyMatrix(transformedLines: List<List<Pair<Int, Int>>>): Matrix<Int> {
+        val boundary = getBoundary(transformedLines)
+        val result = Matrix(boundary.xMax + 1, boundary.yMax + 1) { _, _ -> 0 }
+        return result
+    }
+
+    fun drawSingleLine(line: Line) = drawSingleLine(line.startX, line.startY, line.length, line.angle)
+
+    fun drawSingleLine(startX: Int, startY: Int, length: Double, angle: Double): List<Pair<Int, Int>> {
+        val xOffset = round(length * sin(angle)).toInt()
+        val yOffset = round(length * cos(angle)).toInt()
+
+        return createLine(startX, startY, startX + xOffset, startY + yOffset)
     }
 
 }

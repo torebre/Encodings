@@ -8,7 +8,7 @@ import kotlin.math.min
 
 class SimilarSamples() {
 
-    private val searchPaths = mutableMapOf<Int, MutableList<SearchPath>>()
+    val searchPaths = mutableMapOf<Int, MutableList<SearchPath>>()
 
 
     fun getPathsEndingWithLineId(sampleId: Int, lineId: Int): List<LinePair> {
@@ -18,7 +18,7 @@ class SimilarSamples() {
         return paths ?: emptyList()
     }
 
-    private fun getLastLinePairIfMatch(searchPath: SearchPath, sampleId: Int, lineId: Int): LinePair? {
+    fun getLastLinePairIfMatch(searchPath: SearchPath, sampleId: Int, lineId: Int): LinePair? {
         return searchPath.path.last().let {
             if (it.sampleId == sampleId && it.line2Index == lineId) {
                 it
@@ -28,22 +28,6 @@ class SimilarSamples() {
         }
     }
 
-    fun extendPaths(linePairs: List<LinePair>) {
-        linePairs.forEach { linePair ->
-            val existingPathsForSample = searchPaths[linePair.sampleId]
-
-            if (existingPathsForSample == null) {
-                searchPaths[linePair.sampleId] = mutableListOf(SearchPath(linePair.sampleId, mutableListOf(linePair)))
-            }
-
-            existingPathsForSample?.forEach { searchPath ->
-                getLastLinePairIfMatch(searchPath, linePair.sampleId, linePair.line2Index)?.let {
-                    searchPath.path.add(linePair)
-                }
-            }
-
-        }
-    }
 
 
     fun listPathLengths(): List<Pair<Int, SearchPath>> {
@@ -57,9 +41,31 @@ class SimilarSamples() {
 
 class SearchPath(val sampleId: Int, val path: MutableList<LinePair> = mutableListOf())
 
+class SearchPlaythroughStep(val stepId: Int, val sampleId: Int, val lineAddedId: Int)
 
-class SearchDescription(val similarSamples: SimilarSamples) {
 
+class SearchDescription(val similarSamples: SimilarSamples = SimilarSamples()) {
+    val searchPlayThrough = mutableListOf<SearchPlaythroughStep>()
+
+    fun extendPaths(linePairs: List<LinePair>, stepId: Int) {
+        linePairs.forEach { linePair ->
+            val existingPathsForSample = similarSamples.searchPaths[linePair.sampleId]
+
+            if (existingPathsForSample == null) {
+                similarSamples.searchPaths[linePair.sampleId] = mutableListOf(SearchPath(linePair.sampleId, mutableListOf(linePair)))
+                searchPlayThrough.add(SearchPlaythroughStep(stepId, linePair.sampleId, linePair.line1Index))
+                searchPlayThrough.add(SearchPlaythroughStep(stepId, linePair.sampleId, linePair.line2Index))
+            }
+            else {
+                existingPathsForSample.forEach { searchPath ->
+                    similarSamples.getLastLinePairIfMatch(searchPath, linePair.sampleId, linePair.line2Index)?.let {
+                        searchPath.path.add(linePair)
+                        searchPlayThrough.add(SearchPlaythroughStep(stepId, linePair.sampleId, linePair.line2Index))
+                    }
+                }
+            }
+        }
+    }
 
 }
 
@@ -142,22 +148,20 @@ object FindSimilarLines {
 //        current_index = indices_of_lines_to_use[0]
 //        similar_samples: SimilarSamples = SimilarSamples(input_sample_id, test_sample, indices_of_lines_to_use)
 
-        val similarSamples = SimilarSamples()
-        val searchDescription = SearchDescription(similarSamples)
+        val searchDescription = SearchDescription()
 
         val linePairLookupData = lookupSamples.flatMap { lookupSample ->
             describeLinePairs(lookupSample.id, lookupSample.linePrototypes)
         }.toList()
 
+        var stepId = 0
         for (index in 0 until prototypesWithAngles.size - 1) {
             val lineRelation = describeLinePair(prototypesWithAngles[index], prototypesWithAngles[index + 1])
             val closestLines = findClosestLinesInData(lineRelation, linePairLookupData)
 
-            similarSamples.extendPaths(closestLines.subList(0, 10))
-
-
+            searchDescription.extendPaths(closestLines.subList(0, 10), stepId)
+            ++stepId
         }
-
 
 //
 //        similar_samples.input_sample_id = input_sample_id
@@ -220,10 +224,8 @@ object FindSimilarLines {
 
     fun describeLinePairs(sampleId: Int, lineSample: List<LinePrototypeWithAngle>): MutableList<LinePair> {
         val linePairs = mutableListOf<LinePair>()
-        var index = 0
-        for (line in lineSample) {
-            var index2 = 0
-            for (line2 in lineSample) {
+        for ((index, line) in lineSample.withIndex()) {
+            for ((index2, line2) in lineSample.withIndex()) {
                 linePairs.add(LinePair(sampleId, index, index2, describeLinePair(line, line2)))
             }
         }

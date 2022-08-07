@@ -1,15 +1,19 @@
 package com.kjipo.datageneration
 
+import com.kjipo.experiments.LookupSample
 import com.kjipo.representation.prototype.LinePrototype
 import com.kjipo.representation.segment.Pair
 import kotlin.math.*
 import kotlin.random.Random
 
 
-class LinePrototypeWithAngle(startPair: Pair,
-stopPair: Pair, val angle: Double, val length: Double): LinePrototype(startPair, stopPair) {
+class LinePrototypeWithAngle(
+    startPair: Pair,
+    stopPair: Pair, val angle: Double, val length: Double
+) : LinePrototype(startPair, stopPair) {
 
 }
+
 
 
 
@@ -17,14 +21,20 @@ object CreateSamples {
 
     private val random = Random.Default
 
-    fun generateSample(includeRectangle: Boolean,
+    fun generateSample(
+        sampleId: Int, includeRectangle: Boolean,
+        numberOfRows: Int, numberOfColumns: Int, numberOfRandomLines: Int
+    ) = LookupSample(sampleId, generateSample(includeRectangle, numberOfRows, numberOfColumns, numberOfRandomLines))
+
+    fun generateSample(
+        includeRectangle: Boolean,
         numberOfRows: Int, numberOfColumns: Int, numberOfRandomLines: Int
     ): List<LinePrototypeWithAngle> {
         val sample = mutableListOf<LinePrototypeWithAngle>()
 
         // Include four more lines if no rectangle should be drawn, so that the number of
         // lines returned is the same
-        val numberOfLines = numberOfRandomLines + if(!includeRectangle) 4 else 0
+        val numberOfLines = numberOfRandomLines + if (!includeRectangle) 4 else 0
 
 //        training_samples = np.zeros((number_of_random_lines + 4, 6))
 //
@@ -38,7 +48,7 @@ object CreateSamples {
 //        start_y = random.sample(range(0, number_of_columns), 1)[0]
 
 
-        for(i in 0 until numberOfLines) {
+        for (i in 0 until numberOfLines) {
             val xStart = random.nextInt(0, numberOfRows)
             val yStart = random.nextInt(0, numberOfColumns)
 
@@ -82,7 +92,7 @@ object CreateSamples {
 //        training_samples[number_of_random_lines:(number_of_random_lines + 4), :] = add_rectangle(number_of_rows,
 //        number_of_columns)
 
-        if(includeRectangle) {
+        if (includeRectangle) {
             sample.addAll(addRectangle(numberOfRows, numberOfColumns))
         }
 
@@ -95,7 +105,7 @@ object CreateSamples {
 //    def add_rectangle(number_of_rows: int = 64, number_of_columns: int = 64) -> npt.ArrayLike:
 //    radius = math.floor(random.sample(range(1, min([number_of_rows, number_of_columns])), 1)[0] / 2)
 
-        val radius = floor(random.nextInt(1, min(numberOfRows, numberOfColumns))/2.0).toInt()
+        val radius = floor(random.nextInt(1, min(numberOfRows, numberOfColumns)) / 2.0).toInt()
 //
 //    x_centre = random.sample(range(radius, number_of_rows - radius), 1)[0]
 //    y_centre = random.sample(range(radius, number_of_columns - radius), 1)[0]
@@ -182,7 +192,8 @@ object CreateSamples {
             LinePrototypeWithAngle(Pair(x1, y1), Pair(x2, y2), angle12, length12),
             LinePrototypeWithAngle(Pair(x2, y2), Pair(x4, y4), angle24, length24),
             LinePrototypeWithAngle(Pair(x1, y1), Pair(x3, y3), angle13, length13),
-            LinePrototypeWithAngle(Pair(x3, y3), Pair(x4, y4), angle34, length34))
+            LinePrototypeWithAngle(Pair(x3, y3), Pair(x4, y4), angle34, length34)
+        )
 
 //
 //    return np.array([[angle_12, length_12, x1, y1, x2, y2],

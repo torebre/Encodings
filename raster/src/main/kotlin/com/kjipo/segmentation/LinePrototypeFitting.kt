@@ -1,9 +1,8 @@
 package com.kjipo.segmentation
 
-import com.kjipo.prototype.AngleLine
 import com.kjipo.prototype.FitPrototype
 import com.kjipo.raster.match.MatchDistance
-import com.kjipo.raster.segment.Pair
+import com.kjipo.representation.prototype.AngleLine
 import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.skeleton.transformArraysToMatrix
 import com.kjipo.skeleton.transformToBooleanArrays
@@ -45,7 +44,7 @@ fun fitLinePrototypes(originalImage: Matrix<Boolean>): List<AngleLine> {
 
         linePrototypeFittingLog.info("Start pair: $startPair")
 
-        val topPair = Pair.of(startPair.row, startPair.column)
+        val topPair = Pair(startPair.row, startPair.column)
         val topId = 1
         val top = AngleLine(topId, topPair, 0.0, 0.0)
 

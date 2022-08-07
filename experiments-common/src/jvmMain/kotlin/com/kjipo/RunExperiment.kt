@@ -25,6 +25,16 @@ object RunExperiment {
             println("${it.first}, ${it.second.sampleId}")
         }
 
+        val sample2Search = searchDescription.searchPlayThrough.filter {
+            it.sampleId == 5
+        }.toList()
+
+        println("Search for sample 5:")
+        sample2Search.forEach {
+            println("${it.sampleId}, ${it.lineAddedId}")
+        }
+
+
     }
 
 
