@@ -29,7 +29,6 @@ class SimilarSamples() {
     }
 
 
-
     fun listPathLengths(): List<Pair<Int, SearchPath>> {
         return searchPaths.values.flatten().map {
             Pair(it.path.size, it)
@@ -43,20 +42,23 @@ class SearchPath(val sampleId: Int, val path: MutableList<LinePair> = mutableLis
 
 class SearchPlaythroughStep(val stepId: Int, val sampleId: Int, val lineAddedId: Int)
 
+class InputLinePair(val stepId: Int, val line1Id: Int, val line2Id: Int)
+
 
 class SearchDescription(val similarSamples: SimilarSamples = SimilarSamples()) {
     val searchPlayThrough = mutableListOf<SearchPlaythroughStep>()
+    val nextInput = mutableListOf<InputLinePair>()
 
     fun extendPaths(linePairs: List<LinePair>, stepId: Int) {
         linePairs.forEach { linePair ->
             val existingPathsForSample = similarSamples.searchPaths[linePair.sampleId]
 
             if (existingPathsForSample == null) {
-                similarSamples.searchPaths[linePair.sampleId] = mutableListOf(SearchPath(linePair.sampleId, mutableListOf(linePair)))
+                similarSamples.searchPaths[linePair.sampleId] =
+                    mutableListOf(SearchPath(linePair.sampleId, mutableListOf(linePair)))
                 searchPlayThrough.add(SearchPlaythroughStep(stepId, linePair.sampleId, linePair.line1Index))
                 searchPlayThrough.add(SearchPlaythroughStep(stepId, linePair.sampleId, linePair.line2Index))
-            }
-            else {
+            } else {
                 existingPathsForSample.forEach { searchPath ->
                     similarSamples.getLastLinePairIfMatch(searchPath, linePair.sampleId, linePair.line2Index)?.let {
                         searchPath.path.add(linePair)
@@ -65,6 +67,10 @@ class SearchDescription(val similarSamples: SimilarSamples = SimilarSamples()) {
                 }
             }
         }
+    }
+
+    fun addInputLines(stepId: Int, line1Id: Int, line2Id: Int) {
+        nextInput.add(InputLinePair(stepId, line1Id, line2Id))
     }
 
 }
@@ -156,6 +162,8 @@ object FindSimilarLines {
 
         var stepId = 0
         for (index in 0 until prototypesWithAngles.size - 1) {
+
+            searchDescription.addInputLines(stepId, index, index + 1)
             val lineRelation = describeLinePair(prototypesWithAngles[index], prototypesWithAngles[index + 1])
             val closestLines = findClosestLinesInData(lineRelation, linePairLookupData)
 

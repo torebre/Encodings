@@ -2,91 +2,107 @@ package com.kjipo
 
 import com.kjipo.experiments.LookupSample
 import com.kjipo.experiments.SearchDescription
-import com.kjipo.experiments.SearchPlaythroughStep
 import com.kjipo.representation.LineUtilities
+import com.kjipo.representation.Matrix
+import createIndexLinePrototypeMap
+import getColour
 import kotlinx.browser.document
 import org.w3c.dom.Element
+import mu.KotlinLogging
 
 class SearchVisualization(
+    numberOfRows: Int,
+    numberOfColumns: Int,
+    lookupSample: LookupSample,
     private val searchDescription: SearchDescription,
-    lookupSamples: Collection<LookupSample>
-) {
+    parentElement: String,
+) : MatrixSvg(numberOfRows, numberOfColumns, parentElement) {
 
-    private val SVG_NAMESPACE_URI = "http://www.w3.org/2000/svg"
+    private val transformedLines: Map<Int, List<Pair<Int, Int>>>
+//    private val svgElement: Element
+//    private val lineMatrix: Matrix<Int>
+//    private val matrixCoordinateSvgRectangleMap: Matrix<Element>
 
+    private val logger = KotlinLogging.logger {}
 
-    private val lookupSampleMap = lookupSamples.associateBy { it.id }
+    init {
+//        val element = document.getElementById(parentElement)
+//        svgElement = document.createElementNS(SVG_NAMESPACE_URI, "svg").also {
+//            it.setAttribute("width", "200")
+//            it.setAttribute("width", "200")
+//        }
+//        element?.appendChild(svgElement)
 
+        transformedLines = createIndexLinePrototypeMap(lookupSample.linePrototypes)
 
-    fun showSearch(stepId: Int, sampleId: Int) {
-//       searchDescription.similarSamples
+//        drawMatrixWithNoHighlights().let {
+//            lineMatrix = it.first
+//            matrixCoordinateSvgRectangleMap = it.second
+//        }
+    }
+
+    fun showSearch(stepId: Int) {
+
+        logger.debug { "Test31" }
 
         val searchStepsToDraw = searchDescription.searchPlayThrough.filter {
-            it.sampleId == sampleId && it.stepId == stepId
+            it.stepId == stepId
         }
 
-        val svgElement = document.createElementNS(SVG_NAMESPACE_URI, "svg")
-        document.appendChild(svgElement)
+        searchStepsToDraw.map {
 
-        lookupSampleMap[sampleId]?.let { lookupSample ->
-            drawSearchStep(lookupSample, searchStepsToDraw, svgElement)
+            logger.debug { "Test30" }
+
+            colourLine(it.lineAddedId)
         }
-
 
     }
 
 
-    private fun setupTranslatedElement(svgElement: Element, xShift: Int, yShift: Int): Element? {
-        return svgElement.getOwnerDocument()?.let {
-            val groupingElement = it.createElementNS(SVG_NAMESPACE_URI, "g")
-            groupingElement.setAttribute("transform", "translate(${xShift}, ${yShift})")
+//    private fun setupTranslatedElement(svgElement: Element, xShift: Int, yShift: Int): Element? {
+//        return svgElement.ownerDocument?.let {
+//            val groupingElement = it.createElementNS(SVG_NAMESPACE_URI, "g")
+//            groupingElement.setAttribute("transform", "translate(${xShift}, ${yShift})")
+//
+//            svgElement.appendChild(groupingElement)
+//            groupingElement
+//        }
+//    }
 
-            svgElement.appendChild(groupingElement)
-            groupingElement
-        }
-    }
-
-    private fun drawSearchStep(
-        lookupSample: LookupSample,
-        stepsToDraw: List<SearchPlaythroughStep>,
-        svgElement: Element
-    ) {
-        val transformedLines = lookupSample.linePrototypes.map {
-            LineUtilities.createLine(it.startPair.column, it.startPair.row, it.endPair.column, it.endPair.row)
-        }
-        val lineMatrix = LineUtilities.setupEmptyMatrix(transformedLines)
-        val linesAdded = stepsToDraw.map { it.lineAddedId }
-
-        transformedLines.mapIndexed { index, transformedLine ->
-            val value = if (index in linesAdded) {
-                2
-            } else {
-                1
-            }
-
-            LineUtilities.addLineToMatrix(transformedLine, lineMatrix, value)
-        }
-
-
-        val rowShift = 20
-        val columnShift = 20
-        lineMatrix.forEachIndexed { column, row, value ->
-            svgElement.getOwnerDocument()?.let { ownerDocument ->
-                val rectangle = ownerDocument.createElementNS(SVG_NAMESPACE_URI, "rect").also {
-                    it.setAttribute("width", "20")
-                    it.setAttribute("height", "20")
-                    it.setAttribute("fill", if (value == 2) "red" else if (value == 1) "blue" else "black")
-                }
-
-                setupTranslatedElement(svgElement, column * columnShift, row * rowShift)?.let { translatedElement ->
-                    translatedElement.appendChild(rectangle)
-                    ownerDocument.appendChild(translatedElement)
-                }
+    private fun colourLine(lineId: Int, value: Int = 2, colour: String = "red") {
+        transformedLines[lineId]?.let { points ->
+            points.forEach {
+                valueMatrix[it.first, it.second] = value
+                matrixCoordinateSvgRectangleMap[it.first, it.second].setAttribute("fill", colour)
             }
         }
-
-
     }
+
+    fun markLines(linesIds: List<Int>, value: Int, colour: String) {
+        linesIds.forEach { colourLine(it, value, colour) }
+    }
+
+//    private fun drawMatrixInSvgElement(svgElement: Element, lineMatrix: Matrix<Int>): Matrix<Element> {
+//        svgElement.setAttribute(
+//            "viewBox",
+//            "0 0 ${lineMatrix.numberOfColumns * columnShift} ${lineMatrix.numberOfRows * rowShift}"
+//        )
+//
+//        return Matrix(lineMatrix.numberOfRows, lineMatrix.numberOfColumns) { row, column ->
+//            svgElement.ownerDocument!!.let { ownerDocument ->
+//                ownerDocument.createElementNS(SVG_NAMESPACE_URI, "rect").also {
+//                    it.setAttribute("width", "$rectangleWidth")
+//                    it.setAttribute("height", "$rectangleHeight")
+//                    it.setAttribute("fill", getColour(lineMatrix[row, column]))
+//                }.also { rectangle ->
+//                    setupTranslatedElement(svgElement, column * columnShift, row * rowShift)?.let { translatedElement ->
+//                        translatedElement.appendChild(rectangle)
+//                        svgElement.appendChild(translatedElement)
+//                    }
+//                }
+//            }
+//        }
+//    }
 
 
 }

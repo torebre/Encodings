@@ -15,11 +15,10 @@ class LinePrototypeWithAngle(
 }
 
 
-
-
 object CreateSamples {
 
-    private val random = Random.Default
+    //    private val random = Random.Default
+    private val random = Random(2)
 
     fun generateSample(
         sampleId: Int, includeRectangle: Boolean,

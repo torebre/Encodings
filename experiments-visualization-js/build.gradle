@@ -2,9 +2,6 @@ plugins {
     id 'org.jetbrains.kotlin.js'
 }
 
-group 'com.kjipo'
-version '0.4-SNAPSHOT'
-
 repositories {
     mavenCentral()
 }

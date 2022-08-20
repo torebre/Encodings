@@ -352,10 +352,9 @@ object LineUtilities {
         }
     }
 
-    fun setupEmptyMatrix(transformedLines: List<List<Pair<Int, Int>>>): Matrix<Int> {
+    fun setupEmptyMatrix(transformedLines: Collection<List<Pair<Int, Int>>>): Matrix<Int> {
         val boundary = getBoundary(transformedLines)
-        val result = Matrix(boundary.xMax + 1, boundary.yMax + 1) { _, _ -> 0 }
-        return result
+        return Matrix(boundary.xMax + 1, boundary.yMax + 1) { _, _ -> 0 }
     }
 
     fun drawSingleLine(line: Line) = drawSingleLine(line.startX, line.startY, line.length, line.angle)
