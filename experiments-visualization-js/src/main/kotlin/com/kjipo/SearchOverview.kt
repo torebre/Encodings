@@ -20,9 +20,10 @@ class SearchOverview(
         val element = document.getElementById(parentElement)
         searchVisualizations = lookupSamples.map { lookupSample ->
             logger.debug { "Adding visualization for sample with ID: ${lookupSample.id}" }
-            val parentElementId = "sample-${lookupSample}"
+            val parentElementId = "sample-${lookupSample.id}"
             document.createElement("div").also {
                 it.setAttribute("id", parentElementId)
+                it.setAttribute("class", "lookupsample")
                 element!!.appendChild(it)
             }
             SearchVisualization(numberOfRows, numberOfColumns, lookupSample, searchDescription, parentElementId).also {

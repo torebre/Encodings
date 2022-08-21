@@ -1,6 +1,5 @@
 package com.kjipo
 
-import com.kjipo.representation.LineUtilities
 import com.kjipo.representation.Matrix
 import kotlinx.browser.document
 import mu.KotlinLogging
@@ -17,23 +16,10 @@ open class MatrixSvg(numberOfRows: Int, numberOfColumns: Int, parentElement: Str
     init {
         val element = document.getElementById(parentElement)
         svgElement = document.createElementNS(SVG_NAMESPACE_URI, "svg").also {
-            it.setAttribute("width", "200")
-            it.setAttribute("width", "200")
+            it.setAttribute("width", "${numberOfColumns * rectangleWidth}")
+            it.setAttribute("height", "${numberOfRows * rectangleHeight}")
         }
         element!!.appendChild(svgElement)
-
-//        transformedLines = lookupSample.linePrototypes.mapIndexed { index, linePrototype ->
-//            Pair(
-//                index,
-//                LineUtilities.createLine(
-//                    linePrototype.startPair.column,
-//                    linePrototype.startPair.row,
-//                    linePrototype.endPair.column,
-//                    linePrototype.endPair.row
-//                )
-//            )
-//        }.toMap()
-
         valueMatrix = Matrix(numberOfColumns, numberOfRows) { _, _ -> 0 }
 
         svgElement.setAttribute(
@@ -45,21 +31,6 @@ open class MatrixSvg(numberOfRows: Int, numberOfColumns: Int, parentElement: Str
                 "black"
             }
     }
-
-
-//    private fun drawMatrixWithNoHighlights(): Pair<Matrix<Int>, Matrix<Element>> {
-//        val lineMatrix = LineUtilities.setupEmptyMatrix(transformedLines.values)
-//
-//        transformedLines.forEach { entry ->
-//            LineUtilities.addLineToMatrix(entry.value, lineMatrix, 1)
-//        }
-//
-//        logger.debug { "Number of lines to draw: ${transformedLines.size}" }
-////        logger.debug { lineMatrix.toString() }
-//
-//        return Pair(lineMatrix, drawMatrixInSvgElement(svgElement, lineMatrix))
-//    }
-
 
     private fun setupTranslatedElement(svgElement: Element, xShift: Int, yShift: Int): Element? {
         return svgElement.ownerDocument?.let {
@@ -93,23 +64,5 @@ open class MatrixSvg(numberOfRows: Int, numberOfColumns: Int, parentElement: Str
             }
         }
     }
-
-
-//    protected fun getColour(value: Int): String {
-//        return when (value) {
-//            2 -> {
-//                "red"
-//            }
-//
-//            1 -> {
-//                "blue"
-//            }
-//
-//            else -> {
-//                "black"
-//            }
-//        }
-//    }
-
 
 }
