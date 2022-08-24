@@ -1,15 +1,29 @@
 package com.kjipo
 
 import com.kjipo.experiments.SearchDescription
+import createAndAddButton
 import kotlinx.browser.document
 
 
-class SearchStepOverview(searchDescription: SearchDescription, searchOverview: SearchOverview, inputSampleVisualization: InputSampleVisualization, parentElement: String) {
+class SearchStepOverview(
+    searchDescription: SearchDescription,
+    searchOverview: SearchOverview,
+    inputSampleVisualization: InputSampleVisualization,
+    parentElement: String
+) {
 
     private var currentlyPressedButtonId: String? = null
 
     init {
         val element = document.getElementById(parentElement)
+        searchDescription.nextInput.forEach {
+            val inputStepButton = createAndAddButton(
+                "input-${it.stepId}", "Input ${it.stepId}"
+            ) { _ ->
+                inputSampleVisualization.markInputStep(it.stepId)
+            }
+            element!!.appendChild(inputStepButton)
+        }
 
         searchDescription.searchPlayThrough.indices.forEach { stepIndex ->
             document.createElement("button").also { button ->
@@ -20,9 +34,7 @@ class SearchStepOverview(searchDescription: SearchDescription, searchOverview: S
                     searchOverview.showStep(stepIndex)
                     inputSampleVisualization.showStep(stepIndex)
                     currentlyPressedButtonId?.let { pressedButtonId ->
-                        document.getElementById(pressedButtonId)?.let {
-                            it.removeAttribute("class")
-                        }
+                        document.getElementById(pressedButtonId)?.removeAttribute("class")
                     }
                     button.setAttribute("class", "clicked-button")
                     currentlyPressedButtonId = buttonId
@@ -32,8 +44,6 @@ class SearchStepOverview(searchDescription: SearchDescription, searchOverview: S
                 button.appendChild(buttonText)
             }
         }
-
     }
-
 
 }

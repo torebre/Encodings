@@ -2,18 +2,14 @@ package com.kjipo
 
 import com.kjipo.experiments.LookupSample
 import com.kjipo.experiments.SearchDescription
-import com.kjipo.representation.LineUtilities
-import com.kjipo.representation.Matrix
 import createIndexLinePrototypeMap
 import getColour
-import kotlinx.browser.document
-import org.w3c.dom.Element
 import mu.KotlinLogging
 
 class SearchVisualization(
     numberOfRows: Int,
     numberOfColumns: Int,
-    lookupSample: LookupSample,
+    private val lookupSample: LookupSample,
     private val searchDescription: SearchDescription,
     parentElement: String,
 ) : MatrixSvg(numberOfRows, numberOfColumns, parentElement) {
@@ -24,21 +20,31 @@ class SearchVisualization(
 
     init {
         transformedLines = createIndexLinePrototypeMap(lookupSample.linePrototypes)
+        transformedLines.keys.forEach { colourLine(it) }
     }
 
     fun showSearch(stepId: Int) {
-        val searchStepsToDraw = searchDescription.searchPlayThrough.filter {
-            it.stepId == stepId
-        }
+        val linesToColour = searchDescription.searchPlayThrough.filter {
+            it.sampleId == lookupSample.id && it.stepId == stepId
+        }.map { it.lineAddedId }
 
-        searchStepsToDraw.map {
-            colourLine(it.lineAddedId)
-        }
-
+        colourLineCollection(linesToColour)
     }
 
+    private fun colourLineCollection(
+        lineIds: Collection<Int>, value: Int = 3, colour: String = getColour(3),
+        valueForLineNotInCollection: Int = 2, colourForLineNotInCollection: String = getColour(2)
+    ) {
+        transformedLines.keys.forEach {
+            if (lineIds.contains(it)) {
+                colourLine(it, value, colour)
+            } else {
+                colourLine(it, valueForLineNotInCollection, colourForLineNotInCollection)
+            }
+        }
+    }
 
-    private fun colourLine(lineId: Int, value: Int = 2, colour: String = "red") {
+    private fun colourLine(lineId: Int, value: Int = 2, colour: String = getColour(2)) {
         transformedLines[lineId]?.let { points ->
             points.forEach {
                 valueMatrix[it.first, it.second] = value
@@ -47,8 +53,9 @@ class SearchVisualization(
         }
     }
 
-    fun markLines(linesIds: List<Int>, value: Int, colour: String) {
-        linesIds.forEach { colourLine(it, value, colour) }
+    fun markLines(linesIds: Collection<Int>, value: Int, colour: String) {
+        colourLineCollection(linesIds, value, colour)
+//        linesIds.forEach { colourLine(it, value, colour) }
     }
 
 }

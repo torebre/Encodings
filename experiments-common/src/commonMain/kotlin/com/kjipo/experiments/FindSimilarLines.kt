@@ -6,7 +6,7 @@ import kotlin.math.abs
 import kotlin.math.min
 
 
-class SimilarSamples() {
+class SimilarSamples {
 
     val searchPaths = mutableMapOf<Int, MutableList<SearchPath>>()
 
@@ -27,7 +27,6 @@ class SimilarSamples() {
             }
         }
     }
-
 
     fun listPathLengths(): List<Pair<Int, SearchPath>> {
         return searchPaths.values.flatten().map {
@@ -76,10 +75,7 @@ class SearchDescription(val similarSamples: SimilarSamples = SimilarSamples()) {
 }
 
 
-class LookupSample(val id: Int, val linePrototypes: List<LinePrototypeWithAngle>) {
-
-
-}
+class LookupSample(val id: Int, val linePrototypes: List<LinePrototypeWithAngle>)
 
 data class LinePair(
     val sampleId: Int,
@@ -96,10 +92,7 @@ data class LinePairDescription(
 
 object FindSimilarLines {
 
-
     fun describeLinePair(line1: LinePrototypeWithAngle, line2: LinePrototypeWithAngle): LinePairDescription {
-//        angle_diff = abs(line1[0] - line2[0])
-
         val angleDiff = (line1.angle - line2.angle).let { diff ->
             if (diff > 2 * PI) {
                 diff - 2 * PI
@@ -109,14 +102,6 @@ object FindSimilarLines {
                 diff
             }
         }
-
-//        if angle_diff > 2 * math.pi:
-//        angle_diff -= 2 * math.pi
-//        elif angle_diff < 0:
-//        angle_diff += 2 * math.pi
-//
-//        midpoint_x_line1 = line1[1] if line1[1] < line1[3] else line1[3] + abs(line1[1] - line1[3]) / 2
-//        midpoint_x_line2 = line2[1] if line2[1] < line2[3] else line2[3] + abs(line2[1] - line2[3]) / 2
 
         val midPointColumnLine1 =
             min(line1.startPair.column, line1.endPair.column) + abs(line1.startPair.column - line1.endPair.column) / 2.0
@@ -128,9 +113,6 @@ object FindSimilarLines {
         val midPointRowLine2 =
             min(line2.startPair.row, line2.endPair.row) + abs(line2.startPair.row - line2.endPair.row) / 2.0
 
-//        midpoint_y_line1 = line1[2] if line1[2] < line1[4] else line1[4] + abs(line1[2] - line1[4]) / 2
-//        midpoint_y_line2 = line2[3] if line2[2] < line2[4] else line2[4] + abs(line2[2] - line2[4]) / 2
-
         return LinePairDescription(
             angleDiff, midPointRowLine1, midPointColumnLine1,
             midPointRowLine2, midPointColumnLine2
@@ -140,20 +122,10 @@ object FindSimilarLines {
 
 
     fun findSimilarPaths(
-        prototypesWithAngles: List<LinePrototypeWithAngle>,
+        inputSample: LookupSample,
+        indicesInInputToUse: Collection<Int>,
         lookupSamples: List<LookupSample>
     ): SearchDescription {
-//        '''
-//
-//        :param test_sample:
-//        :param indices_of_lines_to_use
-//        :param data: An array where the columns are angle difference, midpoint x difference, midpoint y difference,
-//        sample index, line 1 index within sample and line 2 index within sample
-//        :return:
-//        '''
-//        current_index = indices_of_lines_to_use[0]
-//        similar_samples: SimilarSamples = SimilarSamples(input_sample_id, test_sample, indices_of_lines_to_use)
-
         val searchDescription = SearchDescription()
 
         val linePairLookupData = lookupSamples.flatMap { lookupSample ->
@@ -161,72 +133,21 @@ object FindSimilarLines {
         }.toList()
 
         var stepId = 0
-        for (index in 0 until prototypesWithAngles.size - 1) {
+        for (index in 0 until inputSample.linePrototypes.size - 1) {
+            if (!indicesInInputToUse.contains(index)) {
+                continue
+            }
 
             searchDescription.addInputLines(stepId, index, index + 1)
-            val lineRelation = describeLinePair(prototypesWithAngles[index], prototypesWithAngles[index + 1])
+            val lineRelation =
+                describeLinePair(inputSample.linePrototypes[index], inputSample.linePrototypes[index + 1])
             val closestLines = findClosestLinesInData(lineRelation, linePairLookupData)
 
             searchDescription.extendPaths(closestLines.subList(0, 10), stepId)
             ++stepId
         }
 
-//
-//        similar_samples.input_sample_id = input_sample_id
-//
-//        search_description = SearchDescription()
-//        search_description.test_sample = test_sample
-//        search_description.similar_samples = similar_samples
-//
-//        for line_index in indices_of_lines_to_use[1:]:
-//        search_step = SearchStep()
-//        search_description.search_steps.append(search_step)
-//
-//        search_step.index_of_first_line = current_index
-//        search_step.index_of_second_line = line_index
-//
-//        # Describe the relation between two lines
-//                first_line_in_relation = test_sample[current_index]
-//        second_line_in_relation = test_sample[line_index]
-//
-//        search_step.first_line_in_relation = first_line_in_relation
-//        search_step.second_line_in_relation = second_line_in_relation
-//
-//        (angle_diff, midpoint_x_diff, midpoint_y_diff) = describe_two_lines(first_line_in_relation,
-//        second_line_in_relation)
-//        # Look for similar relations between lines in the data set
-//                (row_indices_of_closest_lines_across_lookup_examples, first_distances) = find_closest_lines_in_data(angle_diff,
-//        midpoint_x_diff,
-//        midpoint_y_diff,
-//        data,
-//        number_of_closest_lines_to_return=10)
-//        search_step.row_indices_of_closest_lines_across_lookup_examples = row_indices_of_closest_lines_across_lookup_examples
-//        search_step.first_distances = first_distances
-//
-//        counter = 0
-//        for index in row_indices_of_closest_lines_across_lookup_examples:
-//        row = data[index]
-//        # row[3] is the sample ID
-//        # row[4] is the ID of the last path element
-//        # row[5] is the ID of the new to-element
-//        paths_to_extend = similar_samples.find_paths_where_last_step_is_matching(int(row[3]), int(row[4]),
-//            int(row[5]))
-//        search_step.paths_to_extend = paths_to_extend
-//
-//        if len(paths_to_extend) == 0:
-//        if not similar_samples.exists_path_starting_with_id(int(row[3])):
-//        similar_samples.start_new_path(int(row[3]), int(row[4]), int(row[5]), first_distances[counter])
-//        else:
-//        for path in paths_to_extend:
-//        similar_samples.add_path_with_one_more_element(path, int(row[5]),
-//            first_distances[counter])
-//
-//        counter += 1
-//
-//        current_index = line_index
-
         return searchDescription
-
     }
 
 

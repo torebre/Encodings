@@ -27,8 +27,6 @@ class SearchOverview(
                 element!!.appendChild(it)
             }
             SearchVisualization(numberOfRows, numberOfColumns, lookupSample, searchDescription, parentElementId).also {
-                // TODO
-                it.showSearch(0)
             }
         }.toList()
 
@@ -38,7 +36,7 @@ class SearchOverview(
         searchVisualizations.forEach { it.showSearch(searchStep) }
     }
 
-    fun markLinesInSample(lookupSampleIndex: Int, lineIds: List<Int>, value: Int, colour: String) {
+    fun markLinesInSample(lookupSampleIndex: Int, lineIds: Collection<Int>, value: Int, colour: String) {
         searchVisualizations[lookupSampleIndex].markLines(lineIds, value, colour)
     }
 

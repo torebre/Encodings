@@ -7,13 +7,15 @@ import kotlin.math.*
 import kotlin.random.Random
 
 
-class LinePrototypeWithAngle(
+open class LinePrototypeWithAngle(
     startPair: Pair,
     stopPair: Pair, val angle: Double, val length: Double
-) : LinePrototype(startPair, stopPair) {
+) : LinePrototype(startPair, stopPair)
 
-}
-
+class LinePrototypeWithAngleAndId(
+    val id: String, startPair: Pair,
+    stopPair: Pair, angle: Double, length: Double
+) : LinePrototypeWithAngle(startPair, stopPair, angle, length)
 
 object CreateSamples {
 
