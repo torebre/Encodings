@@ -1,7 +1,4 @@
-import com.kjipo.InputSampleVisualization
-import com.kjipo.PathOverview
-import com.kjipo.SearchOverview
-import com.kjipo.SearchStepOverview
+import com.kjipo.*
 import com.kjipo.datageneration.CreateSamples
 import com.kjipo.experiments.FindSimilarLines
 import com.kjipo.experiments.LookupSample
@@ -14,8 +11,6 @@ fun main() {
     KotlinLoggingConfiguration.LOG_LEVEL = KotlinLoggingLevel.DEBUG
     val logger = KotlinLogging.logger {}
 
-    val numberOfRows = 64
-    val numberOfColumns = 64
 
     val inputSample = CreateSamples.generateSample(0, true, numberOfRows, numberOfColumns, 10)
 
@@ -31,13 +26,13 @@ fun main() {
     )
 
     val inputSampleVisualization =
-        InputSampleVisualization(numberOfRows, numberOfColumns, "input_data", inputSample, searchDescription)
+        InputSampleVisualization(numberOfRows, numberOfColumns, "input_data", inputSample)
     inputSampleVisualization.markLines(indicesInInputToUse, 3, "blue")
 
     val searchOverview =
         SearchOverview(lookupSamples, numberOfRows, numberOfColumns, searchDescription, "search_visualization")
 
-    val pathOverview = PathOverview(searchDescription, "paths_overview", searchOverview)
+    val pathOverview = PathOverview(searchDescription, "paths_overview", searchOverview, lookupSamples)
 
     val searchStepOverview =
         SearchStepOverview(searchDescription, searchOverview, inputSampleVisualization, "search_steps_overview")

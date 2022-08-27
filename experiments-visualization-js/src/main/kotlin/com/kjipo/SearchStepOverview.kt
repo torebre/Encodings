@@ -20,7 +20,7 @@ class SearchStepOverview(
             val inputStepButton = createAndAddButton(
                 "input-${it.stepId}", "Input ${it.stepId}"
             ) { _ ->
-                inputSampleVisualization.markInputStep(it.stepId)
+                markInputStep(it.stepId, inputSampleVisualization, searchDescription)
             }
             element!!.appendChild(inputStepButton)
         }
@@ -32,7 +32,9 @@ class SearchStepOverview(
                 element!!.appendChild(button)
                 button.addEventListener("click", {
                     searchOverview.showStep(stepIndex)
-                    inputSampleVisualization.showStep(stepIndex)
+
+                    // TODO
+//                    showStep(stepIndex)
                     currentlyPressedButtonId?.let { pressedButtonId ->
                         document.getElementById(pressedButtonId)?.removeAttribute("class")
                     }
@@ -45,5 +47,19 @@ class SearchStepOverview(
             }
         }
     }
+
+    private fun markInputStep(
+        inputStep: Int,
+        inputSampleVisualization: InputSampleVisualization,
+        searchDescription: SearchDescription
+    ) {
+        inputSampleVisualization.colourLineCollection(
+            listOf(
+                searchDescription.nextInput[inputStep].line1Id,
+                searchDescription.nextInput[inputStep].line2Id
+            )
+        )
+    }
+
 
 }

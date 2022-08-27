@@ -10,6 +10,7 @@ open class MatrixSvg(numberOfRows: Int, numberOfColumns: Int, parentElement: Str
     protected val valueMatrix: Matrix<Int>
     protected val matrixCoordinateSvgRectangleMap: Matrix<Element>
 
+
     private val logger = KotlinLogging.logger {}
 
 
@@ -64,5 +65,4 @@ open class MatrixSvg(numberOfRows: Int, numberOfColumns: Int, parentElement: Str
             }
         }
     }
-
 }

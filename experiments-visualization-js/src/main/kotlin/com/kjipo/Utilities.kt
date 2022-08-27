@@ -30,6 +30,9 @@ fun createAndAddButton(buttonId: String, buttonText: String, clickCallback: (Eve
 
 fun getColour(value: Int): String {
     return when (value) {
+        4 -> {
+           "green"
+        }
         3 -> {
             "yellow"
         }
@@ -42,7 +45,7 @@ fun getColour(value: Int): String {
         }
 
         else -> {
-            "black"
+            "white"
         }
     }
 }
