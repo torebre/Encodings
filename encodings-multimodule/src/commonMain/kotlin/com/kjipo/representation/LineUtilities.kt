@@ -95,9 +95,9 @@ object LineUtilities {
 //        first.translate < -abs(min(0, min(start.x, stop.x)))
 //        second.translate < -abs(min(0, min(start.y, stop.y)))
 
-        var swap = stopX < startX
-        var firstTranslate = abs(min(0, min(startX, stopX)))
-        var secondTranslate = abs(min(0, min(startY, stopY)))
+        val swap = stopX < startX
+        val firstTranslate = abs(min(0, min(startX, stopX)))
+        val secondTranslate = abs(min(0, min(startY, stopY)))
 
 
 //        if (swap) {
@@ -112,10 +112,10 @@ object LineUtilities {
 //            stop.y.translate < -stop.y + second.translate
 //        }
 
-        var startXTranslate: Int
-        var startYTranslate: Int
-        var stopXTranslate: Int
-        var stopYTranslate: Int
+        val startXTranslate: Int
+        val startYTranslate: Int
+        val stopXTranslate: Int
+        val stopYTranslate: Int
 
         if (swap) {
             startXTranslate = stopX + firstTranslate
@@ -139,9 +139,9 @@ object LineUtilities {
 //        }
 
 
-        var xDelta = stopXTranslate - startXTranslate
-        var yDelta = stopYTranslate - startYTranslate
-        var deltaError = abs(yDelta.toDouble() / xDelta)
+        val xDelta = stopXTranslate - startXTranslate
+        val yDelta = stopYTranslate - startYTranslate
+        val deltaError = abs(yDelta.toDouble() / xDelta)
         val signYDelta = if (yDelta < 0) {
             -1
         } else {
@@ -164,7 +164,7 @@ object LineUtilities {
 //        counter < -1
 
 //        var tempResult = Matrix<Int>(2 * abs(startX - stopX) + abs(startY - stopY), 2)
-        var tempResult = mutableListOf<Pair<Int, Int>>()
+        val tempResult = mutableListOf<Pair<Int, Int>>()
 //        var counter = 0
 
 //        for (x in start.x.translate:stop.x.translate) {
