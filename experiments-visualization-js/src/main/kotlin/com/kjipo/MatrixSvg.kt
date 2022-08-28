@@ -15,12 +15,12 @@ open class MatrixSvg(numberOfRows: Int, numberOfColumns: Int, parentElement: Str
 
 
     init {
-        val element = document.getElementById(parentElement)
+        val element = document.getElementById(parentElement)!!
         svgElement = document.createElementNS(SVG_NAMESPACE_URI, "svg").also {
             it.setAttribute("width", "${numberOfColumns * rectangleWidth}")
             it.setAttribute("height", "${numberOfRows * rectangleHeight}")
         }
-        element!!.appendChild(svgElement)
+        element.appendChild(svgElement)
         valueMatrix = Matrix(numberOfColumns, numberOfRows) { _, _ -> 0 }
 
         svgElement.setAttribute(

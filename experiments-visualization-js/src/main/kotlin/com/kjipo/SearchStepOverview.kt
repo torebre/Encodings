@@ -2,6 +2,7 @@ package com.kjipo
 
 import com.kjipo.experiments.SearchDescription
 import createAndAddButton
+import getColour
 import kotlinx.browser.document
 
 
@@ -15,21 +16,21 @@ class SearchStepOverview(
     private var currentlyPressedButtonId: String? = null
 
     init {
-        val element = document.getElementById(parentElement)
+        val element = document.getElementById(parentElement)!!
         searchDescription.nextInput.forEach {
             val inputStepButton = createAndAddButton(
                 "input-${it.stepId}", "Input ${it.stepId}"
             ) { _ ->
                 markInputStep(it.stepId, inputSampleVisualization, searchDescription)
             }
-            element!!.appendChild(inputStepButton)
+            element.appendChild(inputStepButton)
         }
 
         searchDescription.searchPlayThrough.indices.forEach { stepIndex ->
             document.createElement("button").also { button ->
                 val buttonId = "show-step-${stepIndex}"
                 button.setAttribute("id", buttonId)
-                element!!.appendChild(button)
+                element.appendChild(button)
                 button.addEventListener("click", {
                     searchOverview.showStep(stepIndex)
 
@@ -45,6 +46,22 @@ class SearchStepOverview(
                 val buttonText = document.createTextNode("Step $stepIndex")
                 button.appendChild(buttonText)
             }
+        }
+
+        val pathParentElementId = "input-steps"
+        document.createElement("div").also {
+            it.setAttribute("id", pathParentElementId)
+            element.appendChild(it)
+        }
+        searchDescription.nextInput.forEach { inputLinePair ->
+            val inputSampleVisualization =
+                InputSampleVisualization(
+                    numberOfRows,
+                    numberOfColumns,
+                    pathParentElementId,
+                    searchDescription.inputSample
+                )
+            inputSampleVisualization.markLines(listOf(inputLinePair.line1Id, inputLinePair.line2Id), 4, getColour(4))
         }
     }
 

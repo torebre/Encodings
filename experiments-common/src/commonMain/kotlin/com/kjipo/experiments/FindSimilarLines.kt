@@ -44,7 +44,7 @@ class SearchPlaythroughStep(val stepId: Int, val sampleId: Int, val lineAddedId:
 class InputLinePair(val stepId: Int, val line1Id: Int, val line2Id: Int)
 
 
-class SearchDescription(val similarSamples: SimilarSamples = SimilarSamples()) {
+class SearchDescription(val inputSample: LookupSample, val similarSamples: SimilarSamples = SimilarSamples()) {
     val searchPlayThrough = mutableListOf<SearchPlaythroughStep>()
     val nextInput = mutableListOf<InputLinePair>()
 
@@ -126,7 +126,7 @@ object FindSimilarLines {
         indicesInInputToUse: Collection<Int>,
         lookupSamples: List<LookupSample>
     ): SearchDescription {
-        val searchDescription = SearchDescription()
+        val searchDescription = SearchDescription(inputSample)
 
         val linePairLookupData = lookupSamples.flatMap { lookupSample ->
             describeLinePairs(lookupSample.id, lookupSample.linePrototypes)
