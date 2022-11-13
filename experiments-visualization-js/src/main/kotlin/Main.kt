@@ -11,14 +11,13 @@ fun main() {
     KotlinLoggingConfiguration.LOG_LEVEL = KotlinLoggingLevel.DEBUG
     val logger = KotlinLogging.logger {}
 
-
     val inputSample = CreateSamples.generateSample(0, true, numberOfRows, numberOfColumns, 10)
 
     val lookupSamples = (1 until 10).map { id ->
         LookupSample(id, CreateSamples.generateSample(true, numberOfRows, numberOfColumns, 10))
     }.toList()
 
-    val indicesInInputToUse = listOf(10, 11, 12, 13)
+    val indicesInInputToUse = listOf(10, 12, 13, 11)
     val searchDescription = FindSimilarLines.findSimilarPaths(
         inputSample,
         indicesInInputToUse,

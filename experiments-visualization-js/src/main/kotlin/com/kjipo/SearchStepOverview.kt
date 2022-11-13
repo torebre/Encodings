@@ -26,7 +26,7 @@ class SearchStepOverview(
             element.appendChild(inputStepButton)
         }
 
-        searchDescription.searchPlayThrough.indices.forEach { stepIndex ->
+        searchDescription.searchPlayThrough.map { it.stepId }.toSet().forEach { stepIndex ->
             document.createElement("button").also { button ->
                 val buttonId = "show-step-${stepIndex}"
                 button.setAttribute("id", buttonId)

@@ -10,8 +10,18 @@ kotlin {
     jvm()
     js {
         browser {
-        }
-        nodejs {
+//            webpackTask {
+//                sourceMaps = true
+//            }
+
+            testTask {
+                enabled = true
+
+                useKarma {
+                    useChromeHeadless()
+                }
+            }
+
         }
     }
 

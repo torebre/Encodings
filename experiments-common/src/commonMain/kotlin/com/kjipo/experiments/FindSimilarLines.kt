@@ -1,10 +1,14 @@
 package com.kjipo.experiments
 
 import com.kjipo.datageneration.LinePrototypeWithAngle
+import mu.KotlinLogging
+import mu.KotlinLogging.logger
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.min
 
+
+private val logger = KotlinLogging.logger {}
 
 class SimilarSamples {
 
@@ -44,7 +48,10 @@ class SearchPlaythroughStep(val stepId: Int, val sampleId: Int, val lineAddedId:
 class InputLinePair(val stepId: Int, val line1Id: Int, val line2Id: Int)
 
 
-class SearchDescription(val inputSample: LookupSample, val similarSamples: SimilarSamples = SimilarSamples()) {
+class SearchDescription(
+    val inputSample: LookupSample,
+    val similarSamples: SimilarSamples = SimilarSamples()
+) {
     val searchPlayThrough = mutableListOf<SearchPlaythroughStep>()
     val nextInput = mutableListOf<InputLinePair>()
 
@@ -53,12 +60,18 @@ class SearchDescription(val inputSample: LookupSample, val similarSamples: Simil
             val existingPathsForSample = similarSamples.searchPaths[linePair.sampleId]
 
             if (existingPathsForSample == null) {
+
+                logger.info { "Test50. New search path for sample: ${linePair.sampleId}" }
+
                 similarSamples.searchPaths[linePair.sampleId] =
                     mutableListOf(SearchPath(linePair.sampleId, mutableListOf(linePair)))
                 searchPlayThrough.add(SearchPlaythroughStep(stepId, linePair.sampleId, linePair.line1Index))
                 searchPlayThrough.add(SearchPlaythroughStep(stepId, linePair.sampleId, linePair.line2Index))
             } else {
                 existingPathsForSample.forEach { searchPath ->
+
+                    logger.info { "Test51. Search path extended for sample: ${linePair.sampleId}" }
+
                     similarSamples.getLastLinePairIfMatch(searchPath, linePair.sampleId, linePair.line2Index)?.let {
                         searchPath.path.add(linePair)
                         searchPlayThrough.add(SearchPlaythroughStep(stepId, linePair.sampleId, linePair.line2Index))
@@ -123,7 +136,7 @@ object FindSimilarLines {
 
     fun findSimilarPaths(
         inputSample: LookupSample,
-        indicesInInputToUse: Collection<Int>,
+        indicesInInputToUse: List<Int>,
         lookupSamples: List<LookupSample>
     ): SearchDescription {
         val searchDescription = SearchDescription(inputSample)
@@ -133,18 +146,30 @@ object FindSimilarLines {
         }.toList()
 
         var stepId = 0
-        for (index in 0 until inputSample.linePrototypes.size - 1) {
-            if (!indicesInInputToUse.contains(index)) {
-                continue
+
+        indicesInInputToUse.forEachIndexed { index, value ->
+            if (index != indicesInInputToUse.size - 1) {
+                logger.info {
+                    "Step ID: $stepId"
+                }
+                val nextValue = indicesInInputToUse[index + 1]
+                searchDescription.addInputLines(stepId, value, nextValue)
+                val lineRelation =
+                    describeLinePair(inputSample.linePrototypes[value], inputSample.linePrototypes[nextValue])
+                val closestLinesBySample =
+                    findClosestLinesInData(lineRelation, linePairLookupData).groupBy { it.sampleId }
+
+                val linesToUseForExtending = closestLinesBySample.map {
+                    it.value.sortedBy { linePair ->
+                        val angleDiff = abs(lineRelation.angleDiff - linePair.linePairDescription.angleDiff)
+                        angleDiff
+                    }.subList(0, 2)
+                }.flatten()
+
+//                searchDescription.extendPaths(closestLines.subList(0, 10), stepId)
+                searchDescription.extendPaths(linesToUseForExtending, stepId)
+                ++stepId
             }
-
-            searchDescription.addInputLines(stepId, index, index + 1)
-            val lineRelation =
-                describeLinePair(inputSample.linePrototypes[index], inputSample.linePrototypes[index + 1])
-            val closestLines = findClosestLinesInData(lineRelation, linePairLookupData)
-
-            searchDescription.extendPaths(closestLines.subList(0, 10), stepId)
-            ++stepId
         }
 
         return searchDescription

@@ -11,13 +11,14 @@ object RunExperiment {
     @JvmStatic
     fun main(args: Array<String>) {
         val sample = CreateSamples.generateSample(true, 64, 64, 10)
-        val description = describeLinePairs(0, sample)
+        val lookupSample = LookupSample(0, sample)
 
         val lookupSamples = (1 until 10).map { id ->
             LookupSample(id, CreateSamples.generateSample(true, 64, 64, 10))
         }.toList()
 
-        val searchDescription = findSimilarPaths(sample, lookupSamples)
+
+        val searchDescription = findSimilarPaths(lookupSample, (9 until 14).toList(),  lookupSamples)
 
         println("Search description:")
 

@@ -29,7 +29,6 @@ class PathOverview(
 
                 logger.info { pathDescription }
             }
-
         }
 
         searchDescription.similarSamples.searchPaths.flatMap { it.value }.forEachIndexed { index, searchPath ->
@@ -53,11 +52,12 @@ class PathOverview(
     }
 
     private fun showPath(searchPath: SearchPath, parentElementId: String) {
-        val lookupSample = lookupSamples[searchPath.sampleId]
-        searchPath.path.forEach { linePair ->
-            val inputSampleVisualization =
-                InputSampleVisualization(numberOfRows, numberOfColumns, parentElementId, lookupSample)
-            inputSampleVisualization.markLines(listOf(linePair.line1Index, linePair.line2Index), 4, getColour(4))
+        lookupSamples.find { it.id == searchPath.sampleId }?.let { lookupSample ->
+            searchPath.path.forEach { linePair ->
+                val inputSampleVisualization =
+                    InputSampleVisualization(numberOfRows, numberOfColumns, parentElementId, lookupSample)
+                inputSampleVisualization.markLines(listOf(linePair.line1Index, linePair.line2Index), 4, getColour(4))
+            }
         }
     }
 
