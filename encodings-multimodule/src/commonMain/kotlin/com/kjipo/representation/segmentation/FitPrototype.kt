@@ -1,9 +1,10 @@
 package com.kjipo.representation.segmentation
 
+import com.kjipo.representation.raster.EncodingUtilities
 import com.kjipo.representation.raster.FlowDirection
 
 
-//class FitPrototype {
+class FitPrototype {
 //    fun addPrototypes(inputData: Array<BooleanArray>, prototype: Collection<com.kjipo.prototype.AngleLine?>, includeHistory: Boolean): List<Prototype> {
 //        val result: MutableList<Prototype> = java.util.ArrayList<Prototype>()
 //        if (includeHistory) {
@@ -346,32 +347,32 @@ import com.kjipo.representation.raster.FlowDirection
 //            }
 //            return null
 //        }
-//
-//        fun findDisjointRegions(inputData: Array<BooleanArray>): Array<IntArray> {
-//            val regionData = Array(inputData.size) { IntArray(inputData[0].length) }
-//            var fillValue = 1
-//            var foundHit = true
-//            while (foundHit) {
-//                foundHit = false
-//                for (row in inputData.indices) {
-//                    for (column in 0 until inputData[0].length) {
-//                        if (inputData[row][column]
-//                                && regionData[row][column] == 0) {
-//                            spreadAcrossRegion(row, column, fillValue++, inputData, regionData)
-//                            foundHit = true
-//                        }
-//                        if (foundHit) {
-//                            break
-//                        }
-//                    }
-//                    if (foundHit) {
-//                        break
-//                    }
-//                }
-//            }
-//            return regionData
-//        }
-//
+
+        fun findDisjointRegions(inputData: Array<BooleanArray>): Array<IntArray> {
+            val regionData = Array(inputData.size) { IntArray(inputData[0].size) }
+            var fillValue = 1
+            var foundHit = true
+            while (foundHit) {
+                foundHit = false
+                for (row in inputData.indices) {
+                    for (column in 0 until inputData[0].size) {
+                        if (inputData[row][column]
+                                && regionData[row][column] == 0) {
+                            spreadAcrossRegion(row, column, fillValue++, inputData, regionData)
+                            foundHit = true
+                        }
+                        if (foundHit) {
+                            break
+                        }
+                    }
+                    if (foundHit) {
+                        break
+                    }
+                }
+            }
+            return regionData
+        }
+
 //        fun findNumberOfDisjointRegions(inputData: Array<BooleanArray>): Int {
 //            val regionData = Array(inputData.size) { IntArray(inputData[0].length) }
 //            var fillValue = 1
@@ -396,30 +397,29 @@ import com.kjipo.representation.raster.FlowDirection
 //            }
 //            return fillValue
 //        }
-//
-//        private fun spreadAcrossRegion(startRow: Int, startColumn: Int, fillValue: Int,
-//                                       inputData: Array<BooleanArray>, regionData: Array<IntArray>) {
-//            val cellsToVisit: Deque<com.kjipo.raster.segment.Pair> = ArrayDeque<com.kjipo.raster.segment.Pair>()
-//            cellsToVisit.add(com.kjipo.raster.segment.Pair.of(startRow, startColumn))
-//            while (!cellsToVisit.isEmpty()) {
-//                val pair: com.kjipo.raster.segment.Pair = cellsToVisit.poll()
-//                val row: Int = pair.getRow()
-//                val column: Int = pair.getColumn()
-//                if (com.kjipo.raster.EncodingUtilities.validCoordinates(row, column, inputData.size, inputData[0].length)
-//                        && inputData[row][column]) {
-//                    regionData[row][column] = fillValue
-//                }
-//                for (flowDirection in FlowDirection.values()) {
-//                    val nextRow = row + flowDirection.rowShift
-//                    val nextColumn = column + flowDirection.columnShift
-//                    val nextPair: com.kjipo.raster.segment.Pair = com.kjipo.raster.segment.Pair.of(nextRow, nextColumn)
-//                    if (com.kjipo.raster.EncodingUtilities.validCoordinates(nextRow, nextColumn, inputData.size, inputData[0].length)
-//                            && inputData[nextRow][nextColumn]
-//                            && regionData[nextRow][nextColumn] == 0 && !cellsToVisit.contains(nextPair)) {
-//                        cellsToVisit.add(nextPair)
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
+
+        private fun spreadAcrossRegion(startRow: Int, startColumn: Int, fillValue: Int,
+                                       inputData: Array<BooleanArray>, regionData: Array<IntArray>) {
+            val cellsToVisit: ArrayDeque<Pair<Int, Int>> = ArrayDeque()
+            cellsToVisit.add(Pair(startRow, startColumn))
+            while (!cellsToVisit.isEmpty()) {
+                val pair: Pair<Int, Int> = cellsToVisit.removeFirst()
+                val row: Int = pair.first
+                val column: Int = pair.second
+                if (EncodingUtilities.validCoordinates(row, column, inputData.size, inputData[0].size)
+                        && inputData[row][column]) {
+                    regionData[row][column] = fillValue
+                }
+                for (flowDirection in FlowDirection.values()) {
+                    val nextRow = row + flowDirection.rowShift
+                    val nextColumn = column + flowDirection.columnShift
+                    val nextPair: Pair<Int, Int> = Pair(nextRow, nextColumn)
+                    if (EncodingUtilities.validCoordinates(nextRow, nextColumn, inputData.size, inputData[0].size)
+                            && inputData[nextRow][nextColumn]
+                            && regionData[nextRow][nextColumn] == 0 && !cellsToVisit.contains(nextPair)) {
+                        cellsToVisit.add(nextPair)
+                    }
+                }
+            }
+        }
+    }

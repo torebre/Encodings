@@ -4,7 +4,6 @@ package com.kjipo.experiments
 import com.kjipo.segmentation.Matrix
 import com.kjipo.skeleton.makeSquare
 import com.kjipo.skeleton.makeThin
-import javafx.scene.paint.Color
 import org.opencv.core.*
 import org.opencv.highgui.HighGui
 import org.opencv.imgproc.Imgproc

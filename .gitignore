@@ -5,3 +5,4 @@
 **/out
 kanji_output
 **/*.iml
+opencv_build

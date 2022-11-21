@@ -10,8 +10,10 @@ import com.kjipo.parser.FontFileParser;
 import com.kjipo.parser.KanjiDicParser;
 import com.kjipo.parser.Parsers;
 import com.kjipo.raster.attraction.PrototypeCollection;
-import com.kjipo.raster.segment.Pair;
 import com.kjipo.representation.EncodedKanji;
+import com.kjipo.representation.prototype.AngleLine;
+import com.kjipo.representation.prototype.Prototype;
+import com.kjipo.representation.segment.Pair;
 import com.kjipo.skeleton.BwmethodsKt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +58,7 @@ public class CreatePrototypeDataset {
 
             for (EncodedKanji encodedKanji : encodedKanjis) {
                 try {
-                    Pair topPair = Pair.of(0, 0);
+                    Pair topPair = Pair.Companion.of(0, 0);
                     int topId = 1;
                     AngleLine top = new AngleLine(topId, topPair, 3.0, 0);
 
