@@ -12,7 +12,8 @@ class SearchVisualization(
     private val lookupSample: LookupSample,
     private val searchDescription: SearchDescription,
     parentElement: String,
-) : MatrixSvg(numberOfRows, numberOfColumns, parentElement) {
+    id: String
+) : MatrixSvg(numberOfRows, numberOfColumns, parentElement, id) {
 
     private val transformedLines: Map<Int, List<Pair<Int, Int>>>
 

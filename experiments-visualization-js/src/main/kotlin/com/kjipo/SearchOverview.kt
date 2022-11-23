@@ -26,7 +26,7 @@ class SearchOverview(
                 it.setAttribute("class", "lookupsample")
                 element!!.appendChild(it)
             }
-            SearchVisualization(numberOfRows, numberOfColumns, lookupSample, searchDescription, parentElementId).also {
+            SearchVisualization(numberOfRows, numberOfColumns, lookupSample, searchDescription, parentElementId, "search-visualization-sample-${lookupSample.id}").also {
             }
         }.toList()
 

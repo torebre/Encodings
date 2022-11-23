@@ -5,7 +5,7 @@ import kotlinx.browser.document
 import mu.KotlinLogging
 import org.w3c.dom.Element
 
-open class MatrixSvg(numberOfRows: Int, numberOfColumns: Int, parentElement: String) {
+open class MatrixSvg(numberOfRows: Int, numberOfColumns: Int, parentElement: String, id: String) {
     private val svgElement: Element
     protected val valueMatrix: Matrix<Int>
     protected val matrixCoordinateSvgRectangleMap: Matrix<Element>
@@ -17,6 +17,7 @@ open class MatrixSvg(numberOfRows: Int, numberOfColumns: Int, parentElement: Str
     init {
         val element = document.getElementById(parentElement)!!
         svgElement = document.createElementNS(SVG_NAMESPACE_URI, "svg").also {
+            it.id = id
             it.setAttribute("width", "${numberOfColumns * rectangleWidth}")
             it.setAttribute("height", "${numberOfRows * rectangleHeight}")
         }
