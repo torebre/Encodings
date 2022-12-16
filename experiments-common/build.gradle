@@ -40,5 +40,17 @@ kotlin {
                 implementation kotlin('test-annotations-common')
             }
         }
+
+        jvmTest {
+           dependencies {
+               implementation kotlin('test')
+               implementation kotlin('test-junit')
+
+               implementation "io.github.microutils:kotlin-logging-jvm:$kotlinLogging"
+               implementation "org.slf4j:slf4j-simple:2.0.3"
+
+           }
+
+        }
     }
 }

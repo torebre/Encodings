@@ -2,7 +2,6 @@ package com.kjipo.experiments
 
 import com.kjipo.datageneration.LinePrototypeWithAngle
 import mu.KotlinLogging
-import mu.KotlinLogging.logger
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.min
@@ -41,7 +40,11 @@ class SimilarSamples {
 
 }
 
-class SearchPath(val sampleId: Int, val path: MutableList<LinePair> = mutableListOf())
+class SearchPath(val sampleId: Int, val path: MutableList<LinePair> = mutableListOf()) {
+    override fun toString(): String {
+        return "SearchPath(sampleId=$sampleId, path=$path)"
+    }
+}
 
 class SearchPlaythroughStep(val stepId: Int, val sampleId: Int, val lineAddedId: Int)
 
@@ -95,7 +98,11 @@ data class LinePair(
     val line1Index: Int,
     val line2Index: Int,
     val linePairDescription: LinePairDescription
-)
+) {
+    override fun toString(): String {
+        return "LinePair(sampleId=$sampleId, line1Index=$line1Index, line2Index=$line2Index)"
+    }
+}
 
 data class LinePairDescription(
     val angleDiff: Double, val midPointRowLine1: Double, val midPointColumnLine1: Double,
