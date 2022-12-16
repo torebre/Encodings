@@ -4,7 +4,7 @@ apply plugin: 'kotlin'
 dependencies {
     implementation project(":raster")
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    testImplementation group: 'junit', name: 'junit', version: '4.13.1'
 
-    implementation files('/home/student/projects/opencv/build/bin/opencv-341.jar')
+    implementation files('/home/student/workspace/testEncodings/opencv_build/opencv/build/bin/opencv-460.jar')
 }

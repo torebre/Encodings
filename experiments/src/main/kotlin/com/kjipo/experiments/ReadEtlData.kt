@@ -18,7 +18,7 @@ object ReadEtlData {
 
 
     @ExperimentalStdlibApi
-    public fun readData(): List<KanjiData> {
+    fun readData(): List<KanjiData> {
         return (1..5).map { Paths.get(BASE_FILE_NAME + it) }.map { parseFile(it) }.flatten().toList()
     }
 

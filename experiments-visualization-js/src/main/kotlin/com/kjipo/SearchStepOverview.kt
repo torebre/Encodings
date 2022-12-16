@@ -59,7 +59,8 @@ class SearchStepOverview(
                     numberOfRows,
                     numberOfColumns,
                     pathParentElementId,
-                    searchDescription.inputSample
+                    searchDescription.inputSample,
+                    "input-step-${inputLinePair.stepId}-${inputLinePair.line1Id}-{${inputLinePair.line2Id}"
                 )
             inputSampleVisualization.markLines(listOf(inputLinePair.line1Id, inputLinePair.line2Id), 4, getColour(4))
         }

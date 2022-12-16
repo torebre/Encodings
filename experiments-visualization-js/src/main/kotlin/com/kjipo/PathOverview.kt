@@ -53,10 +53,17 @@ class PathOverview(
 
     private fun showPath(searchPath: SearchPath, parentElementId: String) {
         lookupSamples.find { it.id == searchPath.sampleId }?.let { lookupSample ->
-            searchPath.path.forEach { linePair ->
+
+            logger.info { "Test61: Search path ID: ${searchPath.sampleId}. Length: ${searchPath.path.size}" }
+
+            searchPath.path.forEachIndexed { index, linePair ->
                 val inputSampleVisualization =
-                    InputSampleVisualization(numberOfRows, numberOfColumns, parentElementId, lookupSample)
+                    InputSampleVisualization(numberOfRows, numberOfColumns, parentElementId, lookupSample, "path-${lookupSample.id}-step-${index}")
+
+                logger.info { "Test60: Marking lines ${linePair.line1Index} and ${linePair.line2Index}" }
+
                 inputSampleVisualization.markLines(listOf(linePair.line1Index, linePair.line2Index), 4, getColour(4))
+
             }
         }
     }

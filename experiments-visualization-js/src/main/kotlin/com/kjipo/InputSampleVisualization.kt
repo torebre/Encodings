@@ -8,8 +8,9 @@ class InputSampleVisualization(
     numberOfRows: Int,
     numberOfColumns: Int,
     parentElement: String,
-    sample: LookupSample
-) : MatrixSvg(numberOfRows, numberOfColumns, parentElement) {
+    sample: LookupSample,
+    id: String
+) : MatrixSvg(numberOfRows, numberOfColumns, parentElement, id) {
     private val transformedLines: Map<Int, List<Pair<Int, Int>>>
 
 

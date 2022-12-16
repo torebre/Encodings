@@ -25,7 +25,7 @@ fun main() {
     )
 
     val inputSampleVisualization =
-        InputSampleVisualization(numberOfRows, numberOfColumns, "input_data", inputSample)
+        InputSampleVisualization(numberOfRows, numberOfColumns, "input_data", inputSample, "input-sample")
     inputSampleVisualization.markLines(indicesInInputToUse, 3, "blue")
 
     val searchOverview =

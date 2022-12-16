@@ -59,25 +59,29 @@ class SearchDescription(
     val nextInput = mutableListOf<InputLinePair>()
 
     fun extendPaths(linePairs: List<LinePair>, stepId: Int) {
-        linePairs.forEach { linePair ->
-            val existingPathsForSample = similarSamples.searchPaths[linePair.sampleId]
+        linePairs.forEach { newLinePair ->
+            val existingPathsForSample = similarSamples.searchPaths[newLinePair.sampleId]
 
             if (existingPathsForSample == null) {
 
-                logger.info { "Test50. New search path for sample: ${linePair.sampleId}" }
+                logger.info { "Test50. New search path for sample: ${newLinePair.sampleId}" }
 
-                similarSamples.searchPaths[linePair.sampleId] =
-                    mutableListOf(SearchPath(linePair.sampleId, mutableListOf(linePair)))
-                searchPlayThrough.add(SearchPlaythroughStep(stepId, linePair.sampleId, linePair.line1Index))
-                searchPlayThrough.add(SearchPlaythroughStep(stepId, linePair.sampleId, linePair.line2Index))
+                similarSamples.searchPaths[newLinePair.sampleId] =
+                    mutableListOf(SearchPath(newLinePair.sampleId, mutableListOf(newLinePair)))
+                searchPlayThrough.add(SearchPlaythroughStep(stepId, newLinePair.sampleId, newLinePair.line1Index))
+                searchPlayThrough.add(SearchPlaythroughStep(stepId, newLinePair.sampleId, newLinePair.line2Index))
             } else {
                 existingPathsForSample.forEach { searchPath ->
 
-                    logger.info { "Test51. Search path extended for sample: ${linePair.sampleId}" }
+                    logger.info { "Test52. Found search paths for sample: ${newLinePair.sampleId}" }
 
-                    similarSamples.getLastLinePairIfMatch(searchPath, linePair.sampleId, linePair.line2Index)?.let {
-                        searchPath.path.add(linePair)
-                        searchPlayThrough.add(SearchPlaythroughStep(stepId, linePair.sampleId, linePair.line2Index))
+                    val newPoints = setOf(newLinePair.line1Index, newLinePair.line2Index)
+                    similarSamples.getLastLinePairIfMatch(searchPath, newLinePair.sampleId, newLinePair.line1Index)?.let {
+                        if(searchPath.path.find { setOf(it.line1Index, it.line2Index) == newPoints } == null) {
+                            logger.info { "Test51. Search path extended for sample: ${newLinePair.sampleId}. Line pair: ${it.line1Index}, ${it.line2Index}. New line pair: ${newLinePair.line1Index}, ${newLinePair.line2Index}" }
+                            searchPath.path.add(newLinePair)
+                            searchPlayThrough.add(SearchPlaythroughStep(stepId, newLinePair.sampleId, newLinePair.line2Index))
+                        }
                     }
                 }
             }
