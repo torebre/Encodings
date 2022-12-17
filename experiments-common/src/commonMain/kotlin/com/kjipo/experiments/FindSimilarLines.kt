@@ -78,7 +78,7 @@ class SearchDescription(
                     val newPoints = setOf(newLinePair.line1Index, newLinePair.line2Index)
                     similarSamples.getLastLinePairIfMatch(searchPath, newLinePair.sampleId, newLinePair.line1Index)?.let {
                         if(searchPath.path.find { setOf(it.line1Index, it.line2Index) == newPoints } == null) {
-                            logger.info { "Test51. Search path extended for sample: ${newLinePair.sampleId}. Line pair: ${it.line1Index}, ${it.line2Index}. New line pair: ${newLinePair.line1Index}, ${newLinePair.line2Index}" }
+                            logger.info { "Test56. Search path extended for sample: ${newLinePair.sampleId}. Line pair: ${it.line1Index}, ${it.line2Index}. New line pair: ${newLinePair.line1Index}, ${newLinePair.line2Index}" }
                             searchPath.path.add(newLinePair)
                             searchPlayThrough.add(SearchPlaythroughStep(stepId, newLinePair.sampleId, newLinePair.line2Index))
                         }

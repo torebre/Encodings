@@ -13,15 +13,24 @@ class SearchVisualization(
     private val searchDescription: SearchDescription,
     parentElement: String,
     id: String
-) : MatrixSvg(numberOfRows, numberOfColumns, parentElement, id) {
-
+) {
+    private val svgMatrix: MatrixSvg
+    private val valueMatrix: ValueMatrix
     private val transformedLines: Map<Int, List<Pair<Int, Int>>>
 
     private val logger = KotlinLogging.logger {}
 
     init {
         transformedLines = createIndexLinePrototypeMap(lookupSample.linePrototypes)
+        valueMatrix = ValueMatrix(numberOfRows, numberOfColumns)
         transformedLines.keys.forEach { colourLine(it) }
+
+        svgMatrix = MatrixSvg(numberOfRows, numberOfColumns, parentElement, id) { row, column ->
+            valueMatrix.getColourForCoordinate(
+                row,
+                column
+            )
+        }
     }
 
     fun showSearch(stepId: Int) {
@@ -43,13 +52,14 @@ class SearchVisualization(
                 colourLine(it, valueForLineNotInCollection, colourForLineNotInCollection)
             }
         }
+        svgMatrix.refreshSvgMatrix()
     }
 
     private fun colourLine(lineId: Int, value: Int = 2, colour: String = getColour(2)) {
         transformedLines[lineId]?.let { points ->
             points.forEach {
-                valueMatrix[it.first, it.second] = value
-                matrixCoordinateSvgRectangleMap[it.first, it.second].setAttribute("fill", colour)
+                valueMatrix.valueMatrix[it.first, it.second] = value
+//                matrixCoordinateSvgRectangleMap[it.first, it.second]?.setAttribute("fill", colour)
             }
         }
     }
@@ -57,6 +67,7 @@ class SearchVisualization(
     fun markLines(linesIds: Collection<Int>, value: Int, colour: String) {
         colourLineCollection(linesIds, value, colour)
 //        linesIds.forEach { colourLine(it, value, colour) }
+        svgMatrix.refreshSvgMatrix()
     }
 
 }

@@ -1,7 +1,6 @@
 package com.kjipo.viewer
 
 import KanjiViewer
-import com.github.aakira.napier.Napier
 import com.kjipo.representation.*
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.js.Js
@@ -11,13 +10,22 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.w3c.dom.*
-import kotlin.browser.document
-import kotlin.dom.clear
+import mu.KotlinLoggingConfiguration
+import mu.KotlinLoggingLevel
+import mu.KotlinLogging
+import kotlinx.browser.document
+import kotlinx.dom.clear
 
 
-class KanjiApp {
+class KanjiApp() {
     private val client = HttpClient(Js)
-    private var selectedKanji = 0 // 33760 // 27355
+    private var selectedKanji = 0
+
+    val logger = KotlinLogging.logger {}
+
+    init {
+        KotlinLoggingConfiguration.LOG_LEVEL = KotlinLoggingLevel.DEBUG
+    }
 
     fun setupKanjiSelection() {
         CoroutineScope(Dispatchers.Main).launch {
@@ -44,7 +52,8 @@ class KanjiApp {
         }
     }
 
-    fun loadEncodedKanjiFromString(kanjiString: String, unicode: Int) = EncodedKanji(loadEncodedKanjiFromString(kanjiString.split('\n')), unicode)
+    fun loadEncodedKanjiFromString(kanjiString: String, unicode: Int) =
+        EncodedKanji(loadEncodedKanjiFromString(kanjiString.split('\n')), unicode)
 
     fun loadEncodedKanjiFromString(kanjiString: List<String>): Array<BooleanArray> {
         return kanjiString.map {
@@ -57,8 +66,8 @@ class KanjiApp {
                     null
                 }
             }
-                    .filterNotNull()
-                    .toBooleanArray()
+                .filterNotNull()
+                .toBooleanArray()
         }.toTypedArray()
     }
 
@@ -100,7 +109,9 @@ class KanjiApp {
                 drawSquaresOnExistingCanvas(parsedResponse2, 3, "selectedKanji")
 
             } catch (exception: Exception) {
-                Napier.e(exception.message.orEmpty(), exception)
+                logger.error(exception) {
+                    exception.message.orEmpty()
+                }
             }
         }
     }
@@ -111,7 +122,12 @@ class KanjiApp {
         return LineUtilities.drawLines(parsedLines.toList())
     }
 
-    private fun addCanvas(matrix: Matrix<Int>, squareSize: Int = 2, useColours: Boolean = false, parent: Element? = null) {
+    private fun addCanvas(
+        matrix: Matrix<Int>,
+        squareSize: Int = 2,
+        useColours: Boolean = false,
+        parent: Element? = null
+    ) {
         try {
             val element = document.createElement("canvas") as HTMLCanvasElement
 
@@ -121,12 +137,19 @@ class KanjiApp {
                 document.body?.appendChild(element)
             }
             drawOnExistingCanvas(matrix, squareSize, useColours, element)
-        } catch (e: ClientRequestException) {
-            Napier.e("Could not find segment", e)
+        } catch (exception: ClientRequestException) {
+            logger.error(exception) {
+                "Could not find segment"
+            }
         }
     }
 
-    private fun drawOnExistingCanvas(matrix: Matrix<Int>, squareSize: Int = 2, useColours: Boolean = false, canvasElementId: String) {
+    private fun drawOnExistingCanvas(
+        matrix: Matrix<Int>,
+        squareSize: Int = 2,
+        useColours: Boolean = false,
+        canvasElementId: String
+    ) {
         document.getElementById(canvasElementId)?.let {
             val context2 = (it as HTMLCanvasElement).getContext("2d")
             val kanjiViewer = KanjiViewer(context2 as CanvasRenderingContext2D)
@@ -142,7 +165,12 @@ class KanjiApp {
 
     }
 
-    private fun drawOnExistingCanvas(matrix: Matrix<Int>, squareSize: Int = 2, useColours: Boolean = false, canvasElement: Element) {
+    private fun drawOnExistingCanvas(
+        matrix: Matrix<Int>,
+        squareSize: Int = 2,
+        useColours: Boolean = false,
+        canvasElement: Element
+    ) {
         val context2 = (canvasElement as HTMLCanvasElement).getContext("2d")
         val kanjiViewer = KanjiViewer(context2 as CanvasRenderingContext2D)
 
@@ -162,7 +190,6 @@ class KanjiApp {
             kanjiViewer.drawSquares(matrix, squareSize)
         }
     }
-
 
 
 }

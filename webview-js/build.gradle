@@ -27,7 +27,7 @@ dependencies {
     implementation project(':encodings-multimodule')
     implementation libraries.kotlin_stdlib_js
     implementation "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
-
+    implementation "io.github.microutils:kotlin-logging:$kotlinLogging"
     implementation("io.ktor:ktor-client-js:1.2.5")
 
     testImplementation "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version"
