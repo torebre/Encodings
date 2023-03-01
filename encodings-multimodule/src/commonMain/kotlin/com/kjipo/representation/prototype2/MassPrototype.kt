@@ -1,8 +1,6 @@
 package com.kjipo.representation.prototype2
 
-import com.kjipo.representation.prototype2.Prototype
 
-class MassPrototype: Prototype {
-
+class MassPrototype(imageIdentifier: String): AppliedPrototype(imageIdentifier) {
 
 }

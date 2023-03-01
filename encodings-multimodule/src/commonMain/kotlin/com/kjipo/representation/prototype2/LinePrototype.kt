@@ -3,7 +3,7 @@ package com.kjipo.representation.prototype2
 
 
 
-class LinePrototype(val startPoint: EndpointPrototype, val stopPoint: EndpointPrototype): Prototype {
+class LinePrototype(imageIdentifier: String, val startPoint: EndpointPrototype, val stopPoint: EndpointPrototype): AppliedPrototype(imageIdentifier) {
 
 
 

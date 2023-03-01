@@ -1,7 +1,8 @@
 package com.kjipo.representation.prototype2
 
-import com.kjipo.representation.prototype2.Prototype
 
-class EndpointPrototype(val point: Pair<Int, Int>): Prototype {
+class EndpointPrototype(imageIdentifier: String, val point: Pair<Int, Int>): AppliedPrototype(imageIdentifier) {
+
+    constructor(imageIdentifier: String, x: Int, y: Int): this(imageIdentifier, Pair(x, y))
 
 }
