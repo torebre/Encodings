@@ -2,22 +2,13 @@ package com.kjipo.skeleton
 
 import com.kjipo.prototype.FitPrototype
 import com.kjipo.raster.EncodingUtilities
+import com.kjipo.representation.Matrix
 import com.kjipo.representation.raster.FlowDirection
-import com.kjipo.segmentation.Matrix
+import com.kjipo.representation.raster.bwmorphEndpoints
 import kotlin.math.abs
 import kotlin.math.min
 import javafx.scene.paint.Color
 
-
-
-fun extractSkeleton(image: Matrix<Boolean>) {
-    val thinImage = makeThin(image)
-    extractJunctions(thinImage)
-
-    // TODO
-
-
-}
 
 fun extractJunctions(thinImage: Matrix<Boolean>): Matrix<Boolean> {
 //    %
@@ -69,14 +60,14 @@ fun extractJunctions(thinImage: Matrix<Boolean>): Matrix<Boolean> {
         val pid = cc.pixelIdsList[i]
 
         val snSum = pid.map { sn[it.first, it.second] }
-                .map {
-                    if (it) {
-                        1
-                    } else {
-                        0
-                    }
+            .map {
+                if (it) {
+                    1
+                } else {
+                    0
                 }
-                .sum()
+            }
+            .sum()
 
         if (snSum == 0) {
             pid.minBy { it.first }?.let {
@@ -186,8 +177,8 @@ fun makelut(function: (matrix: Matrix<Boolean>) -> Boolean): List<Boolean> {
 
         Pair(it, function.invoke(evalMatrix))
     }.sortedBy { it.first }
-            .map { it.second }
-            .toList()
+        .map { it.second }
+        .toList()
 
 //    w = reshape(2.^[nq - 1: - 1:0], n, n);
 //    for i = 0:c-1
@@ -246,15 +237,17 @@ fun fNC(matrix: Matrix<Boolean>): Double {
         val (row1, column1) = fIP(i + 1)
         val (row2, column2) = fIP(i)
 
-        sum += abs(if (matrix[row1, column1]) {
-            1
-        } else {
-            0
-        } - if (matrix[row2, column2]) {
-            1
-        } else {
-            0
-        })
+        sum += abs(
+            if (matrix[row1, column1]) {
+                1
+            } else {
+                0
+            } - if (matrix[row2, column2]) {
+                1
+            } else {
+                0
+            }
+        )
     }
 
 //    end
@@ -276,102 +269,6 @@ fun fIP(lindx: Int): Pair<Int, Int> {
         7 -> Pair(0, 0)
         else -> throw IllegalArgumentException("Unexpected index: $lindx")
     }
-}
-
-
-fun bwmorphEndpoints(image: Matrix<Boolean>): Matrix<Boolean> {
-    // TODO Does not mark everything that looks like an endpoint. Try to find a better algorithm
-
-    val result = Matrix(image.numberOfRows, image.numberOfColumns, { row, column -> false })
-
-    for (row in 0 until image.numberOfRows) {
-        for (column in 0 until image.numberOfColumns) {
-            result[row, column] = isEnd(row, column, image)
-        }
-    }
-
-    return result
-}
-
-fun isEnd(row: Int, column: Int, image: Matrix<Boolean>): Boolean {
-    return if (!image[row, column]) {
-        false
-    } else {
-        pixelsFilled(row, column, image) == 2
-    }
-}
-
-fun pixelsFilled(row: Int, column: Int, image: Matrix<Boolean>): Int {
-    var pixels = 0
-
-    if (row > 0) {
-        if (column > 0) {
-            if (image[row - 1, column - 1]) {
-                ++pixels
-            }
-        }
-        if (column < image.numberOfColumns - 1) {
-            if (image[row - 1, column + 1]) {
-                ++pixels
-            }
-        }
-        if (image[row - 1, column]) {
-            ++pixels
-        }
-    }
-
-    if (row < image.numberOfRows - 1) {
-        if (column > 0) {
-            if (image[row + 1, column - 1]) {
-                ++pixels
-            }
-        }
-        if (column < image.numberOfColumns - 1) {
-            if (image[row + 1, column + 1]) {
-                ++pixels
-            }
-        }
-        if (image[row + 1, column]) {
-            ++pixels
-        }
-    }
-
-    if (column > 0) {
-        if (image[row, column - 1]) {
-            ++pixels
-        }
-    }
-    if (column < image.numberOfColumns - 1) {
-        if (image[row, column + 1]) {
-            ++pixels
-        }
-    }
-
-    if (image[row, column]) {
-        ++pixels
-    }
-
-    return pixels
-}
-
-
-fun makeThin(image: Array<BooleanArray>): Matrix<Boolean> = makeThin(Matrix(image.size, image[0].size, { row, column -> image[row][column] }))
-
-fun makeThin(image: Matrix<Boolean>) = thin(fillIsolatedHoles(image))
-
-fun fillIsolatedHoles(image: Matrix<Boolean>): Matrix<Boolean> {
-    val result = Matrix.copy(image)
-
-    for (row in 0 until image.numberOfRows) {
-        for (column in 0 until image.numberOfColumns) {
-            if (result[row, column]) {
-                continue
-            }
-            result[row, column] = pixelsFilled(row, column, image) == 8
-        }
-    }
-
-    return result
 }
 
 
@@ -398,7 +295,8 @@ fun binaryFillHoles(image: Matrix<Boolean>): Matrix<Boolean> {
             if (outputImage[row, column]) {
                 // Up
                 if (EncodingUtilities.validCoordinates(row - 1, column, image.numberOfRows, image.numberOfColumns)
-                        && mask[row - 1, column]) {
+                    && mask[row - 1, column]
+                ) {
                     if (!outputImage[row - 1, column]) {
                         change = true
                     }
@@ -406,7 +304,8 @@ fun binaryFillHoles(image: Matrix<Boolean>): Matrix<Boolean> {
                 }
                 // Down
                 if (EncodingUtilities.validCoordinates(row + 1, column, image.numberOfRows, image.numberOfColumns)
-                        && mask[row + 1, column]) {
+                    && mask[row + 1, column]
+                ) {
                     if (!outputImage[row + 1, column]) {
                         change = true
                     }
@@ -414,7 +313,8 @@ fun binaryFillHoles(image: Matrix<Boolean>): Matrix<Boolean> {
                 }
                 // Left
                 if (EncodingUtilities.validCoordinates(row, column - 1, image.numberOfRows, image.numberOfColumns)
-                        && mask[row, column - 1]) {
+                    && mask[row, column - 1]
+                ) {
                     if (!outputImage[row, column - 1]) {
                         change = true
                     }
@@ -422,7 +322,8 @@ fun binaryFillHoles(image: Matrix<Boolean>): Matrix<Boolean> {
                 }
                 // Right
                 if (EncodingUtilities.validCoordinates(row, column + 1, image.numberOfRows, image.numberOfColumns)
-                        && mask[row, column + 1]) {
+                    && mask[row, column + 1]
+                ) {
                     if (!outputImage[row, column + 1]) {
                         change = true
                     }
@@ -519,8 +420,9 @@ fun getXh(row: Int, column: Int, result: Matrix<Boolean>): Int {
     var sum = 0
     for (i in 1..4) {
         if (!getNeighbour(row, column, 2 * i - 1, result)
-                && (getNeighbour(row, column, 2 * i, result)
-                        || getNeighbour(row, column, 2 * i + 1, result))) {
+            && (getNeighbour(row, column, 2 * i, result)
+                    || getNeighbour(row, column, 2 * i + 1, result))
+        ) {
             sum += 1
         }
     }
@@ -541,7 +443,8 @@ fun getN2(row: Int, column: Int, result: Matrix<Boolean>): Int {
     var sum = 0
     for (k in 1..4) {
         if (getNeighbour(row, column, 2 * k, result)
-                || getNeighbour(row, column, 2 * k + 1, result)) {
+            || getNeighbour(row, column, 2 * k + 1, result)
+        ) {
             sum += 1
         }
     }
@@ -586,16 +489,18 @@ fun thinNotWorking(image: Matrix<Boolean>): Matrix<Boolean> {
                 if (first) {
                     first = false
                     if (!(getNeighbour(row, column, 2, result)
-                                    || getNeighbour(row, column, 3, result)
-                                    || !getNeighbour(row, column, 8, result)
-                                    ) && getNeighbour(row, column, 1, result)) {
+                                || getNeighbour(row, column, 3, result)
+                                || !getNeighbour(row, column, 8, result)
+                                ) && getNeighbour(row, column, 1, result)
+                    ) {
                         continue
                     }
                 } else {
                     if (!(getNeighbour(row, column, 6, result)
-                                    || getNeighbour(row, column, 7, result)
-                                    || !getNeighbour(row, column, 4, result))
-                            && getNeighbour(row, column, 5, result)) {
+                                || getNeighbour(row, column, 7, result)
+                                || !getNeighbour(row, column, 4, result))
+                        && getNeighbour(row, column, 5, result)
+                    ) {
                         continue
                     }
                 }
@@ -621,112 +526,6 @@ fun thinNotWorking(image: Matrix<Boolean>): Matrix<Boolean> {
 }
 
 
-internal val lookup1 = booleanArrayOf(false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, true, true, false, false, true, true,
-        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, false, true, true, false, false, false, false, false, false, false, true,
-        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, true, false, false, false, true,
-        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true,
-        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, true, false, false, false, true,
-        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, false, true, true, false, false, false, false, false, false, false, true,
-        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true,
-        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, true, false, true, true, false, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, true, false, true, false, false, false, true,
-        false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, true, false, true, true, true, true, false, false, true, true, false, false)
-
-internal val lookup2 = booleanArrayOf(true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, true, true, true, false, true, false, true, true, false, false, false, false, true, false,
-        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, true, true, false, false, false, false, false, true, true, false, false, true, false,
-        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, true, true, true, true, false, false, false, true, true, false, true,
-        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, false, true, true, true, false, true, false, true,
-        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, true, false, true, false, false, true, true, true, true, true, true,
-        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, true, true, false, false, true, true, false, true,
-        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, true, true, false, true, false, false, true, false, true, true, false, true,
-        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, false, true, false, true, true, true, false, true, false, true, false, true,
-        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, true, false, true, false, true, false, true, true, true, true, true, true, true,
-        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, true, false, true, false, false, true, false, true, true, true, true,
-        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true,
-        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true,
-        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, true, false, true, false, false, true, false, true, true, true, true,
-        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
-        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true,
-        true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true)
-
-
-fun thin(image: Matrix<Boolean>): Matrix<Boolean> {
-    var previous = image
-    var result: Matrix<Boolean>
-    while (true) {
-        result = Matrix(image.numberOfRows, image.numberOfColumns, { row, column -> false })
-        applyLookup(applyLookup(previous, lookup1), lookup2).forEachIndexed({ row, column, value ->
-            result[row, column] = previous[row, column] && value
-        })
-
-        var changed = false
-        result.forEachIndexed({ row, column, value ->
-            if (value != previous[row, column]) {
-                changed = true
-                return@forEachIndexed
-            }
-        })
-
-        if (changed) {
-            previous = result
-        } else {
-            return result
-        }
-    }
-}
-
-
-fun applyLookup(image: Matrix<Boolean>, lookup: BooleanArray): Matrix<Boolean> {
-    if (image.numberOfRows != image.numberOfColumns) {
-        throw IllegalArgumentException("Only square matrices supported")
-    }
-    return applyLookup3(image, lookup)
-}
-
-fun applyLookup3(image: Matrix<Boolean>, lookup: BooleanArray): Matrix<Boolean> {
-    val result = Matrix.copy(image)
-    image.forEachIndexed({ row, column, value ->
-        run {
-            // https://se.mathworks.com/help/images/ref/applylut.html
-            var index = if (value) {
-                16
-            } else {
-                0
-            }
-            FlowDirection.values().forEach { value2 ->
-                index += if (EncodingUtilities.validCell(row, column, value2, image.numberOfRows, image.numberOfColumns)) {
-                    if (!image[row + value2.rowShift, column + value2.columnShift]) {
-                        0
-                    } else {
-                        when (value2) {
-                            FlowDirection.EAST -> 2
-                            FlowDirection.NORTH_EAST -> 4
-                            FlowDirection.NORTH -> 32
-                            FlowDirection.NORTH_WEST -> 256
-                            FlowDirection.WEST -> 128
-                            FlowDirection.SOUTH_WEST -> 64
-                            FlowDirection.SOUTH -> 8
-                            FlowDirection.SOUTH_EAST -> 1
-                        }
-                    }
-                } else {
-                    0
-                }
-            }
-            result[row, column] = lookup[index]
-        }
-
-    })
-    return result
-}
-
-
 fun transformToBooleanArrays(image: Matrix<Boolean>): Array<BooleanArray> {
     return (0 until image.numberOfRows).map {
         val row = it
@@ -748,9 +547,11 @@ fun transformToArrays(image: Matrix<Color>): Array<Array<Color>> {
 }
 
 
-fun transformArraysToMatrix(image: Array<BooleanArray>) = Matrix(image.size, image[0].size, { row, column -> image[row][column] })
+fun transformArraysToMatrix(image: Array<BooleanArray>) =
+    Matrix(image.size, image[0].size, { row, column -> image[row][column] })
 
-fun transformArraysToMatrix(image: Array<IntArray>) = Matrix(image.size, image[0].size, { row, column -> image[row][column] })
+fun transformArraysToMatrix(image: Array<IntArray>) =
+    Matrix(image.size, image[0].size, { row, column -> image[row][column] })
 
 
 fun makeSquare(matrix: Matrix<Boolean>): Matrix<Boolean> {
@@ -792,10 +593,9 @@ fun makeSquare(matrix: Matrix<Boolean>): Matrix<Boolean> {
         val offsetRow = row + minRow
         val offsetColumn = column + minColumn
 
-        if(offsetRow >= matrix.numberOfRows || offsetColumn >= matrix.numberOfColumns) {
+        if (offsetRow >= matrix.numberOfRows || offsetColumn >= matrix.numberOfColumns) {
             false
-        }
-        else {
+        } else {
             matrix[offsetRow, offsetColumn]
         }
     })

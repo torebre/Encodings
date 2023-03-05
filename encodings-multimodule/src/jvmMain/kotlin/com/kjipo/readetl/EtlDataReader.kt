@@ -2,7 +2,7 @@ package com.kjipo.readetl
 
 import com.kjipo.representation.Matrix
 import java.nio.file.Path
-import java.util.HexFormat
+import java.util.*
 import java.util.stream.Stream
 import javax.imageio.ImageIO
 import kotlin.io.path.*
@@ -14,8 +14,12 @@ import kotlin.io.path.*
 object EtlDataReader {
 
 
-    fun extractEtlImagesToKanjiData(etlBaseDirectory: Path, dataset: EtlDataSet, maxNumberOfFilesToRead: Int = Int.MAX_VALUE): List<KanjiFromEtlData> {
-        if(!etlBaseDirectory.isDirectory()) {
+    fun extractEtlImagesToKanjiData(
+        etlBaseDirectory: Path,
+        dataset: EtlDataSet,
+        maxNumberOfFilesToRead: Int = Int.MAX_VALUE
+    ): List<KanjiFromEtlData> {
+        if (!etlBaseDirectory.isDirectory()) {
             throw IllegalArgumentException("Input needs to be a directory")
         }
 
@@ -23,38 +27,34 @@ object EtlDataReader {
 
         return etlBaseDirectory.resolve(dataset.name).listDirectoryEntries().stream()
             .filter { it.isDirectory() }
-            .flatMap { processEtlKanjiDirectory(it,dataset) }
+            .flatMap { processEtlKanjiDirectory(it, dataset) }
             .takeWhile {
-                 counter++ < maxNumberOfFilesToRead
+                counter++ < maxNumberOfFilesToRead
             }
             .toList()
     }
 
     private fun processEtlKanjiDirectory(etlKanjiDirectory: Path, dataset: EtlDataSet): Stream<KanjiFromEtlData> {
-        val unicode = etlKanjiDirectory.name.let {  HexFormat.fromHexDigits(it.substring(2)) }
+        val unicode = etlKanjiDirectory.name.let { HexFormat.fromHexDigits(it.substring(2)) }
 
         return etlKanjiDirectory.listDirectoryEntries().stream()
             .filter { it.extension == "png" }
-            .map { KanjiFromEtlData(unicode, dataset, it.pathString, readImage(it)) }
+            .map { KanjiFromEtlData(unicode, dataset, it, readImage(it)) }
     }
 
 
-
-    private fun readImage(imageFile: Path): Matrix<Boolean> {
+    private fun readImage(imageFile: Path): Matrix<Int> {
         return ImageIO.read(imageFile.toFile()).let { bufferedImage ->
-            Matrix(bufferedImage.height, bufferedImage.width) { _, _ -> false }.also { image ->
+            Matrix(bufferedImage.height, bufferedImage.width) { _, _ -> 0 }.also { image ->
                 for (row in 0 until bufferedImage.height) {
                     for (column in 0 until bufferedImage.width) {
-                        if (bufferedImage.getRGB(column, row) != -1) {
-                            image[row, column] = true
-                        }
+                        val rgbValue = bufferedImage.getRGB(column, row)
+                        image[row, column] = rgbValue
                     }
                 }
             }
-
         }
     }
-
 
 
 }
@@ -72,13 +72,22 @@ enum class EtlDataSet {
 }
 
 
-data class KanjiFromEtlData(val unicode: Int, val etlDataset: EtlDataSet, val fileName: String, val kanjiData: Matrix<Boolean>)
+data class KanjiFromEtlData(
+    val unicode: Int,
+    val etlDataset: EtlDataSet,
+    val filePath: Path,
+    val kanjiData: Matrix<Int>
+)
 
 
 fun main() {
-    val dataset = EtlDataReader.extractEtlImagesToKanjiData(Path.of("/home/student/Downloads/etlcbd_datasets"), EtlDataSet.ETL9G, 5)
+    val dataset = EtlDataReader.extractEtlImagesToKanjiData(
+        Path.of("/home/student/Downloads/etlcbd_datasets"),
+        EtlDataSet.ETL9G,
+        5
+    )
 
     dataset.forEach {
-        println("${it.unicode}, ${it.etlDataset}, ${it.fileName}")
+        println("${it.unicode}, ${it.etlDataset}, ${it.filePath}")
     }
 }

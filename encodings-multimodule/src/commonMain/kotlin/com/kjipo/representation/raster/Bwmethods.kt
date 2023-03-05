@@ -661,6 +661,204 @@ import com.kjipo.representation.Matrix
 //    }.toTypedArray()
 //}
 
+
+
+fun makeThin(image: Array<BooleanArray>): Matrix<Boolean> = makeThin(Matrix(image.size, image[0].size, { row, column -> image[row][column] }))
+
+fun makeThin(image: Matrix<Boolean>) = thin(fillIsolatedHoles(image))
+
+fun fillIsolatedHoles(image: Matrix<Boolean>): Matrix<Boolean> {
+    val result = Matrix.copy(image)
+
+    for (row in 0 until image.numberOfRows) {
+        for (column in 0 until image.numberOfColumns) {
+            if (result[row, column]) {
+                continue
+            }
+            result[row, column] = pixelsFilled(row, column, image) == 8
+        }
+    }
+
+    return result
+}
+
+
+
+fun pixelsFilled(row: Int, column: Int, image: Matrix<Boolean>): Int {
+    var pixels = 0
+
+    if (row > 0) {
+        if (column > 0) {
+            if (image[row - 1, column - 1]) {
+                ++pixels
+            }
+        }
+        if (column < image.numberOfColumns - 1) {
+            if (image[row - 1, column + 1]) {
+                ++pixels
+            }
+        }
+        if (image[row - 1, column]) {
+            ++pixels
+        }
+    }
+
+    if (row < image.numberOfRows - 1) {
+        if (column > 0) {
+            if (image[row + 1, column - 1]) {
+                ++pixels
+            }
+        }
+        if (column < image.numberOfColumns - 1) {
+            if (image[row + 1, column + 1]) {
+                ++pixels
+            }
+        }
+        if (image[row + 1, column]) {
+            ++pixels
+        }
+    }
+
+    if (column > 0) {
+        if (image[row, column - 1]) {
+            ++pixels
+        }
+    }
+    if (column < image.numberOfColumns - 1) {
+        if (image[row, column + 1]) {
+            ++pixels
+        }
+    }
+
+    if (image[row, column]) {
+        ++pixels
+    }
+
+    return pixels
+}
+
+
+
+fun isEnd(row: Int, column: Int, image: Matrix<Boolean>): Boolean {
+    return if (!image[row, column]) {
+        false
+    } else {
+        pixelsFilled(row, column, image) == 2
+    }
+}
+
+
+
+fun thin(image: Matrix<Boolean>): Matrix<Boolean> {
+    var previous = image
+    var result: Matrix<Boolean>
+    while (true) {
+        result = Matrix(image.numberOfRows, image.numberOfColumns, { row, column -> false })
+        applyLookup(applyLookup(previous, lookup1), lookup2).forEachIndexed({ row, column, value ->
+            result[row, column] = previous[row, column] && value
+        })
+
+        var changed = false
+        result.forEachIndexed({ row, column, value ->
+            if (value != previous[row, column]) {
+                changed = true
+                return@forEachIndexed
+            }
+        })
+
+        if (changed) {
+            previous = result
+        } else {
+            return result
+        }
+    }
+}
+
+
+
+internal val lookup1 = booleanArrayOf(false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, true, true, false, false, true, true,
+    false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, false, true, true, false, false, false, false, false, false, false, true,
+    false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, true, false, false, false, true,
+    false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true,
+    false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, true, false, false, false, true,
+    false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, false, true, true, false, false, false, false, false, false, false, true,
+    false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true,
+    false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, true, false, true, true, false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, true, true, false, true, false, false, false, true,
+    false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, true, false, true, true, true, true, false, false, true, true, false, false)
+
+internal val lookup2 = booleanArrayOf(true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, true, true, true, false, true, false, true, true, false, false, false, false, true, false,
+    true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, true, true, false, false, false, false, false, true, true, false, false, true, false,
+    true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, true, true, true, true, false, false, false, true, true, false, true,
+    true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, false, true, true, true, false, true, false, true,
+    true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, true, false, true, false, false, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, true, true, false, false, true, true, false, true,
+    true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, true, true, false, true, false, false, true, false, true, true, false, true,
+    true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, false, true, false, true, true, true, false, true, false, true, false, true,
+    true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, true, false, true, false, true, false, true, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, true, false, true, false, false, true, false, true, true, true, true,
+    true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, true, false, true, false, false, true, false, true, true, true, true,
+    true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, false, true, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true)
+
+
+
+
+fun applyLookup(image: Matrix<Boolean>, lookup: BooleanArray): Matrix<Boolean> {
+    if (image.numberOfRows != image.numberOfColumns) {
+        throw IllegalArgumentException("Only square matrices supported")
+    }
+    return applyLookup3(image, lookup)
+}
+
+
+
+fun applyLookup3(image: Matrix<Boolean>, lookup: BooleanArray): Matrix<Boolean> {
+    val result = Matrix.copy(image)
+    image.forEachIndexed({ row, column, value ->
+        run {
+            // https://se.mathworks.com/help/images/ref/applylut.html
+            var index = if (value) {
+                16
+            } else {
+                0
+            }
+            FlowDirection.values().forEach { value2 ->
+                index += if (EncodingUtilities.validCell(row, column, value2, image.numberOfRows, image.numberOfColumns)) {
+                    if (!image[row + value2.rowShift, column + value2.columnShift]) {
+                        0
+                    } else {
+                        when (value2) {
+                            FlowDirection.EAST -> 2
+                            FlowDirection.NORTH_EAST -> 4
+                            FlowDirection.NORTH -> 32
+                            FlowDirection.NORTH_WEST -> 256
+                            FlowDirection.WEST -> 128
+                            FlowDirection.SOUTH_WEST -> 64
+                            FlowDirection.SOUTH -> 8
+                            FlowDirection.SOUTH_EAST -> 1
+                        }
+                    }
+                } else {
+                    0
+                }
+            }
+            result[row, column] = lookup[index]
+        }
+
+    })
+    return result
+}
+
 fun transformArraysToMatrix(image: Array<BooleanArray>) = Matrix(image.size, image[0].size, { row, column -> image[row][column] })
 
 fun transformArraysToMatrix(image: Array<IntArray>) = Matrix(image.size, image[0].size, { row, column -> image[row][column] })
@@ -712,53 +910,67 @@ fun makeSquare(matrix: Matrix<Boolean>): Matrix<Boolean> {
     }
 }
 
-//
-//fun extractSkeleton(image: Matrix<Boolean>) {
-//    val thinImage = makeThin(image)
-//    extractJunctions(thinImage)
-//
-//    // TODO
-//
-//
-//}
-//
-//fun bwconncomp(image: Matrix<Boolean>): ConnCompResult {
-//    val disjointRegions = FitPrototype.findDisjointRegions(transformToBooleanArrays(image))
-//
-//    val regionPixelMapping = mutableMapOf<Int, MutableList<Pair<Int, Int>>>()
-//    disjointRegions.forEachIndexed({ row, columnValues ->
-//        columnValues.forEachIndexed({ column, value ->
-//            regionPixelMapping.computeIfAbsent(value, { key -> mutableListOf() }).add(Pair(row, column))
-//        })
-//    })
-//
-//    return ConnCompResult(regionPixelMapping.values.toList())
-//}
-//
-//data class ConnCompResult(val pixelIdsList: List<List<Pair<Int, Int>>>)
-//
-//fun getNeighbourhood(matrix: Matrix<Boolean>, row: Int, column: Int): Matrix<Boolean> {
-//    val result = Matrix(3, 3, { row2, column2 -> false })
-//    result[1, 1] = matrix[row, column]
-//    FlowDirection.values().forEach {
-//        if (EncodingUtilities.validCell(row, column, it, matrix.numberOfRows, matrix.numberOfColumns)) {
-//            result[1 + it.rowShift, 1 + it.columnShift] = matrix[row + it.rowShift, column + it.columnShift]
-//        }
-//    }
-//    return result
-//}
-//
-//val matrix = Matrix(3, 3, { row, column ->
-//    when (Pair(row, column)) {
-//        Pair(0, 0) -> 256
-//        Pair(0, 1) -> 32
-//        Pair(0, 2) -> 4
-//        Pair(1, 0) -> 128
-//        Pair(1, 1) -> 16
-//        Pair(1, 2) -> 2
-//        Pair(2, 0) -> 64
-//        Pair(2, 1) -> 8
-//        Pair(2, 2) -> 1
-//        else -> throw IllegalArgumentException("Unexpected row: $row")
-//    }
-//})
+
+
+
+inline fun <reified T> makeSquare(matrix: Matrix<T>, thresholdFunction: (T)->Boolean, emptyValue: T): Matrix<T> {
+    if (matrix.numberOfRows == matrix.numberOfColumns) {
+        return Matrix.copy(matrix)
+    }
+
+    var minRow = 0
+    var maxRow = 0
+    var minColumn = 0
+    var maxColumn = 0
+
+    matrix.forEachIndexed { row, column, value ->
+        if (thresholdFunction(matrix[row, column])) {
+            if (minRow > row) {
+                minRow = row
+            }
+            if (maxRow < row) {
+                maxRow = row
+            }
+            if (minColumn > column) {
+                minColumn = column
+            }
+            if (maxColumn < column) {
+                maxColumn = column
+            }
+        }
+    }
+
+    val occupiedRows = maxRow - minRow
+    val occupiedColumns = maxColumn - minColumn
+    val sideSize = if (occupiedRows < occupiedColumns) {
+        occupiedColumns
+    } else {
+        occupiedRows
+    }
+
+    return Matrix(sideSize, sideSize) { row, column ->
+        val offsetRow = row + minRow
+        val offsetColumn = column + minColumn
+
+        if(offsetRow >= matrix.numberOfRows || offsetColumn >= matrix.numberOfColumns) {
+            emptyValue
+        } else {
+            matrix[offsetRow, offsetColumn]
+        }
+    }
+}
+
+
+fun bwmorphEndpoints(image: Matrix<Boolean>): Matrix<Boolean> {
+    // TODO Does not mark everything that looks like an endpoint. Try to find a better algorithm
+
+    val result = Matrix(image.numberOfRows, image.numberOfColumns, { row, column -> false })
+
+    for (row in 0 until image.numberOfRows) {
+        for (column in 0 until image.numberOfColumns) {
+            result[row, column] = isEnd(row, column, image)
+        }
+    }
+
+    return result
+}

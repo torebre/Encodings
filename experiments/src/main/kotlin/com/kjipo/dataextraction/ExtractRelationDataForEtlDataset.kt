@@ -2,9 +2,8 @@ package com.kjipo.dataextraction
 
 import com.kjipo.experiments.ExtractRelationDataFromKanji
 import com.kjipo.experiments.ReadEtlData
-import com.kjipo.segmentation.fitMultipleLinesUsingDevianceMeasure
+import com.kjipo.representation.raster.makeThin
 import com.kjipo.segmentation.shrinkImage
-import com.kjipo.skeleton.makeThin
 import com.kjipo.utilities.DisplayUtilities
 import java.nio.file.Files
 import java.nio.file.Path

@@ -12,10 +12,9 @@ class Matrix<T>(val numberOfRows: Int, val numberOfColumns: Int, val array: Arra
                 Matrix(xWidth, yWidth, Array(xWidth, { arrayOfNulls<T>(yWidth) }))
 
         inline operator fun <reified T> invoke(xWidth: Int, yWidth: Int, operator: (Int, Int) -> (T)): Matrix<T> {
-            val array = Array(xWidth, {
-                val x = it
-                Array(yWidth, { operator(x, it) })
-            })
+            val array = Array(xWidth) { array ->
+                Array(yWidth) { operator(array, it) }
+            }
             return Matrix(xWidth, yWidth, array)
         }
 
