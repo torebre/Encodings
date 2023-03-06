@@ -39,7 +39,7 @@ object EtlDataReader {
 
         return etlKanjiDirectory.listDirectoryEntries().stream()
             .filter { it.extension == "png" }
-            .map { KanjiFromEtlData(unicode, dataset, it, readImage(it)) }
+            .map { KanjiFromEtlData(unicode, dataset, it, flipMatrix(readImage(it))) }
     }
 
 
@@ -53,6 +53,12 @@ object EtlDataReader {
                     }
                 }
             }
+        }
+    }
+
+    private inline fun <reified T> flipMatrix(matrix: Matrix<T>): Matrix<T> {
+        return Matrix(matrix.numberOfColumns, matrix.numberOfRows) { row, column ->
+            matrix[column, row]
         }
     }
 

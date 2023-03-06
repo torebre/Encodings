@@ -974,3 +974,16 @@ fun bwmorphEndpoints(image: Matrix<Boolean>): Matrix<Boolean> {
 
     return result
 }
+
+
+
+fun getNeighbourhood(matrix: Matrix<Boolean>, row: Int, column: Int): Matrix<Boolean> {
+    val result = Matrix(3, 3, { row2, column2 -> false })
+    result[1, 1] = matrix[row, column]
+    FlowDirection.values().forEach {
+        if (EncodingUtilities.validCell(row, column, it, matrix.numberOfRows, matrix.numberOfColumns)) {
+            result[1 + it.rowShift, 1 + it.columnShift] = matrix[row + it.rowShift, column + it.columnShift]
+        }
+    }
+    return result
+}
