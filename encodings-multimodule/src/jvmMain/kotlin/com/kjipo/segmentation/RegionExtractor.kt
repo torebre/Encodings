@@ -31,14 +31,6 @@ class RegionExtractor {
     }
 
 
-    private fun getOffset(value: Int): Int {
-        return when (value) {
-            0 -> -1
-            1 -> 0
-            2 -> 1
-            else -> throw IllegalArgumentException("Unexpected offset")
-        }
-    }
 
 
 }
