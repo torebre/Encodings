@@ -103,28 +103,13 @@ object PrototypeTest {
             }
         }
 
-        writeOutputMatrix(
+        writeOutputMatrixToPngFile(
             result,
             File("${dataset.filePath.fileName.toString().substringBefore('.')}_edges.png"),
             colourMap
         )
     }
 
-    private fun writeOutputMatrix(result: Matrix<Int>, outputFile: File, colourMap: Map<Int, IntArray>) {
-        val bufferedImage = BufferedImage(
-            result.numberOfRows,
-            result.numberOfColumns,
-            TYPE_INT_RGB
-        )
-
-        result.forEachIndexed { row, column, value ->
-            colourMap[value]?.let {
-                bufferedImage.raster.setPixel(row, column, it)
-            }
-        }
-
-        ImageIO.write(bufferedImage, "png", outputFile)
-    }
 
 
     @JvmStatic

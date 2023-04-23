@@ -2,8 +2,10 @@ import com.kjipo.readetl.EtlDataReader
 import com.kjipo.readetl.EtlDataSet
 import com.kjipo.readetl.KanjiFromEtlData
 import com.kjipo.representation.Matrix
+import java.awt.image.BufferedImage
+import java.io.File
 import java.nio.file.Path
-
+import javax.imageio.ImageIO
 
 
 val colourMap = mapOf(
@@ -20,9 +22,12 @@ internal fun loadImagesFromEtl9G(maxNumberOfFilesToRead: Int): List<KanjiFromEtl
     )
 }
 
-internal fun transformToBooleanMatrix(imageMatrix: Matrix<Int>): Matrix<Boolean> {
+internal fun transformToBooleanMatrix(
+    imageMatrix: Matrix<Int>,
+    thresholdFunction: (rgbValue: Int) -> Boolean = { value -> handlePixelValue(value) }
+): Matrix<Boolean> {
     return Matrix(imageMatrix.numberOfRows, imageMatrix.numberOfColumns, { _, _ -> false }).also { matrix ->
-        imageMatrix.forEachIndexed { row, column, value -> matrix[row, column] = handlePixelValue(value) }
+        imageMatrix.forEachIndexed { row, column, value -> matrix[row, column] = thresholdFunction(value) }
     }
 }
 
@@ -44,10 +49,10 @@ internal fun handlePixelValue(rgbValue: Int): Boolean {
         // https://www.baeldung.com/cs/convert-rgb-to-grayscale
         val grayscale = (0.3 * red) / 255 + (0.59 * green) / 255 + (0.11 * blue) / 255
 
-        if (blue < 255 || green < 254 || red < 255) {
-            println("Test30: $red, $green, $blue")
-            println("Grayscale: $grayscale")
-        }
+//        if (blue < 255 || green < 254 || red < 255) {
+//            println("Test30: $red, $green, $blue")
+//            println("Grayscale: $grayscale")
+//        }
 
         if (grayscale > 0.9) {
             return true
@@ -55,4 +60,20 @@ internal fun handlePixelValue(rgbValue: Int): Boolean {
     }
     return false
 
+}
+
+internal fun writeOutputMatrixToPngFile(result: Matrix<Int>, outputFile: File, colourMap: Map<Int, IntArray>) {
+    val bufferedImage = BufferedImage(
+        result.numberOfRows,
+        result.numberOfColumns,
+        BufferedImage.TYPE_INT_RGB
+    )
+
+    result.forEachIndexed { row, column, value ->
+        colourMap[value]?.let {
+            bufferedImage.raster.setPixel(row, column, it)
+        }
+    }
+
+    ImageIO.write(bufferedImage, "png", outputFile)
 }

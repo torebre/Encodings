@@ -1,12 +1,10 @@
 package com.kjipo
 
 import com.kjipo.datageneration.CreateSamples
-import com.kjipo.experiments.FindSimilarLines.describeLinePairs
 import com.kjipo.experiments.FindSimilarLines.findSimilarPaths
 import com.kjipo.experiments.LookupSample
 
 object RunExperiment {
-
 
     @JvmStatic
     fun main(args: Array<String>) {
@@ -17,8 +15,7 @@ object RunExperiment {
             LookupSample(id, CreateSamples.generateSample(true, 64, 64, 10))
         }.toList()
 
-
-        val searchDescription = findSimilarPaths(lookupSample, (9 until 14).toList(),  lookupSamples)
+        val searchDescription = findSimilarPaths(lookupSample, (9 until 14).toList(), lookupSamples)
 
         println("Search description:")
 
@@ -36,6 +33,5 @@ object RunExperiment {
         }
 
     }
-
 
 }

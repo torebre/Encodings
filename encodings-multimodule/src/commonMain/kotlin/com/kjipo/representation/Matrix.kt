@@ -1,5 +1,7 @@
 package com.kjipo.representation
 
+import com.kjipo.representation.raster.EncodingUtilities
+import com.kjipo.representation.raster.FlowDirection
 
 
 class Matrix<T>(val numberOfRows: Int, val numberOfColumns: Int, val array: Array<Array<T>>) {
@@ -9,7 +11,7 @@ class Matrix<T>(val numberOfRows: Int, val numberOfColumns: Int, val array: Arra
         inline operator fun <reified T> invoke() = Matrix(0, 0, Array(0, { emptyArray<T>() }))
 
         inline operator fun <reified T> invoke(xWidth: Int, yWidth: Int) =
-                Matrix(xWidth, yWidth, Array(xWidth, { arrayOfNulls<T>(yWidth) }))
+            Matrix(xWidth, yWidth, Array(xWidth, { arrayOfNulls<T>(yWidth) }))
 
         inline operator fun <reified T> invoke(xWidth: Int, yWidth: Int, operator: (Int, Int) -> (T)): Matrix<T> {
             val array = Array(xWidth) { array ->
@@ -19,13 +21,24 @@ class Matrix<T>(val numberOfRows: Int, val numberOfColumns: Int, val array: Arra
         }
 
         inline fun <reified T> copy(matrix: Matrix<T>): Matrix<T> {
-            return Matrix(matrix.numberOfRows, matrix.numberOfColumns, { row, column ->
-                matrix.get(row, column)
-            })
+            return Matrix(matrix.numberOfRows, matrix.numberOfColumns) { row, column ->
+                matrix[row, column]
+            }
         }
 
-
     }
+
+    inline fun <reified T> getNeighbourhood(row: Int, column: Int): Matrix<T?> {
+        val result = Matrix<T?>(3, 3) { _, _ -> null }
+        result[1, 1] = array[row][column] as T?
+        FlowDirection.values().forEach {
+            if (EncodingUtilities.validCell(row, column, it, numberOfRows, numberOfColumns)) {
+                result[1 + it.rowShift, 1 + it.columnShift] = array[row + it.rowShift][column + it.columnShift] as T?
+            }
+        }
+        return result
+    }
+
 
     operator fun get(x: Int, y: Int): T {
         return array[x][y]
