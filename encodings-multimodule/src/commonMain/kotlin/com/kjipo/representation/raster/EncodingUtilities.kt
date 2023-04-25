@@ -88,9 +88,7 @@ object EncodingUtilities {
         if (shiftedRow < 0 || shiftedRow >= rows) {
             return false
         }
-        return if (shiftedColumn < 0 || shiftedColumn >= columns) {
-            false
-        } else true
+        return !(shiftedColumn < 0 || shiftedColumn >= columns)
     }
 
     @JvmStatic

@@ -18,7 +18,8 @@ class PointsTest {
         for (row in 0 until imageMatrix.numberOfRows) {
             for (column in 0 until imageMatrix.numberOfColumns) {
                 if (imageMatrix[row, column]) {
-                    result[row, column] = 2
+                    result[row, column] = pointsPlacer.regionMatrix[row, column] + 10
+//                    result[row, column] = 2
                 }
             }
         }
@@ -29,9 +30,7 @@ class PointsTest {
 
         writeOutputMatrixToPngFile(
             result,
-            File("${dataset.filePath.fileName.toString().substringBefore('.')}_points.png"),
-            colourMap
-        )
+            File("${dataset.filePath.fileName.toString().substringBefore('.')}_points.png"))
 
 
     }

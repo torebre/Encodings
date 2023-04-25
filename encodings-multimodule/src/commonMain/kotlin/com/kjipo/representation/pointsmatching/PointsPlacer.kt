@@ -1,6 +1,7 @@
 package com.kjipo.representation.pointsmatching
 
 import com.kjipo.representation.Matrix
+import com.kjipo.representation.raster.EncodingUtilities
 import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.representation.raster.getFlowDirectionForOffset
 import kotlin.math.pow
@@ -8,6 +9,13 @@ import kotlin.math.sqrt
 
 class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
     private val points = mutableListOf<Pair<Int, Int>>()
+
+    val regionMatrix: Matrix<Int>
+
+
+    init {
+        regionMatrix = identifyRegions()
+    }
 
 
     fun runPlacement() {
@@ -42,7 +50,7 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
         var temp: Pair<Int, Int>? = null
         neighbourhood.forEachIndexed { row, column, value ->
             if (value == true) {
-                temp = Pair(row, column)
+                temp = Pair(row + existingPoint.first, column + existingPoint.second)
                 return@forEachIndexed
             }
         }
@@ -61,12 +69,10 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
 
     private fun movePoint(newPoint: Pair<Int, Int>): Pair<Int, Int> {
         var currentPoint = newPoint
-
         var counter = 0
+
         while (counter < 100) {
             val updatedPoint = doOnePointStep(currentPoint)
-
-            println("Current point: ${currentPoint}. Updated point: ${updatedPoint}")
 
             if (currentPoint == updatedPoint) {
                 return currentPoint
@@ -87,6 +93,10 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
         for (row in 0 until 3) {
             for (column in 0 until 3) {
                 neighbourhood[row, column]?.let { value ->
+                    if (!value) {
+                        return@let
+                    }
+
                     val distance = points.sumOf { point ->
                         sqrt(
                             (point.first - point.first).toDouble().pow(2)
@@ -100,7 +110,7 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
 
         var direction: FlowDirection? = null
         neighbourhood.forEachIndexed { row, column, value ->
-            if (value != null) {
+            if (value == true) {
                 getFlowDirectionForOffset(row - 1, column - 1)?.let {
                     direction = it
                     return@forEachIndexed
@@ -132,6 +142,70 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
             Pair(point.first + it.rowShift, point.second + it.columnShift)
         } ?: point
 
+    }
+
+
+    private fun identifyRegions(): Matrix<Int> {
+        val regionMatrix = Matrix<Int>(imageMatrix.numberOfRows, imageMatrix.numberOfColumns) { row, column ->
+            if (imageMatrix[row, column]) {
+                -1
+            } else {
+                0
+            }
+        }
+
+        var fillValue = 1
+        var foundHit = true
+
+        while (foundHit) {
+            foundHit = false
+
+            for (row in 0 until regionMatrix.numberOfRows) {
+                for (column in 0 until regionMatrix.numberOfColumns) {
+                    if (regionMatrix[row, column] == -1) {
+                        spreadAcrossRegion(row, column, fillValue, regionMatrix)
+                        foundHit = true
+                        ++fillValue
+                    }
+                }
+            }
+        }
+
+        return regionMatrix
+    }
+
+
+    private fun spreadAcrossRegion(
+        startRow: Int, startColumn: Int, fillValue: Int,
+        regionData: Matrix<Int>
+    ) {
+        val cellsToVisit = ArrayDeque<Pair<Int, Int>>()
+        cellsToVisit.add(Pair(startRow, startColumn))
+
+        while (cellsToVisit.isNotEmpty()) {
+            val (row, column) = cellsToVisit.removeFirst()
+
+            if (EncodingUtilities.validCoordinates(row, column, regionData.numberOfRows, regionData.numberOfColumns)
+            ) {
+                regionData[row, column] = fillValue
+            }
+            for (flowDirection in FlowDirection.values()) {
+                val nextRow = row + flowDirection.rowShift
+                val nextColumn = column + flowDirection.columnShift
+                val nextPair = Pair(nextRow, nextColumn)
+
+                if ((EncodingUtilities.validCoordinates(
+                        nextRow,
+                        nextColumn,
+                        regionData.numberOfRows,
+                        regionData.numberOfColumns)
+                            && regionData[nextRow, nextColumn] == -1)
+                    && !cellsToVisit.contains(nextPair)
+                ) {
+                    cellsToVisit.add(nextPair)
+                }
+            }
+        }
     }
 
 

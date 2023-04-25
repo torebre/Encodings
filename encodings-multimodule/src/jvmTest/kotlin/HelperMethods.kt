@@ -2,8 +2,10 @@ import com.kjipo.readetl.EtlDataReader
 import com.kjipo.readetl.EtlDataSet
 import com.kjipo.readetl.KanjiFromEtlData
 import com.kjipo.representation.Matrix
+import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.File
+import java.lang.IllegalArgumentException
 import java.nio.file.Path
 import javax.imageio.ImageIO
 
@@ -12,6 +14,21 @@ val colourMap = mapOf(
     Pair(1, IntArray(3).also { it[0] = 255; it[1] = 0; it[2] = 0 }),
     Pair(2, IntArray(3).also { it[0] = 0; it[1] = 255; it[2] = 0 })
 )
+
+fun colourFunction(value: Int): IntArray {
+    if (value < 0 || value > 50) {
+        throw IllegalArgumentException("Value needs to be in range from 0 to 50 (inclusive)")
+    }
+
+    return Color.getHSBColor(value.toFloat().div(50), 1.0f, 1.0f).let { colour ->
+        IntArray(3).also {
+            it[0] = colour.red
+            it[1] = colour.green
+            it[2] = colour.blue
+        }
+    }
+
+}
 
 
 internal fun loadImagesFromEtl9G(maxNumberOfFilesToRead: Int): List<KanjiFromEtlData> {
@@ -63,6 +80,15 @@ internal fun handlePixelValue(rgbValue: Int): Boolean {
 }
 
 internal fun writeOutputMatrixToPngFile(result: Matrix<Int>, outputFile: File, colourMap: Map<Int, IntArray>) {
+    return writeOutputMatrixToPngFile(result, outputFile) { value ->
+        colourMap[value]!!
+    }
+}
+
+
+internal fun writeOutputMatrixToPngFile(result: Matrix<Int>, outputFile: File, colourProvider: (Int) -> IntArray? = { value ->
+    colourFunction(value)
+}) {
     val bufferedImage = BufferedImage(
         result.numberOfRows,
         result.numberOfColumns,
@@ -70,7 +96,7 @@ internal fun writeOutputMatrixToPngFile(result: Matrix<Int>, outputFile: File, c
     )
 
     result.forEachIndexed { row, column, value ->
-        colourMap[value]?.let {
+        colourProvider(value).let {
             bufferedImage.raster.setPixel(row, column, it)
         }
     }
