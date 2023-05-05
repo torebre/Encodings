@@ -13,6 +13,11 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
     val regionMatrix: Matrix<Int>
 
 
+    val backgroundRegion = 0
+    val interiorPointRegion = 1
+    val startRegionCount = 10
+
+
     init {
         regionMatrix = identifyRegions()
     }
@@ -26,7 +31,32 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
             points.add(it)
         }
 
+        removeInteriorPoints(regionMatrix)
 
+    }
+
+    private fun removeInteriorPoints(valueMatrix: Matrix<Int>) {
+        val pointsInInterior = mutableListOf<Pair<Int, Int>>()
+
+        valueMatrix.forEachIndexed { row, column, value ->
+            val neighbourhood = valueMatrix.getNeighbourhood<Int?>(row, column)
+
+            var surroundedByEqualValues = true
+            neighbourhood.forEach {
+               if(it != null && it != value) {
+                   surroundedByEqualValues = false
+                   return@forEach
+               }
+            }
+
+            if(surroundedByEqualValues) {
+                pointsInInterior.add(Pair(row, column))
+            }
+        }
+
+        pointsInInterior.forEach {
+            valueMatrix[it.first, it.second] = interiorPointRegion
+        }
     }
 
 
@@ -154,7 +184,7 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
             }
         }
 
-        var fillValue = 1
+        var fillValue = startRegionCount
         var foundHit = true
 
         while (foundHit) {
