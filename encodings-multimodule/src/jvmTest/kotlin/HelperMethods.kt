@@ -11,6 +11,7 @@ import javax.imageio.ImageIO
 
 
 val colourMap = mapOf(
+    Pair(0, IntArray(3).also { it[0] = 0; it[1] = 0; it[2] = 0 }),
     Pair(1, IntArray(3).also { it[0] = 255; it[1] = 0; it[2] = 0 }),
     Pair(2, IntArray(3).also { it[0] = 0; it[1] = 255; it[2] = 0 })
 )
@@ -30,6 +31,16 @@ fun colourFunction(value: Int): IntArray {
 
 }
 
+fun colourFunction(value: Double): IntArray {
+    return Color.getHSBColor(value.toFloat(), 1.0f, 1.0f).let { colour ->
+        IntArray(3).also {
+            it[0] = colour.red
+            it[1] = colour.green
+            it[2] = colour.blue
+        }
+    }
+
+}
 
 internal fun loadImagesFromEtl9G(maxNumberOfFilesToRead: Int): List<KanjiFromEtlData> {
     return EtlDataReader.extractEtlImagesToKanjiData(
@@ -86,9 +97,11 @@ internal fun writeOutputMatrixToPngFile(result: Matrix<Int>, outputFile: File, c
 }
 
 
-internal fun writeOutputMatrixToPngFile(result: Matrix<Int>, outputFile: File, colourProvider: (Int) -> IntArray? = { value ->
-    colourFunction(value)
-}) {
+internal fun <T> writeOutputMatrixToPngFile(
+    result: Matrix<T>,
+    outputFile: File,
+    colourProvider: (T) -> IntArray?
+) {
     val bufferedImage = BufferedImage(
         result.numberOfRows,
         result.numberOfColumns,

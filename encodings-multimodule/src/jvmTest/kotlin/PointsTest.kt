@@ -30,9 +30,53 @@ class PointsTest {
 
         writeOutputMatrixToPngFile(
             result,
-            File("${dataset.filePath.fileName.toString().substringBefore('.')}_points.png"))
+            File("${dataset.filePath.fileName.toString().substringBefore('.')}_points.png")
+        ) { value -> colourFunction(value) }
+    }
+
+    fun runFindLinePoints() {
+        val dataset = loadImagesFromEtl9G(1).first()
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, PointsTest::simpleThreshold))
+        val pointsPlacer = PointsPlacer(imageMatrix)
+
+        writeOutputMatrixToPngFile(
+            pointsPlacer.linePointMatrix,
+            File("${dataset.filePath.fileName.toString().substringBefore('.')}_line_points.png")
+        ) { value -> colourFunction(value) }
+    }
 
 
+    fun runFindCenterMass() {
+        val dataset = loadImagesFromEtl9G(1).first()
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, PointsTest::simpleThreshold))
+        val pointsPlacer = PointsPlacer(imageMatrix)
+
+        val result = Matrix(imageMatrix.numberOfRows, imageMatrix.numberOfColumns)
+        { row, column -> pointsPlacer.regionMatrix[row, column] }
+
+        for (row in 0 until imageMatrix.numberOfRows) {
+            for (column in 0 until imageMatrix.numberOfColumns) {
+                if (pointsPlacer.centerOfMassMatrix[row, column] != PointsPlacer.backgroundRegion) {
+                    result[row, column] = 1
+                }
+
+            }
+        }
+
+        pointsPlacer.getPoints().forEach { point ->
+            result[point.first, point.second] = 1
+        }
+
+        writeOutputMatrixToPngFile(
+            result,
+            File("${dataset.filePath.fileName.toString().substringBefore('.')}_center_mass_points.png")
+        ) { value ->
+            if (colourMap.containsKey(value)) {
+                colourMap[value]
+            } else {
+                colourFunction(value)
+            }
+        }
     }
 
 
@@ -56,5 +100,8 @@ class PointsTest {
 
 fun main() {
     val pointsTest = PointsTest()
-    pointsTest.runRegionExtraction()
+//    pointsTest.runRegionExtraction()
+//    pointsTest.runFindLinePoints()
+    pointsTest.runFindCenterMass()
+
 }

@@ -39,6 +39,10 @@ class Matrix<T>(val numberOfRows: Int, val numberOfColumns: Int, val array: Arra
         return result
     }
 
+    fun isValid(row: Int, column: Int): Boolean {
+        return row >= 0 && row < array.size && column >= 0 && column < array[0].size
+    }
+
 
     operator fun get(x: Int, y: Int): T {
         return array[x][y]

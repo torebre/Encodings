@@ -4,6 +4,7 @@ import com.kjipo.representation.Matrix
 import com.kjipo.representation.raster.EncodingUtilities
 import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.representation.raster.getFlowDirectionForOffset
+import com.kjipo.representation.raster.shiftTwoStepsForward
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -12,10 +13,13 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
 
     val regionMatrix: Matrix<Int>
 
+    val linePointMatrix: Matrix<Double> by lazy {
+        identifyLinePoints()
+    }
 
-    val backgroundRegion = 0
-    val interiorPointRegion = 1
-    val startRegionCount = 10
+    val centerOfMassMatrix: Matrix<Int> by lazy {
+        centerOfMassPointsForRegions()
+    }
 
 
     init {
@@ -35,6 +39,33 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
 
     }
 
+
+    fun identifyLinePoints(): Matrix<Double> {
+        val linePointMatrix = Matrix(regionMatrix.numberOfRows, regionMatrix.numberOfColumns) { _, _ -> 0.0 }
+        regionMatrix.forEachIndexed { row, column, _ ->
+            val directionRatio = checkLinePoint(row, column, regionMatrix)
+            linePointMatrix[row, column] = directionRatio.second
+        }
+        return linePointMatrix
+    }
+
+    fun centerOfMassPointsForRegions(): Matrix<Int> {
+        val centerOfMassPointsMatrix = Matrix(
+            regionMatrix.numberOfRows,
+            regionMatrix.numberOfColumns
+        ) { _, _ -> 0 }
+        var regionCounter = startRegionCount
+
+        while (true) {
+            val massCenter = findMassCenter(regionMatrix, regionCounter) ?: break
+
+            centerOfMassPointsMatrix[massCenter.first, massCenter.second] = 1
+            ++regionCounter
+        }
+
+        return centerOfMassPointsMatrix
+    }
+
     private fun removeInteriorPoints(valueMatrix: Matrix<Int>) {
         val pointsInInterior = mutableListOf<Pair<Int, Int>>()
 
@@ -43,13 +74,13 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
 
             var surroundedByEqualValues = true
             neighbourhood.forEach {
-               if(it != null && it != value) {
-                   surroundedByEqualValues = false
-                   return@forEach
-               }
+                if (it != null && it != value) {
+                    surroundedByEqualValues = false
+                    return@forEach
+                }
             }
 
-            if(surroundedByEqualValues) {
+            if (surroundedByEqualValues) {
                 pointsInInterior.add(Pair(row, column))
             }
         }
@@ -228,7 +259,8 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
                         nextRow,
                         nextColumn,
                         regionData.numberOfRows,
-                        regionData.numberOfColumns)
+                        regionData.numberOfColumns
+                    )
                             && regionData[nextRow, nextColumn] == -1)
                     && !cellsToVisit.contains(nextPair)
                 ) {
@@ -239,7 +271,84 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
     }
 
 
+    fun checkLinePoint(row: Int, column: Int, imageMatrix: Matrix<Int>): Pair<FlowDirection, Double> {
+        val directionRatioMap = mutableMapOf<FlowDirection, Double>()
+
+        for (direction in FlowDirection.values()) {
+            var stepsMainDirection = 0
+            var mainDirectionX = row
+            var mainDirectionY = column
+
+            while (true) {
+                mainDirectionX += direction.rowShift
+                mainDirectionY += direction.columnShift
+
+                if (!imageMatrix.isValid(mainDirectionX, mainDirectionY)
+                    || imageMatrix[mainDirectionX, mainDirectionY] == backgroundRegion
+                ) {
+                    break
+                }
+                ++stepsMainDirection
+            }
+
+            var stepsSecondaryDirection = 0
+            val secondaryDirection = direction.shiftTwoStepsForward()
+            var secondaryDirectionX = row
+            var secondaryDirectionY = column
+
+            while (true) {
+                secondaryDirectionX += secondaryDirection.rowShift
+                secondaryDirectionY += secondaryDirection.columnShift
+
+                if (!imageMatrix.isValid(secondaryDirectionX, secondaryDirectionY)
+                    || imageMatrix[secondaryDirectionX, secondaryDirectionY] == backgroundRegion
+                ) {
+                    break
+                }
+                ++stepsSecondaryDirection
+            }
+
+            directionRatioMap[direction] = stepsMainDirection.toDouble() / stepsSecondaryDirection
+        }
+
+        var maxDirection = FlowDirection.EAST
+        var maxRatio = directionRatioMap[FlowDirection.EAST]!!
+        directionRatioMap.forEach { value ->
+            if (value.value > maxRatio) {
+                maxDirection = value.key
+                maxRatio = value.value
+            }
+        }
+
+        return Pair(maxDirection, maxRatio)
+    }
+
+    private fun findMassCenter(imageMatrix: Matrix<Int>, regionId: Int): Pair<Int, Int>? {
+        var rowSum = 0
+        var columnSum = 0
+        var numberOfCellsIncluded = 0
+
+        imageMatrix.forEachIndexed { row, column, value ->
+            if (value == regionId) {
+                rowSum += row
+                columnSum += column
+                ++numberOfCellsIncluded
+            }
+        }
+
+        if (numberOfCellsIncluded == 0) {
+            return null
+        }
+
+        return Pair(rowSum / numberOfCellsIncluded, columnSum / numberOfCellsIncluded)
+    }
+
     fun getPoints() = points.toList()
 
+    companion object {
+        val backgroundRegion = 0
+        val interiorPointRegion = 1
+        val startRegionCount = 10
+    }
 
 }
