@@ -11,7 +11,9 @@ import kotlin.math.sqrt
 class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
     private val points = mutableListOf<Pair<Int, Int>>()
 
-    val regionMatrix: Matrix<Int>
+    val regionMatrix: Matrix<Int> by lazy {
+        identifyRegions()
+    }
 
     val linePointMatrix: Matrix<Double> by lazy {
         identifyLinePoints()
@@ -19,11 +21,6 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
 
     val centerOfMassMatrix: Matrix<Int> by lazy {
         centerOfMassPointsForRegions()
-    }
-
-
-    init {
-        regionMatrix = identifyRegions()
     }
 
 
@@ -323,6 +320,87 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
         return Pair(maxDirection, maxRatio)
     }
 
+
+    fun extractBorders(valueMatrix: Matrix<Int> = regionMatrix): List<Border> {
+        val borderMatrix = Matrix(valueMatrix.numberOfRows, valueMatrix.numberOfColumns)
+        { row, column ->
+            if (valueMatrix[row, column] == backgroundRegion) {
+               backgroundRegion
+            } else {
+               interiorPointRegion
+            }
+        }
+
+        val borders = mutableListOf<Border>()
+
+        valueMatrix.forEachIndexed { row, column, value ->
+            val neighbourhood = valueMatrix.getNeighbourhood<Int?>(row, column)
+
+            var surroundedByEqualValues = true
+            neighbourhood.forEach {
+                if (it != null && it != value) {
+                    surroundedByEqualValues = false
+                    return@forEach
+                }
+            }
+
+            if (surroundedByEqualValues) {
+                borderMatrix[row, column] = backgroundRegion
+            }
+        }
+
+        val borderMatrixCopy = Matrix.copy(borderMatrix)
+        while(true) {
+            val borderPoint = findBorderPoint(borderMatrixCopy, interiorPointRegion) ?: break
+
+            val border = getConnectedPoints(borderPoint.first, borderPoint.second, borderMatrixCopy)
+            borders.add(Border(border))
+
+            border.forEach { borderMatrixCopy[it.first, it.second] = backgroundRegion }
+
+            if(borders.size > 10) {
+                break
+            }
+        }
+
+        return borders
+    }
+
+    private fun findBorderPoint(borderMatrix: Matrix<Int>, borderValue: Int): Pair<Int, Int>? {
+        borderMatrix.forEachIndexed { row, column, _ ->
+           if(borderMatrix[row, column] == borderValue) {
+               return Pair(row, column)
+           }
+        }
+        return null
+    }
+
+    private fun getConnectedPoints(row: Int, column: Int, borderMatrix: Matrix<Int>): MutableList<Pair<Int, Int>> {
+        val firstPoint = Pair(row, column)
+        val pointsToExamine = ArrayDeque(listOf(firstPoint))
+        val borderMatrixCopy = Matrix.copy(borderMatrix)
+        borderMatrixCopy[firstPoint.first, firstPoint.second] = backgroundRegion
+        val borderPoints = mutableListOf<Pair<Int, Int>>()
+
+        while(pointsToExamine.isNotEmpty()) {
+            val point = pointsToExamine.removeFirst()
+            borderPoints.add(point)
+
+            FlowDirection.values().forEach { flowDirection ->
+                if (EncodingUtilities.validCell(point.first, point.second, flowDirection, borderMatrixCopy.numberOfRows,
+                        borderMatrixCopy.numberOfColumns)
+                    && borderMatrixCopy[point.first + flowDirection.rowShift, point.second + flowDirection.columnShift] != backgroundRegion) {
+                    Pair(point.first + flowDirection.rowShift, point.second + flowDirection.columnShift).let {
+                        pointsToExamine.add(it)
+                        borderMatrixCopy[it.first, it.second] = backgroundRegion
+                    }
+                }
+            }
+        }
+
+        return borderPoints
+    }
+
     private fun findMassCenter(imageMatrix: Matrix<Int>, regionId: Int): Pair<Int, Int>? {
         var rowSum = 0
         var columnSum = 0
@@ -348,6 +426,7 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
     companion object {
         val backgroundRegion = 0
         val interiorPointRegion = 1
+        val borderRegion = 2
         val startRegionCount = 10
     }
 

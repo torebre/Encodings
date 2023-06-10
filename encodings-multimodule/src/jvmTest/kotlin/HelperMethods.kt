@@ -16,6 +16,14 @@ val colourMap = mapOf(
     Pair(2, IntArray(3).also { it[0] = 0; it[1] = 255; it[2] = 0 })
 )
 
+fun colorMapFallbackFunction(value: Int): IntArray {
+    return if (colourMap.containsKey(value)) {
+        colourMap[value]!!
+    } else {
+        colourFunction(value)
+    }
+}
+
 fun colourFunction(value: Int): IntArray {
     if (value < 0 || value > 50) {
         throw IllegalArgumentException("Value needs to be in range from 0 to 50 (inclusive)")

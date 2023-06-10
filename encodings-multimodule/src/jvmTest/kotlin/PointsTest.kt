@@ -1,3 +1,4 @@
+import com.kjipo.readetl.KanjiFromEtlData
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.pointsmatching.PointsPlacer
 import com.kjipo.representation.raster.makeSquare
@@ -34,6 +35,33 @@ class PointsTest {
         ) { value -> colourFunction(value) }
     }
 
+
+    fun extractBorders(dataset: KanjiFromEtlData = loadImagesFromEtl9G(1).first()) {
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, PointsTest::simpleThreshold))
+
+        val pointsPlacer = PointsPlacer(imageMatrix)
+
+        pointsPlacer.runPlacement()
+
+        val result = Matrix(imageMatrix.numberOfRows, imageMatrix.numberOfColumns) { _, _ -> 0 }
+
+        for (row in 0 until imageMatrix.numberOfRows) {
+            for (column in 0 until imageMatrix.numberOfColumns) {
+                if (imageMatrix[row, column]) {
+                    result[row, column] = pointsPlacer.regionMatrix[row, column] + 10
+//                    result[row, column] = 2
+                }
+            }
+        }
+
+        pointsPlacer.getPoints().forEach { point ->
+            result[point.first, point.second] = 1
+        }
+
+
+    }
+
+
     fun runFindLinePoints() {
         val dataset = loadImagesFromEtl9G(1).first()
         val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, PointsTest::simpleThreshold))
@@ -59,7 +87,6 @@ class PointsTest {
                 if (pointsPlacer.centerOfMassMatrix[row, column] != PointsPlacer.backgroundRegion) {
                     result[row, column] = 1
                 }
-
             }
         }
 
@@ -77,6 +104,30 @@ class PointsTest {
                 colourFunction(value)
             }
         }
+    }
+
+
+    fun runBorderExtraction() {
+        val dataset = loadImagesFromEtl9G(1).first()
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, PointsTest::simpleThreshold))
+        val pointsPlacer = PointsPlacer(imageMatrix)
+        val result = pointsPlacer.extractBorders()
+        val borderMatrix = Matrix(
+            imageMatrix.numberOfRows,
+            imageMatrix.numberOfColumns
+        ) { _, _ -> PointsPlacer.backgroundRegion }
+
+        result.forEachIndexed { index, value ->
+            value.points.forEach {
+                borderMatrix[it.first, it.second] = index + PointsPlacer.startRegionCount
+            }
+        }
+
+        writeOutputMatrixToPngFile(
+            borderMatrix,
+            File("${dataset.filePath.fileName.toString().substringBefore('.')}_border_extraction.png")
+        ) { value -> colorMapFallbackFunction(value) }
+
     }
 
 
@@ -102,6 +153,7 @@ fun main() {
     val pointsTest = PointsTest()
 //    pointsTest.runRegionExtraction()
 //    pointsTest.runFindLinePoints()
-    pointsTest.runFindCenterMass()
+//    pointsTest.runFindCenterMass()
+    pointsTest.runBorderExtraction()
 
 }
