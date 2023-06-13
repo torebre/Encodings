@@ -107,6 +107,10 @@ class PointsTest {
     }
 
 
+    /**
+     * Mark the borders of each region and write the result as an
+     * image to a file.
+     */
     fun runBorderExtraction() {
         val dataset = loadImagesFromEtl9G(1).first()
         val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, PointsTest::simpleThreshold))
@@ -126,6 +130,32 @@ class PointsTest {
         writeOutputMatrixToPngFile(
             borderMatrix,
             File("${dataset.filePath.fileName.toString().substringBefore('.')}_border_extraction.png")
+        ) { value -> colorMapFallbackFunction(value) }
+
+    }
+
+
+    /**
+     * Extract the borders and write an image showing a single border
+     * region to a file.
+     */
+    fun runBorderExtractionShowOneBorderRegion() {
+        val dataset = loadImagesFromEtl9G(1).first()
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, PointsTest::simpleThreshold))
+        val pointsPlacer = PointsPlacer(imageMatrix)
+        val result = pointsPlacer.extractBorderStructure()
+        val borderMatrix = Matrix(
+            imageMatrix.numberOfRows,
+            imageMatrix.numberOfColumns
+        ) { _, _ -> PointsPlacer.backgroundRegion }
+
+        result.borders[1].points.forEach { point ->
+            borderMatrix[point.first, point.second] = PointsPlacer.startRegionCount
+        }
+
+        writeOutputMatrixToPngFile(
+            borderMatrix,
+            File("${dataset.filePath.fileName.toString().substringBefore('.')}_border_extraction_single_region.png")
         ) { value -> colorMapFallbackFunction(value) }
 
     }
@@ -154,6 +184,7 @@ fun main() {
 //    pointsTest.runRegionExtraction()
 //    pointsTest.runFindLinePoints()
 //    pointsTest.runFindCenterMass()
-    pointsTest.runBorderExtraction()
+//    pointsTest.runBorderExtraction()
+    pointsTest.runBorderExtractionShowOneBorderRegion()
 
 }

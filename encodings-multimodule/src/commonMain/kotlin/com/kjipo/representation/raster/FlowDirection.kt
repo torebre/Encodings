@@ -12,8 +12,6 @@ enum class FlowDirection(val rowShift: Int, val columnShift: Int, val angleInRad
     SOUTH_WEST(1, -1, 5 * PI / 4),
     SOUTH(1, 0, 3 * PI / 2),
     SOUTH_EAST(1, 1, 7 * PI / 4)
-
-
 }
 
 fun getFlowDirectionForOffset(rowShift: Int, columnShift: Int): FlowDirection? {
@@ -24,3 +22,6 @@ fun FlowDirection.shiftTwoStepsForward(): FlowDirection {
     return FlowDirection.values()[(this.ordinal + 2) % FlowDirection.values().size]
 }
 
+fun FlowDirection.oppositeDirection(): FlowDirection {
+    return FlowDirection.values()[(this.ordinal + 4) % FlowDirection.values().size]
+}
