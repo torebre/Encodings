@@ -2,6 +2,7 @@ import com.kjipo.readetl.EtlDataReader
 import com.kjipo.readetl.EtlDataSet
 import com.kjipo.readetl.KanjiFromEtlData
 import com.kjipo.representation.Matrix
+import com.kjipo.representation.pointsmatching.Direction
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.File
@@ -22,6 +23,24 @@ fun colorMapFallbackFunction(value: Int): IntArray {
     } else {
         colourFunction(value)
     }
+}
+
+
+
+fun colourFunction(value: Direction?): IntArray {
+    if(value == null) {
+        return IntArray(3).also { it[0] = 0; it[1] = 0; it[2] = 0 }
+    }
+//    println(value.ordinal.toFloat().div(Direction.values().size))
+
+    return Color.getHSBColor(value.ordinal.toFloat().div(Direction.values().size), 1.0f, 1.0f).let { colour ->
+        IntArray(3).also {
+            it[0] = colour.red
+            it[1] = colour.green
+            it[2] = colour.blue
+        }
+    }
+
 }
 
 fun colourFunction(value: Int): IntArray {

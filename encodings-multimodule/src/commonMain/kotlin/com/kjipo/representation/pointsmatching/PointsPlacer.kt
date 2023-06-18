@@ -20,6 +20,17 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
         centerOfMassPointsForRegions()
     }
 
+    val flowDirectionDirectionMap = mapOf(
+        Pair(FlowDirection.EAST, Direction.LEFT_RIGHT),
+        Pair(FlowDirection.NORTH_EAST, Direction.DIAGONAL_UP),
+        Pair(FlowDirection.NORTH, Direction.UP_DOWN),
+        Pair(FlowDirection.NORTH_WEST, Direction.DIAGONAL_DOWN),
+        Pair(FlowDirection.WEST, Direction.LEFT_RIGHT),
+        Pair(FlowDirection.SOUTH_WEST, Direction.DIAGONAL_UP),
+        Pair(FlowDirection.SOUTH, Direction.UP_DOWN),
+        Pair(FlowDirection.SOUTH_EAST, Direction.DIAGONAL_DOWN)
+    )
+
 
     fun runPlacement() {
         val firstPoint = addFirstPoint()
@@ -364,32 +375,102 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
     }
 
 
-    private val flowDirectionDirectionMap = mapOf(
-        Pair(FlowDirection.EAST, Direction.LEFT_RIGHT),
-        Pair(FlowDirection.NORTH_EAST, Direction.DIAGONAL_UP),
-        Pair(FlowDirection.NORTH, Direction.UP_DOWN),
-        Pair(FlowDirection.NORTH_WEST, Direction.DIAGONAL_DOWN),
-        Pair(FlowDirection.WEST, Direction.LEFT_RIGHT),
-        Pair(FlowDirection.SOUTH_WEST, Direction.DIAGONAL_UP),
-        Pair(FlowDirection.SOUTH, Direction.UP_DOWN),
-        Pair(FlowDirection.SOUTH_EAST, Direction.DIAGONAL_DOWN)
-    )
+    fun encodeBorderIntoDirectionList(singleBorderMatrix: Matrix<Int>): List<PointDirection> {
+        singleBorderMatrix.forEachIndexed { row, column, value ->
+            if (singleBorderMatrix[row, column] != backgroundRegion) {
+                return encodeBorderIntoDirectionList(row, column, singleBorderMatrix) {
+                    it != backgroundRegion
+                }
+            }
+        }
+        return emptyList()
+    }
 
-    fun classifyDirection(row: Int, column: Int, borderMatrix: Matrix<Boolean>): Direction? {
-        if (!borderMatrix[row, column]) {
+
+    inline fun <reified T> encodeBorderIntoDirectionList(
+        row: Int,
+        column: Int,
+        valueMatrix: Matrix<T>,
+        noinline valueFunction: (T) -> Boolean
+    ): List<PointDirection> {
+        val pointsToExamine = ArrayDeque<Pair<Int, Int>>()
+            .also { it.add(Pair(row, column)) }
+
+        val matrixCopy = Matrix(valueMatrix.numberOfRows, valueMatrix.numberOfColumns) { row2, column2 ->
+            valueFunction(valueMatrix[row2, column2])
+        }
+
+        val borderPoints = mutableListOf<PointDirection>()
+
+        val directionList = arrayOf(
+            FlowDirection.EAST,
+            FlowDirection.SOUTH_EAST,
+            FlowDirection.NORTH_EAST,
+            FlowDirection.SOUTH,
+            FlowDirection.SOUTH_WEST,
+            FlowDirection.WEST,
+            FlowDirection.NORTH_WEST,
+            FlowDirection.NORTH,
+        )
+        while (pointsToExamine.isNotEmpty()) {
+            val point = pointsToExamine.removeFirst()
+            val direction = classifyDirection(
+                point.first, point.second,
+                valueMatrix,
+                valueFunction
+            )
+
+            borderPoints.add(PointDirection(point.first, point.second, direction))
+            matrixCopy[point.first, point.second] = false
+
+            getNeighbourhood(
+                matrixCopy,
+                point.first,
+                point.second,
+                directionList
+            ).forEach { directionValidInformation ->
+                if (directionValidInformation.second
+                    && matrixCopy[point.first + directionValidInformation.first.rowShift, point.second + directionValidInformation.first.columnShift]
+                ) {
+                    pointsToExamine.add(
+                        Pair(
+                            point.first + directionValidInformation.first.rowShift,
+                            point.second + directionValidInformation.first.columnShift
+                        )
+                    )
+                    return@forEach
+                }
+            }
+        }
+
+        return borderPoints
+    }
+
+
+    /**
+     * Given a point examines the direction of the line going through the point
+     * if possible.
+     */
+    inline fun <reified T> classifyDirection(
+        row: Int,
+        column: Int,
+        borderMatrix: Matrix<T>,
+        noinline valueFunction: (T) -> Boolean
+    ): Direction {
+        if (!valueFunction(borderMatrix[row, column])) {
             // Not determining any direction if the center point is missing
-            return null
+            return Direction.NONE
         }
 
+        val neighbourHood = getNeighbourhoodType(borderMatrix, row, column, valueFunction)
         var occupiedCells = 0
-        borderMatrix.forEach { occupiedCells += if(it) 1 else 0 }
 
-        if(occupiedCells != 2) {
+        neighbourHood.forEach { occupiedCells += if (it) 1 else 0 }
+
+        if (occupiedCells != 2) {
             // Two of the cells around the center should be occupied to be able to determine a direction
-            return null
+            return Direction.NONE
         }
-
-        val neighbourHood = getNeighbourhood(borderMatrix, row, column)
 
         for (i in 0 until FlowDirection.values().count() / 2) {
             val direction = FlowDirection.values()[i]
@@ -398,13 +479,13 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
             if (neighbourHood[direction.rowShift + 1, direction.columnShift + 1] &&
                 neighbourHood[oppositeDirection.rowShift + 1, oppositeDirection.columnShift + 1]
             ) {
-                return flowDirectionDirectionMap[direction]
+                // The direction should be in the map if this point is reached
+                return flowDirectionDirectionMap[direction]!!
             }
-
         }
 
         // Should not reach this point
-        return null
+        return Direction.NONE
     }
 
     private fun findBorderPoint(borderMatrix: Matrix<Int>, borderValue: Int): Pair<Int, Int>? {
@@ -466,6 +547,8 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
     }
 
     fun getPoints() = points.toList()
+
+    class PointDirection(val row: Int, val column: Int, val direction: Direction)
 
     companion object {
         val backgroundRegion = 0

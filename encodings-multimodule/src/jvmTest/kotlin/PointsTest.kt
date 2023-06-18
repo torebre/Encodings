@@ -1,5 +1,6 @@
 import com.kjipo.readetl.KanjiFromEtlData
 import com.kjipo.representation.Matrix
+import com.kjipo.representation.pointsmatching.Direction
 import com.kjipo.representation.pointsmatching.PointsPlacer
 import com.kjipo.representation.raster.makeSquare
 import java.io.File
@@ -161,6 +162,34 @@ class PointsTest {
     }
 
 
+    fun runBorderEncodingOnOneRegion() {
+        val dataset = loadImagesFromEtl9G(1).first()
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, PointsTest::simpleThreshold))
+        val pointsPlacer = PointsPlacer(imageMatrix)
+        val allBordersMatrix = pointsPlacer.extractBorderStructure()
+        val borderMatrix = Matrix(
+            imageMatrix.numberOfRows,
+            imageMatrix.numberOfColumns
+        ) { _, _ -> PointsPlacer.backgroundRegion }
+
+        allBordersMatrix.borders[1].points.forEach { point ->
+            borderMatrix[point.first, point.second] = PointsPlacer.startRegionCount
+        }
+
+        val encodedBorder = pointsPlacer.encodeBorderIntoDirectionList(borderMatrix)
+        val result = Matrix<Direction?>(imageMatrix.numberOfRows, imageMatrix.numberOfColumns) { _, _ ->
+            null
+        }
+
+        encodedBorder.forEach { result[it.row, it.column] = it.direction }
+
+        writeOutputMatrixToPngFile(
+            result,
+            File("${dataset.filePath.fileName.toString().substringBefore('.')}_border_encoding_single_region.png")
+        ) { value -> colourFunction(value) }
+    }
+
+
     companion object {
 
         private fun simpleThreshold(rgbValue: Int): Boolean {
@@ -185,6 +214,7 @@ fun main() {
 //    pointsTest.runFindLinePoints()
 //    pointsTest.runFindCenterMass()
 //    pointsTest.runBorderExtraction()
-    pointsTest.runBorderExtractionShowOneBorderRegion()
+//    pointsTest.runBorderExtractionShowOneBorderRegion()
+    pointsTest.runBorderEncodingOnOneRegion()
 
 }
