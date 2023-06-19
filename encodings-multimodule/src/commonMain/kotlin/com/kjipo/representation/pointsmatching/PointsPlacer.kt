@@ -467,7 +467,7 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
 
         neighbourHood.forEach { occupiedCells += if (it) 1 else 0 }
 
-        if (occupiedCells != 2) {
+        if (occupiedCells != 3) {
             // Two of the cells around the center should be occupied to be able to determine a direction
             return Direction.NONE
         }
