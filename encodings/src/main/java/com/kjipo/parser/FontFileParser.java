@@ -14,6 +14,7 @@ import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -25,7 +26,7 @@ public class FontFileParser {
     private static final Logger logger = LoggerFactory.getLogger(FontFileParser.class);
 
 
-    public static Collection<EncodedKanji> parseFontFile(Collection<Integer> unicodes, InputStream trueTypeFontData, int numberOfRows, int numberOfColumns) throws IOException, FontFormatException {
+    public static List<EncodedKanji> parseFontFile(Collection<Integer> unicodes, InputStream trueTypeFontData, int numberOfRows, int numberOfColumns) throws IOException, FontFormatException {
         Font font = Font.createFont(Font.TRUETYPE_FONT, trueTypeFontData);
         FontRenderContext fontRenderContext = getFontRenderContext();
 

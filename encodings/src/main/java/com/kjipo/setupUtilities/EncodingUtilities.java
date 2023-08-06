@@ -3,23 +3,18 @@ package com.kjipo.setupUtilities;
 import com.kjipo.parser.KanjiDicParser;
 import com.kjipo.parser.Parsers;
 import com.kjipo.representation.EncodedKanji;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.io.BufferedWriter;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
+import java.util.List;
 
 import static com.kjipo.parser.FontFileParser.parseFontFile;
 
@@ -66,29 +61,96 @@ public final class EncodingUtilities {
     }
 
 
-    public static void main(String args[]) throws IOException, FontFormatException {
-        java.util.List<KanjiDicParser.KanjiDicEntry> entries = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).collect(Collectors.toList());
+    public static void writeEncodedKanjiToFiles(Collection<EncodedKanji> encodedKanjis, Path outputDirectory) {
+        var encoder = Base64.getEncoder();
+
+        encodedKanjis.parallelStream().forEach(encodedKanji -> {
+            var fileToWriteTo = outputDirectory.resolve(encodedKanji.getUnicode() + ".dat");
+            BitSet bitSet = getBitSet(encodedKanji);
+            var base64EncodedData = encoder.encode(bitSet.toByteArray());
+
+            try (FileOutputStream fileOutputStream = new FileOutputStream(fileToWriteTo.toFile())) {
+                fileOutputStream.write(base64EncodedData);
+
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+    }
+
+    @NotNull
+    private static BitSet getBitSet(EncodedKanji encodedKanji) {
+        boolean[][] data = encodedKanji.getImage();
+
+        int bitsNeededForData = data.length * data[0].length;
+        if (bitsNeededForData % 8 != 0) {
+            bitsNeededForData += 1;
+        }
+
+        byte[] outputData = new byte[2 + bitsNeededForData];
+        // The matrix has dimensions smaller than 256 so the length fits in a byte
+        outputData[0] = (byte) data.length;
+        outputData[1] = (byte) data[0].length;
+
+        BitSet bitSet = BitSet.valueOf(outputData);
+
+        for (int row = 0; row < data.length; ++row) {
+            for (int column = 0; column < data[0].length; ++column) {
+                // Note that data from data is being rotated here
+                bitSet.set(16 + row * data.length + column, data[column][row]);
+            }
+        }
+        return bitSet;
+    }
+
+    private static Set<Integer> getKanjiUniCodesFromFile() throws IOException {
+        java.util.List<KanjiDicParser.KanjiDicEntry> entries = KanjiDicParser.parseKanjidicFile(Parsers.EDICT_FILE_LOCATION).toList();
 
         Set<Integer> charactersFoundInFile = new HashSet<>();
         for (KanjiDicParser.KanjiDicEntry entry : entries) {
-
             for (int i = 0; i < entry.getKanji().length(); ++i) {
                 charactersFoundInFile.add(entry.getKanji().codePointAt(i));
             }
-
-//            char[] chars = entry.getKanji().toCharArray();
-//            for (char character : chars) {
-//                charactersFoundInFile.add(character);
-//            }
         }
 
         logger.info("Number of characters found: {}", charactersFoundInFile.size());
+
+        return charactersFoundInFile;
+    }
+
+
+    private static void writeKanjiFromDictionaryToFiles() throws IOException, FontFormatException {
+        var charactersFoundInFile = getKanjiUniCodesFromFile();
+        var outputDirectory = Path.of("/home/student/workspace/testEncodings/temp/kanjiOutput");
+
+        List<EncodedKanji> encodedKanjis;
+        try (InputStream fontStream = new FileInputStream(Parsers.FONT_FILE_LOCATION.toFile())) {
+            encodedKanjis = parseFontFile(charactersFoundInFile, fontStream, 200, 200);
+//            encodedKanjis = parseFontFile(Collections.singletonList(32769), fontStream, 200, 200);
+        }
+
+        writeEncodedKanjiToFiles(encodedKanjis, outputDirectory);
+    }
+
+
+    private static void writeAllKanjiToSingleFile() throws IOException, FontFormatException {
+        var charactersFoundInFile = getKanjiUniCodesFromFile();
 
         Path outputFile = Paths.get("/home/student/encodedkanji.txt");
         try (InputStream fontStream = new FileInputStream(Parsers.FONT_FILE_LOCATION.toFile())) {
             Collection<EncodedKanji> encodedKanjis = parseFontFile(charactersFoundInFile, fontStream, 200, 200);
             writeCharactersToFile(encodedKanjis, outputFile);
         }
+
+    }
+
+
+    public static void main(String args[]) throws IOException, FontFormatException {
+//        writeAllKanjiToSingleFile();
+        writeKanjiFromDictionaryToFiles();
     }
 
 }

@@ -12,8 +12,8 @@ import java.nio.file.Paths;
 
 
 public class Parsers {
-    public static final Path FONT_FILE_LOCATION = Paths.get("/home/student/font/kochi-mincho-subst.ttf");
-    public static final Path EDICT_FILE_LOCATION = Paths.get("/home/student/edict/edict2");
+    public static final Path FONT_FILE_LOCATION = Paths.get("/home/student/Documents/edict/kochi-substitute-20030809/kochi-mincho-subst.ttf");
+    public static final Path EDICT_FILE_LOCATION = Paths.get("/home/student/Documents/edict/edict2");
     public static final Charset JAPANESE_CHARSET = Charset.forName("EUC_JP");
 
     private static final Logger logger = LoggerFactory.getLogger(Parsers.class);

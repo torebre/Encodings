@@ -4,6 +4,10 @@ import com.kjipo.representation.pointsmatching.Direction
 import com.kjipo.representation.pointsmatching.PointsPlacer
 import com.kjipo.representation.raster.makeSquare
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.Base64
+import java.util.BitSet
 
 class PointsTest {
 
@@ -105,6 +109,32 @@ class PointsTest {
                 colourFunction(value)
             }
         }
+    }
+
+
+    private fun loadKanjiMatrix(path: Path): Matrix<Boolean> {
+        val bytesInFile = Files.readAllBytes(path)
+        val bytes = Base64.getDecoder().decode(bytesInFile)
+        val bitSet = BitSet.valueOf(bytes)
+        val numberOfRows = bytes[0].toUByte().toInt()
+        val numberOfColumns = bytes[1].toUByte().toInt()
+
+        return Matrix(numberOfRows, numberOfColumns) { row, column ->
+            bitSet[16 + row * numberOfRows + column]
+        }
+    }
+
+
+    fun findCenterMassForMultipleImages() {
+        val imageMatrix = loadKanjiMatrix(Path.of("/home/student/workspace/testEncodings/temp/kanjiOutput/32769.dat"))
+
+        writeOutputMatrixToPngFile(
+            imageMatrix,
+            File("32769_kanji_from_input_file.png")) { value ->
+            if (value) colourMap[0] else colourMap[1]
+        }
+
+
     }
 
 
@@ -212,9 +242,10 @@ fun main() {
     val pointsTest = PointsTest()
 //    pointsTest.runRegionExtraction()
 //    pointsTest.runFindLinePoints()
-//    pointsTest.runFindCenterMass()
 //    pointsTest.runBorderExtraction()
 //    pointsTest.runBorderExtractionShowOneBorderRegion()
-    pointsTest.runBorderEncodingOnOneRegion()
+//    pointsTest.runBorderEncodingOnOneRegion()
 
+//    pointsTest.runFindCenterMass()
+    pointsTest.findCenterMassForMultipleImages()
 }
