@@ -6,3 +6,4 @@
 kanji_output
 **/*.iml
 opencv_build
+temp

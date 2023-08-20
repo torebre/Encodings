@@ -37,6 +37,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation kotlin('stdlib-common')
+                implementation "io.github.aakira:napier:2.6.1"
             }
         }
         commonTest {
@@ -48,6 +49,8 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation kotlin('stdlib-jdk8')
+                implementation "io.github.oshai:kotlin-logging-jvm:5.0.1"
+                implementation "org.slf4j:slf4j-simple:2.0.3"
             }
         }
         jvmTest {

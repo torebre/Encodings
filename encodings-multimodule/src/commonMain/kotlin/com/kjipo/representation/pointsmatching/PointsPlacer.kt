@@ -2,6 +2,7 @@ package com.kjipo.representation.pointsmatching
 
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.raster.*
+import io.github.aakira.napier.Napier
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -30,6 +31,20 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
         Pair(FlowDirection.SOUTH, Direction.UP_DOWN),
         Pair(FlowDirection.SOUTH_EAST, Direction.DIAGONAL_DOWN)
     )
+
+
+    init {
+        var counter = 0
+        imageMatrix.forEach {
+            if (it) {
+                ++counter
+            }
+        }
+
+        if (counter == imageMatrix.numberOfRows * imageMatrix.numberOfColumns) {
+            Napier.e("Image matrix only has one value")
+        }
+    }
 
 
     fun runPlacement() {

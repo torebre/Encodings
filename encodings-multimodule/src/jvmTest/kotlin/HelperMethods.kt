@@ -9,6 +9,7 @@ import java.io.File
 import java.lang.IllegalArgumentException
 import java.nio.file.Path
 import javax.imageio.ImageIO
+import kotlin.math.max
 
 
 val colourMap = mapOf(
@@ -26,9 +27,8 @@ fun colorMapFallbackFunction(value: Int): IntArray {
 }
 
 
-
 fun colourFunction(value: Direction?): IntArray {
-    if(value == null) {
+    if (value == null) {
         return IntArray(3).also { it[0] = 0; it[1] = 0; it[2] = 0 }
     }
 //    println(value.ordinal.toFloat().div(Direction.values().size))
@@ -43,12 +43,12 @@ fun colourFunction(value: Direction?): IntArray {
 
 }
 
-fun colourFunction(value: Int): IntArray {
-    if (value < 0 || value > 50) {
-        throw IllegalArgumentException("Value needs to be in range from 0 to 50 (inclusive)")
+fun colourFunction(value: Int, maxValue: Int = 50): IntArray {
+    if (value < 0 || value > maxValue) {
+        throw IllegalArgumentException("Value needs to be in range from 0 to $maxValue (inclusive): $value")
     }
 
-    return Color.getHSBColor(value.toFloat().div(50), 1.0f, 1.0f).let { colour ->
+    return Color.getHSBColor(value.toFloat().div(maxValue), 1.0f, 1.0f).let { colour ->
         IntArray(3).also {
             it[0] = colour.red
             it[1] = colour.green

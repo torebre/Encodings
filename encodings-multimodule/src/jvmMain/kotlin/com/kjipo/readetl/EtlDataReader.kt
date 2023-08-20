@@ -34,6 +34,33 @@ object EtlDataReader {
             .toList()
     }
 
+    fun extractEtlImagesForUnicodeToKanjiData(unicode: Int): List<KanjiFromEtlData> {
+        return extractEtlImagesForUnicodeToKanjiData(
+            Path.of("/home/student/Downloads/etlcbd_datasets"),
+            EtlDataSet.ETL9G,
+            unicode
+        )
+    }
+
+    fun extractEtlImagesForUnicodeToKanjiData(
+        etlBaseDirectory: Path,
+        dataset: EtlDataSet,
+        unicode: Int
+    ): List<KanjiFromEtlData> {
+        if (!etlBaseDirectory.isDirectory()) {
+            throw IllegalArgumentException("Input needs to be a directory")
+        }
+
+        return etlBaseDirectory.resolve(dataset.name).listDirectoryEntries().stream()
+            .filter { it.isDirectory() }
+            .filter {
+                it.name.let { HexFormat.fromHexDigits(it.substring(2)) } == unicode
+            }
+            .flatMap { getEtlFiles(it) }
+            .map { KanjiFromEtlData(unicode, dataset, it, flipMatrix(readImage(it))) }
+            .toList()
+    }
+
     private fun processEtlKanjiDirectory(etlKanjiDirectory: Path, dataset: EtlDataSet): Stream<KanjiFromEtlData> {
         val unicode = etlKanjiDirectory.name.let { HexFormat.fromHexDigits(it.substring(2)) }
 
@@ -42,8 +69,13 @@ object EtlDataReader {
             .map { KanjiFromEtlData(unicode, dataset, it, flipMatrix(readImage(it))) }
     }
 
+    private fun getEtlFiles(etlKanjiDirectory: Path): Stream<Path>? {
+        return etlKanjiDirectory.listDirectoryEntries().stream()
+            .filter { it.extension == "png" }
+    }
 
-    private fun readImage(imageFile: Path): Matrix<Int> {
+
+    fun readImage(imageFile: Path): Matrix<Int> {
         return ImageIO.read(imageFile.toFile()).let { bufferedImage ->
             Matrix(bufferedImage.height, bufferedImage.width) { _, _ -> 0 }.also { image ->
                 for (row in 0 until bufferedImage.height) {
@@ -56,7 +88,7 @@ object EtlDataReader {
         }
     }
 
-    private inline fun <reified T> flipMatrix(matrix: Matrix<T>): Matrix<T> {
+    inline fun <reified T> flipMatrix(matrix: Matrix<T>): Matrix<T> {
         return Matrix(matrix.numberOfColumns, matrix.numberOfRows) { row, column ->
             matrix[column, row]
         }
@@ -83,7 +115,11 @@ data class KanjiFromEtlData(
     val etlDataset: EtlDataSet,
     val filePath: Path,
     val kanjiData: Matrix<Int>
-)
+) {
+
+    fun getFileNameWithoutSuffix() = filePath.fileName.nameWithoutExtension
+
+}
 
 
 fun main() {
