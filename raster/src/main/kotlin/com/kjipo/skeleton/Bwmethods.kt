@@ -3,7 +3,6 @@ package com.kjipo.skeleton
 import com.kjipo.prototype.FitPrototype
 import com.kjipo.raster.EncodingUtilities
 import com.kjipo.representation.Matrix
-import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.representation.raster.bwmorphEndpoints
 import com.kjipo.representation.raster.getNeighbourhood
 import kotlin.math.abs

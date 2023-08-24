@@ -86,6 +86,19 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
         return centerOfMassPointsMatrix
     }
 
+    fun getCenterOfMassPoints(): List<CenterOfMassPoint> {
+        var regionCounter = startRegionCount
+        val centerOfMassPoints = mutableListOf<CenterOfMassPoint>()
+
+        while (true) {
+            val massCenter = findMassCenter(regionMatrix, regionCounter) ?: break
+            centerOfMassPoints.add(CenterOfMassPoint(massCenter, regionCounter))
+            ++regionCounter
+        }
+
+        return centerOfMassPoints
+    }
+
     private fun removeInteriorPoints(valueMatrix: Matrix<Int>) {
         val pointsInInterior = mutableListOf<Pair<Int, Int>>()
 
@@ -561,9 +574,12 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
         return Pair(rowSum / numberOfCellsIncluded, columnSum / numberOfCellsIncluded)
     }
 
+
     fun getPoints() = points.toList()
 
     class PointDirection(val row: Int, val column: Int, val direction: Direction)
+
+    class CenterOfMassPoint(val coordinates: Pair<Int, Int>, val region: Int)
 
     companion object {
         val backgroundRegion = 0

@@ -125,6 +125,11 @@ public final class EncodingUtilities {
     private static void writeKanjiFromDictionaryToFiles() throws IOException, FontFormatException {
         var charactersFoundInFile = getKanjiUniCodesFromFile();
         var outputDirectory = Path.of("/home/student/workspace/testEncodings/temp/kanjiOutput");
+        if (!outputDirectory.toFile().exists()) {
+            if (!outputDirectory.toFile().mkdirs()) {
+                throw new IOException("Could not create output directory");
+            }
+        }
 
         List<EncodedKanji> encodedKanjis;
         try (InputStream fontStream = new FileInputStream(Parsers.FONT_FILE_LOCATION.toFile())) {
@@ -135,7 +140,6 @@ public final class EncodingUtilities {
         writeEncodedKanjiToFiles(encodedKanjis, outputDirectory);
     }
 
-
     private static void writeAllKanjiToSingleFile() throws IOException, FontFormatException {
         var charactersFoundInFile = getKanjiUniCodesFromFile();
 
@@ -144,7 +148,6 @@ public final class EncodingUtilities {
             Collection<EncodedKanji> encodedKanjis = parseFontFile(charactersFoundInFile, fontStream, 200, 200);
             writeCharactersToFile(encodedKanjis, outputFile);
         }
-
     }
 
 

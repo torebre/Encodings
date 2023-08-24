@@ -3,7 +3,9 @@ import com.kjipo.readetl.KanjiFromEtlData
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.pointsmatching.Direction
 import com.kjipo.representation.pointsmatching.PointsPlacer
+import com.kjipo.representation.raster.bwmorphEndpoints
 import com.kjipo.representation.raster.makeSquare
+import com.kjipo.representation.raster.makeThin
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.File
 import java.nio.file.Files
@@ -186,19 +188,20 @@ class PointsTest {
     fun createMassCenterForImages() {
         val unicode = 32769
         val outputDirectory = Path.of("/home/student/workspace/testEncodings/temp/centermass/")
-//        val imageMatrix =
-//            loadKanjiMatrix(outputDirectory.resolve("/home/student/workspace/testEncodings/temp/kanjiOutput/$unicode.dat"))
 
         if (!outputDirectory.exists()) {
             outputDirectory.createDirectory()
         }
 
-//        writeOutputMatrixToPngFile(
-//            imageMatrix,
-//            outputDirectory.resolve("${unicode}_kanji_from_input_file.png").toFile()
-//        ) { value ->
-//            if (value) colourMap[0] else colourMap[1]
-//        }
+        val imageMatrix =
+            loadKanjiMatrix(outputDirectory.resolve("/home/student/workspace/testEncodings/temp/kanjiOutput/$unicode.dat"))
+
+        writeOutputMatrixToPngFile(
+            imageMatrix,
+            outputDirectory.resolve("${unicode}_kanji_from_input_file.png").toFile()
+        ) { value ->
+            if (value) colourMap[0] else colourMap[1]
+        }
 
         extractEtlImagesForUnicodeToKanjiData(unicode).map {
             Pair(it.filePath, makeSquare(transformToBooleanMatrix(it.kanjiData, PointsTest::simpleThreshold)))
@@ -208,17 +211,28 @@ class PointsTest {
             }
             .forEach {
                 val regions = mutableSetOf<Int>()
-                it.second.centerOfMassMatrix.forEach { value ->
+                it.second.regionMatrix.forEach { value ->
                     regions.add(value)
                 }
 //                logger.info { "Number of regions: ${regions.size}" }
 
+                val numberOfColoursNeeded = regions.size + PointsPlacer.startRegionCount + 1
+                val centerOfMassPoints = it.second.getCenterOfMassPoints().map { it.coordinates }.toSet()
+
                 writeOutputMatrixToPngFile(
-                    it.second.centerOfMassMatrix,
+                    it.second.regionMatrix,
                     outputDirectory.resolve("example_${it.first.nameWithoutExtension}_center_mass.png").toFile()
-                ) { value ->
-                    colourFunction(value, regions.size + PointsPlacer.startRegionCount)
+                ) { row, column, value ->
+                    if (centerOfMassPoints.contains(Pair(row, column))) {
+                        IntArray(3).also {
+                            it[0] = 0
+                            it[1] = 255
+                            it[2] = 255
+                        }
+                    } else {
+                        colourFunction(value, numberOfColoursNeeded)
 //                    if (value) colourMap[0] else colourMap[1]
+                    }
                 }
             }
     }
@@ -236,6 +250,60 @@ class PointsTest {
             if (value > 0) colourMap[0] else colourMap[1]
         }
 
+    }
+
+    fun runExtraction() {
+        val unicode = 32769
+        val outputDirectory = Path.of("/home/student/workspace/testEncodings/temp/placement/")
+
+        if (!outputDirectory.exists()) {
+            outputDirectory.createDirectory()
+        }
+
+        val imageMatrix =
+            makeThin(makeSquare(loadKanjiMatrix(outputDirectory.resolve("/home/student/workspace/testEncodings/temp/kanjiOutput/$unicode.dat"))))
+
+        writeOutputMatrixToPngFile(
+            imageMatrix,
+            outputDirectory.resolve("${unicode}_kanji_from_input_file.png").toFile()
+        ) { value ->
+            if (value) colourMap[0] else colourMap[1]
+        }
+
+        extractEtlImagesForUnicodeToKanjiData(unicode).map {
+            Pair(it.filePath, makeThin(makeSquare(transformToBooleanMatrix(it.kanjiData, PointsTest::simpleThreshold))))
+        }
+            .forEach {
+                val pointsPlacer = PointsPlacer(it.second)
+                val endPointList = mutableSetOf<Pair<Int, Int>>()
+
+                bwmorphEndpoints(it.second).forEachIndexed { row, column, value ->
+                    if (value) {
+                        endPointList.add(Pair(row, column))
+                    }
+                }
+
+                val regions = mutableSetOf<Int>()
+                pointsPlacer.regionMatrix.forEach { value ->
+                    regions.add(value)
+                }
+//                logger.info { "Number of regions: ${regions.size}" }
+
+                writeOutputMatrixToPngFile(
+                    it.second,
+                    outputDirectory.resolve("example_${it.first.nameWithoutExtension}_extraction.png").toFile()
+                ) { row, column, value ->
+                    if (endPointList.contains(Pair(row, column))) {
+                        IntArray(3).also {
+                            it[0] = 0
+                            it[1] = 255
+                            it[2] = 255
+                        }
+                    } else {
+                        if (value) colourMap[0] else colourMap[1]
+                    }
+                }
+            }
     }
 
 
@@ -349,5 +417,7 @@ fun main() {
 
 //    pointsTest.runFindCenterMass()
 //    pointsTest.createImagesForUnicode()
-    pointsTest.createMassCenterForImages()
+//    pointsTest.createMassCenterForImages()
+
+    pointsTest.runExtraction()
 }

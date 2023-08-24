@@ -143,3 +143,23 @@ internal fun <T> writeOutputMatrixToPngFile(
 
     ImageIO.write(bufferedImage, "png", outputFile)
 }
+
+internal fun <T> writeOutputMatrixToPngFile(
+    result: Matrix<T>,
+    outputFile: File,
+    colourProvider: (Int, Int, T) -> IntArray?
+) {
+    val bufferedImage = BufferedImage(
+        result.numberOfRows,
+        result.numberOfColumns,
+        BufferedImage.TYPE_INT_RGB
+    )
+
+    result.forEachIndexed { row, column, value ->
+        colourProvider(row, column, value).let {
+            bufferedImage.raster.setPixel(row, column, it)
+        }
+    }
+
+    ImageIO.write(bufferedImage, "png", outputFile)
+}
