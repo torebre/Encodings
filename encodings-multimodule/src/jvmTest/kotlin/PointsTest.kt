@@ -1,7 +1,9 @@
+import com.kjipo.matching.EndpointFeature
 import com.kjipo.readetl.EtlDataReader.extractEtlImagesForUnicodeToKanjiData
 import com.kjipo.readetl.KanjiFromEtlData
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.pointsmatching.Direction
+import com.kjipo.representation.pointsmatching.EndPointMatchData
 import com.kjipo.representation.pointsmatching.PointsPlacer
 import com.kjipo.representation.raster.bwmorphEndpoints
 import com.kjipo.representation.raster.makeSquare
@@ -15,6 +17,8 @@ import java.util.BitSet
 import kotlin.io.path.createDirectory
 import kotlin.io.path.exists
 import kotlin.io.path.nameWithoutExtension
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class PointsTest {
 
@@ -261,7 +265,7 @@ class PointsTest {
         }
 
         val imageMatrix =
-            makeThin(makeSquare(loadKanjiMatrix(outputDirectory.resolve("/home/student/workspace/testEncodings/temp/kanjiOutput/$unicode.dat"))))
+            makeThin(makeSquare(loadKanjiMatrix(Path.of("/home/student/workspace/testEncodings/temp/kanjiOutput/$unicode.dat"))))
 
         writeOutputMatrixToPngFile(
             imageMatrix,
@@ -275,11 +279,11 @@ class PointsTest {
         }
             .forEach {
                 val pointsPlacer = PointsPlacer(it.second)
-                val endPointList = mutableSetOf<Pair<Int, Int>>()
+                val endPoints = mutableSetOf<Pair<Int, Int>>()
 
                 bwmorphEndpoints(it.second).forEachIndexed { row, column, value ->
                     if (value) {
-                        endPointList.add(Pair(row, column))
+                        endPoints.add(Pair(row, column))
                     }
                 }
 
@@ -293,7 +297,7 @@ class PointsTest {
                     it.second,
                     outputDirectory.resolve("example_${it.first.nameWithoutExtension}_extraction.png").toFile()
                 ) { row, column, value ->
-                    if (endPointList.contains(Pair(row, column))) {
+                    if (endPoints.contains(Pair(row, column))) {
                         IntArray(3).also {
                             it[0] = 0
                             it[1] = 255
@@ -304,6 +308,115 @@ class PointsTest {
                     }
                 }
             }
+    }
+
+    class EndpointsRelationData(val endpoint1: EndpointFeature, val endpoint2: EndpointFeature, val distance: Double)
+
+    class RelationDataForImage(
+        val endpointsRelationData: List<EndpointFeature>,
+        val relationData: Map<Pair<Int, Int>, EndpointsRelationData>
+    )
+
+
+    fun setupEndpointMatching() {
+        val unicode = 32769
+
+        val imageMatrix =
+            makeThin(makeSquare(loadKanjiMatrix(Path.of("/home/student/workspace/testEncodings/temp/kanjiOutput/$unicode.dat"))))
+
+        val endpointRelationData = extractEtlImagesForUnicodeToKanjiData(unicode).map {
+            Pair(it.filePath, makeThin(makeSquare(transformToBooleanMatrix(it.kanjiData, PointsTest::simpleThreshold))))
+        }
+            .map {
+                val endPoints = mutableSetOf<Pair<Int, Int>>()
+
+                bwmorphEndpoints(it.second).forEachIndexed { row, column, value ->
+                    if (value) {
+                        endPoints.add(Pair(row, column))
+                    }
+                }
+
+
+                setupMatchData(endPoints)
+            }
+
+        endpointRelationData.forEach {
+            println("Endpoint relation data: ${it.relationData.size}")
+        }
+
+    }
+
+    fun setupMatchData(endpoints: Set<Pair<Int, Int>>): RelationDataForImage {
+        var idCounter = 0
+        val endPointFeatures = endpoints.map {
+            EndpointFeature(idCounter++, it)
+        }
+
+        val relationData = mutableMapOf<Pair<Int, Int>, EndpointsRelationData>()
+        var counter = 1
+
+        for (endPointFeature in endPointFeatures) {
+            for (i in counter until endPointFeatures.size) {
+                relationData[Pair(endPointFeature.id, endPointFeatures[i].id)] =
+                    createEndpointRelationData(endPointFeature, endPointFeatures[i])
+            }
+            ++counter
+        }
+
+        return RelationDataForImage(endPointFeatures, relationData)
+    }
+
+    private fun createEndpointRelationData(
+        endpointFeature1: EndpointFeature,
+        endpointFeature2: EndpointFeature
+    ): EndpointsRelationData {
+        return EndpointsRelationData(
+            endpointFeature1,
+            endpointFeature2,
+            computeDistance(endpointFeature1, endpointFeature2)
+        )
+    }
+
+    private fun computeDistance(
+        endpointFeature1: EndpointFeature,
+        endpointFeature2: EndpointFeature
+    ): Double {
+        return sqrt(
+            (endpointFeature1.location.first - endpointFeature2.location.first).toDouble().pow(2) +
+                    (endpointFeature1.location.second - endpointFeature2.location.second).toDouble().pow(2)
+        )
+    }
+
+
+    fun runMatch() {
+        val unicode = 32769
+
+//        val imageMatrix =
+//            makeThin(makeSquare(loadKanjiMatrix(Path.of("/home/student/workspace/testEncodings/temp/kanjiOutput/$unicode.dat"))))
+
+        val endPointMatchData = extractEtlImagesForUnicodeToKanjiData(unicode, 5).map {
+            Pair(it.filePath, makeThin(makeSquare(transformToBooleanMatrix(it.kanjiData, PointsTest::simpleThreshold))))
+        }.map {
+            val endPoints = mutableSetOf<Pair<Int, Int>>()
+
+            bwmorphEndpoints(it.second).forEachIndexed { row, column, value ->
+                if (value) {
+                    endPoints.add(Pair(row, column))
+                }
+            }
+
+            EndPointMatchData(it.second, endPoints)
+        }
+
+        for (data1 in endPointMatchData) {
+            for (data2 in endPointMatchData) {
+                EndPointMatchData.match(data1, data2)
+
+            }
+
+        }
+
+
     }
 
 
@@ -402,7 +515,6 @@ class PointsTest {
             }
             return false
         }
-
     }
 
 }
@@ -419,5 +531,8 @@ fun main() {
 //    pointsTest.createImagesForUnicode()
 //    pointsTest.createMassCenterForImages()
 
-    pointsTest.runExtraction()
+//    pointsTest.runExtraction()
+
+    pointsTest.setupEndpointMatching()
+
 }
