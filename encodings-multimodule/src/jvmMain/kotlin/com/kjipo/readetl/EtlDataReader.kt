@@ -34,18 +34,21 @@ object EtlDataReader {
             .toList()
     }
 
-    fun extractEtlImagesForUnicodeToKanjiData(unicode: Int): List<KanjiFromEtlData> {
+    fun extractEtlImagesForUnicodeToKanjiData(unicode: Int,
+                                              numberOfImagesToLoad: Long = Long.MAX_VALUE): List<KanjiFromEtlData> {
         return extractEtlImagesForUnicodeToKanjiData(
             Path.of("/home/student/Downloads/etlcbd_datasets"),
             EtlDataSet.ETL9G,
-            unicode
+            unicode,
+            numberOfImagesToLoad
         )
     }
 
     fun extractEtlImagesForUnicodeToKanjiData(
         etlBaseDirectory: Path,
         dataset: EtlDataSet,
-        unicode: Int
+        unicode: Int,
+        numberOfImagesToLoad: Long = Long.MAX_VALUE
     ): List<KanjiFromEtlData> {
         if (!etlBaseDirectory.isDirectory()) {
             throw IllegalArgumentException("Input needs to be a directory")
@@ -56,6 +59,7 @@ object EtlDataReader {
             .filter {
                 it.name.let { HexFormat.fromHexDigits(it.substring(2)) } == unicode
             }
+            .limit(numberOfImagesToLoad)
             .flatMap { getEtlFiles(it) }
             .map { KanjiFromEtlData(unicode, dataset, it, flipMatrix(readImage(it))) }
             .toList()
