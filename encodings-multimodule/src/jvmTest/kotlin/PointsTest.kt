@@ -315,7 +315,50 @@ class PointsTest {
     class RelationDataForImage(
         val endpointsRelationData: List<EndpointFeature>,
         val relationData: Map<Pair<Int, Int>, EndpointsRelationData>
-    )
+    ) {
+
+
+        fun computeRelationsForEndpoint(endpointFeature: EndpointFeature) {
+            val closestPointsData = getClosestPoints(endpointFeature, 2)
+
+            if(closestPointsData.size < 2) {
+                return
+            }
+
+            val otherPoint1 = if(closestPointsData[0].endpoint1 == endpointFeature) closestPointsData[0].endpoint2 else closestPointsData[0].endpoint1
+            val otherPoint2 = if(closestPointsData[1].endpoint1 == endpointFeature) closestPointsData[1].endpoint2 else closestPointsData[1].endpoint1
+
+            val directionVector1 = Pair(endpointFeature.location.first - otherPoint1.location.first, endpointFeature.location.second - otherPoint1.location.second)
+            val directionVector2 = Pair(endpointFeature.location.first - otherPoint2.location.first, endpointFeature.location.second - otherPoint2.location.second)
+
+            val dotProduct = directionVector1.first * directionVector2.first + directionVector1.second * directionVector2.second
+
+            val relativeDistance = if(closestPointsData[0].distance > closestPointsData[1].distance) {
+                closestPointsData[1].distance / closestPointsData[0].distance
+            }
+            else {
+                closestPointsData[0].distance / closestPointsData[1].distance
+            }
+
+        }
+
+        fun computeRelationsForEndpoints() {
+            endpointsRelationData.forEach { computeRelationsForEndpoint(it) }
+
+
+        }
+
+
+        fun getClosestPoints(endpointFeature: EndpointFeature, numberOfPointsToGet: Int): List<EndpointsRelationData> {
+           return relationData.filter { it.key.first == endpointFeature.id || it.key.second == endpointFeature.id }
+                .map { it.value }
+                .sortedBy { it.distance }
+                .take(numberOfPointsToGet)
+        }
+
+
+
+    }
 
 
     fun setupEndpointMatching() {
@@ -324,7 +367,8 @@ class PointsTest {
         val imageMatrix =
             makeThin(makeSquare(loadKanjiMatrix(Path.of("/home/student/workspace/testEncodings/temp/kanjiOutput/$unicode.dat"))))
 
-        val endpointRelationData = extractEtlImagesForUnicodeToKanjiData(unicode).map {
+        // TODO Remove restriction on the number of images to load
+        val endpointRelationData = extractEtlImagesForUnicodeToKanjiData(unicode, 1).map {
             Pair(it.filePath, makeThin(makeSquare(transformToBooleanMatrix(it.kanjiData, PointsTest::simpleThreshold))))
         }
             .map {
@@ -336,13 +380,14 @@ class PointsTest {
                     }
                 }
 
-
                 setupMatchData(endPoints)
             }
 
-        endpointRelationData.forEach {
-            println("Endpoint relation data: ${it.relationData.size}")
-        }
+//        endpointRelationData.forEach {
+//            println("Endpoint relation data: ${it.relationData.size}")
+//        }
+
+        endpointRelationData.first().computeRelationsForEndpoints()
 
     }
 
