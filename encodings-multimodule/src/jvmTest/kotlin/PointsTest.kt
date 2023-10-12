@@ -1,4 +1,5 @@
 import com.kjipo.matching.EndpointFeature
+import com.kjipo.matching.EndpointTriplet
 import com.kjipo.readetl.EtlDataReader.extractEtlImagesForUnicodeToKanjiData
 import com.kjipo.readetl.KanjiFromEtlData
 import com.kjipo.representation.Matrix
@@ -318,11 +319,11 @@ class PointsTest {
     ) {
 
 
-        fun computeRelationsForEndpoint(endpointFeature: EndpointFeature) {
+        fun computeRelationsForEndpoint(endpointFeature: EndpointFeature): EndpointTriplet? {
             val closestPointsData = getClosestPoints(endpointFeature, 2)
 
             if(closestPointsData.size < 2) {
-                return
+                return null
             }
 
             val otherPoint1 = if(closestPointsData[0].endpoint1 == endpointFeature) closestPointsData[0].endpoint2 else closestPointsData[0].endpoint1
@@ -340,12 +341,15 @@ class PointsTest {
                 closestPointsData[0].distance / closestPointsData[1].distance
             }
 
+            val center = Pair((endpointFeature.location.first + otherPoint1.location.first + otherPoint2.location.first).toDouble() / 3,
+                (endpointFeature.location.second + otherPoint1.location.second + otherPoint2.location.second).toDouble() / 3)
+
+            return EndpointTriplet(endpointFeature, center, dotProduct, relativeDistance)
         }
 
         fun computeRelationsForEndpoints() {
+
             endpointsRelationData.forEach { computeRelationsForEndpoint(it) }
-
-
         }
 
 
