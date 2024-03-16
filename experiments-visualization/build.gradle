@@ -1,0 +1,23 @@
+//apply plugin: 'java'
+//apply plugin: 'kotlin'
+
+//compileJava {
+//    sourceCompatibility = JavaVersion.VERSION_1_8
+//    targetCompatibility = JavaVersion.VERSION_1_8
+//}
+plugins {
+    id 'kotlin'
+    id 'org.openjfx.javafxplugin' version '0.0.10'
+}
+
+javafx {
+    version = "18.0.1"
+    modules = [ 'javafx.graphics', 'javafx.swing', 'javafx.controls' ]
+}
+
+dependencies {
+    implementation project(":encodings-multimodule")
+    implementation project(":raster")
+    implementation project(":visualization")
+    implementation "no.tornado:tornadofx:1.7.5"
+}

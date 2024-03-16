@@ -1,3 +1,5 @@
+package com.kjipo.experiments
+
 import com.kjipo.matching.EndpointFeature
 import com.kjipo.matching.EndpointTriplet
 import com.kjipo.readetl.EtlDataReader.extractEtlImagesForUnicodeToKanjiData
@@ -18,6 +20,7 @@ import java.util.BitSet
 import kotlin.io.path.createDirectory
 import kotlin.io.path.exists
 import kotlin.io.path.nameWithoutExtension
+import kotlin.math.absoluteValue
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -28,7 +31,7 @@ class PointsTest {
 
     fun runRegionExtraction() {
         val dataset = loadImagesFromEtl9G(1).first()
-        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, PointsTest::simpleThreshold))
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, Companion::simpleThreshold))
 
         val pointsPlacer = PointsPlacer(imageMatrix)
 
@@ -57,7 +60,7 @@ class PointsTest {
 
 
     fun extractBorders(dataset: KanjiFromEtlData = loadImagesFromEtl9G(1).first()) {
-        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, PointsTest::simpleThreshold))
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, Companion::simpleThreshold))
 
         val pointsPlacer = PointsPlacer(imageMatrix)
 
@@ -84,7 +87,7 @@ class PointsTest {
 
     fun runFindLinePoints() {
         val dataset = loadImagesFromEtl9G(1).first()
-        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, PointsTest::simpleThreshold))
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, Companion::simpleThreshold))
         val pointsPlacer = PointsPlacer(imageMatrix)
 
         writeOutputMatrixToPngFile(
@@ -96,7 +99,7 @@ class PointsTest {
 
     fun runFindCenterMass() {
         val dataset = loadImagesFromEtl9G(1).first()
-        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, PointsTest::simpleThreshold))
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, Companion::simpleThreshold))
         val pointsPlacer = PointsPlacer(imageMatrix)
 
         val result = Matrix(imageMatrix.numberOfRows, imageMatrix.numberOfColumns)
@@ -149,18 +152,6 @@ class PointsTest {
     }
 
 
-    private fun loadKanjiMatrix(path: Path): Matrix<Boolean> {
-        val bytesInFile = Files.readAllBytes(path)
-        val bytes = Base64.getDecoder().decode(bytesInFile)
-        val bitSet = BitSet.valueOf(bytes)
-        val numberOfRows = bytes[0].toUByte().toInt()
-        val numberOfColumns = bytes[1].toUByte().toInt()
-
-        return Matrix(numberOfRows, numberOfColumns) { row, column ->
-            bitSet[16 + row * numberOfRows + column]
-        }
-    }
-
 
     fun createImagesForUnicode() {
         val unicode = 32769
@@ -180,7 +171,7 @@ class PointsTest {
         }
 
         extractEtlImagesForUnicodeToKanjiData(unicode).forEach {
-            val tranformedEtlKanjiData = makeSquare(transformToBooleanMatrix(it.kanjiData, PointsTest::simpleThreshold))
+            val tranformedEtlKanjiData = makeSquare(transformToBooleanMatrix(it.kanjiData, Companion::simpleThreshold))
             writeOutputMatrixToPngFile(
                 tranformedEtlKanjiData,
                 outputDirectory.resolve("example_${it.getFileNameWithoutSuffix()}.png").toFile()
@@ -209,7 +200,7 @@ class PointsTest {
         }
 
         extractEtlImagesForUnicodeToKanjiData(unicode).map {
-            Pair(it.filePath, makeSquare(transformToBooleanMatrix(it.kanjiData, PointsTest::simpleThreshold)))
+            Pair(it.filePath, makeSquare(transformToBooleanMatrix(it.kanjiData, Companion::simpleThreshold)))
         }
             .map {
                 Pair(it.first, PointsPlacer(it.second))
@@ -276,7 +267,7 @@ class PointsTest {
         }
 
         extractEtlImagesForUnicodeToKanjiData(unicode).map {
-            Pair(it.filePath, makeThin(makeSquare(transformToBooleanMatrix(it.kanjiData, PointsTest::simpleThreshold))))
+            Pair(it.filePath, makeThin(makeSquare(transformToBooleanMatrix(it.kanjiData, Companion::simpleThreshold))))
         }
             .forEach {
                 val pointsPlacer = PointsPlacer(it.second)
@@ -313,57 +304,6 @@ class PointsTest {
 
     class EndpointsRelationData(val endpoint1: EndpointFeature, val endpoint2: EndpointFeature, val distance: Double)
 
-    class RelationDataForImage(
-        val endpointsRelationData: List<EndpointFeature>,
-        val relationData: Map<Pair<Int, Int>, EndpointsRelationData>
-    ) {
-
-
-        fun computeRelationsForEndpoint(endpointFeature: EndpointFeature): EndpointTriplet? {
-            val closestPointsData = getClosestPoints(endpointFeature, 2)
-
-            if(closestPointsData.size < 2) {
-                return null
-            }
-
-            val otherPoint1 = if(closestPointsData[0].endpoint1 == endpointFeature) closestPointsData[0].endpoint2 else closestPointsData[0].endpoint1
-            val otherPoint2 = if(closestPointsData[1].endpoint1 == endpointFeature) closestPointsData[1].endpoint2 else closestPointsData[1].endpoint1
-
-            val directionVector1 = Pair(endpointFeature.location.first - otherPoint1.location.first, endpointFeature.location.second - otherPoint1.location.second)
-            val directionVector2 = Pair(endpointFeature.location.first - otherPoint2.location.first, endpointFeature.location.second - otherPoint2.location.second)
-
-            val dotProduct = directionVector1.first * directionVector2.first + directionVector1.second * directionVector2.second
-
-            val relativeDistance = if(closestPointsData[0].distance > closestPointsData[1].distance) {
-                closestPointsData[1].distance / closestPointsData[0].distance
-            }
-            else {
-                closestPointsData[0].distance / closestPointsData[1].distance
-            }
-
-            val center = Pair((endpointFeature.location.first + otherPoint1.location.first + otherPoint2.location.first).toDouble() / 3,
-                (endpointFeature.location.second + otherPoint1.location.second + otherPoint2.location.second).toDouble() / 3)
-
-            return EndpointTriplet(endpointFeature, center, dotProduct, relativeDistance)
-        }
-
-        fun computeRelationsForEndpoints() {
-
-            endpointsRelationData.forEach { computeRelationsForEndpoint(it) }
-        }
-
-
-        fun getClosestPoints(endpointFeature: EndpointFeature, numberOfPointsToGet: Int): List<EndpointsRelationData> {
-           return relationData.filter { it.key.first == endpointFeature.id || it.key.second == endpointFeature.id }
-                .map { it.value }
-                .sortedBy { it.distance }
-                .take(numberOfPointsToGet)
-        }
-
-
-
-    }
-
 
     fun setupEndpointMatching() {
         val unicode = 32769
@@ -372,8 +312,8 @@ class PointsTest {
             makeThin(makeSquare(loadKanjiMatrix(Path.of("/home/student/workspace/testEncodings/temp/kanjiOutput/$unicode.dat"))))
 
         // TODO Remove restriction on the number of images to load
-        val endpointRelationData = extractEtlImagesForUnicodeToKanjiData(unicode, 1).map {
-            Pair(it.filePath, makeThin(makeSquare(transformToBooleanMatrix(it.kanjiData, PointsTest::simpleThreshold))))
+        val endpointRelationData = extractEtlImagesForUnicodeToKanjiData(unicode, 5).map {
+            Pair(it.filePath, makeThin(makeSquare(transformToBooleanMatrix(it.kanjiData, Companion::simpleThreshold))))
         }
             .map {
                 val endPoints = mutableSetOf<Pair<Int, Int>>()
@@ -391,8 +331,24 @@ class PointsTest {
 //            println("Endpoint relation data: ${it.relationData.size}")
 //        }
 
-        endpointRelationData.first().computeRelationsForEndpoints()
+        val endpointDataFirstInput = endpointRelationData.first()
+        endpointDataFirstInput.computeRelationsForEndpoints()
 
+
+        println(endpointDataFirstInput)
+
+
+
+    }
+
+
+    private fun matchEndpointTriplets(endpointTriplet: EndpointTriplet, endpointTripletsToMatch: List<EndpointTriplet>): List<EndpointTripletDistance> {
+        val endpointTripletDistances = endpointTripletsToMatch.map { endpointTripletToMatch ->
+            val distance = (endpointTriplet.relativeDistance - endpointTripletToMatch.relativeDistance).absoluteValue + (endpointTriplet.dotProduct - endpointTripletToMatch.dotProduct).absoluteValue
+            EndpointTripletDistance(endpointTriplet, endpointTripletToMatch, distance)
+        }.toList()
+
+        return endpointTripletDistances.sortedBy { it.distance }
     }
 
     fun setupMatchData(endpoints: Set<Pair<Int, Int>>): RelationDataForImage {
@@ -444,7 +400,7 @@ class PointsTest {
 //            makeThin(makeSquare(loadKanjiMatrix(Path.of("/home/student/workspace/testEncodings/temp/kanjiOutput/$unicode.dat"))))
 
         val endPointMatchData = extractEtlImagesForUnicodeToKanjiData(unicode, 5).map {
-            Pair(it.filePath, makeThin(makeSquare(transformToBooleanMatrix(it.kanjiData, PointsTest::simpleThreshold))))
+            Pair(it.filePath, makeThin(makeSquare(transformToBooleanMatrix(it.kanjiData, Companion::simpleThreshold))))
         }.map {
             val endPoints = mutableSetOf<Pair<Int, Int>>()
 
@@ -475,7 +431,7 @@ class PointsTest {
      */
     fun runBorderExtraction() {
         val dataset = loadImagesFromEtl9G(1).first()
-        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, PointsTest::simpleThreshold))
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, Companion::simpleThreshold))
         val pointsPlacer = PointsPlacer(imageMatrix)
         val result = pointsPlacer.extractBorders()
         val borderMatrix = Matrix(
@@ -503,7 +459,7 @@ class PointsTest {
      */
     fun runBorderExtractionShowOneBorderRegion() {
         val dataset = loadImagesFromEtl9G(1).first()
-        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, PointsTest::simpleThreshold))
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, Companion::simpleThreshold))
         val pointsPlacer = PointsPlacer(imageMatrix)
         val result = pointsPlacer.extractBorderStructure()
         val borderMatrix = Matrix(
@@ -525,7 +481,7 @@ class PointsTest {
 
     fun runBorderEncodingOnOneRegion() {
         val dataset = loadImagesFromEtl9G(1).first()
-        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, PointsTest::simpleThreshold))
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, Companion::simpleThreshold))
         val pointsPlacer = PointsPlacer(imageMatrix)
         val allBordersMatrix = pointsPlacer.extractBorderStructure()
         val borderMatrix = Matrix(

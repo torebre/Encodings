@@ -1,6 +1,7 @@
 package com.kjipo.visualization
 
-import com.kjipo.segmentation.Matrix
+import com.kjipo.representation.EncodedKanji
+import com.kjipo.representation.Matrix
 import javafx.application.Application
 import javafx.scene.paint.Color
 import org.slf4j.LoggerFactory
@@ -8,8 +9,6 @@ import tornadofx.*
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.streams.toList
-import com.kjipo.representation.EncodedKanji
 
 
 class RasterOverviewApplication : App() {
@@ -29,7 +28,7 @@ fun displayKanjis(encodedKanjis: Collection<EncodedKanji>, squareSize: Int = 1) 
     val colourRasters = encodedKanjis.map {
         characters.add(String(Character.toChars(it.unicode)))
 
-        Array(it.image.size, { row ->
+        Array(it.image.size) { row ->
             Array(it.image[0].size, { column ->
                 if (it.image[row][column]) {
                     Color.WHITE
@@ -37,7 +36,7 @@ fun displayKanjis(encodedKanjis: Collection<EncodedKanji>, squareSize: Int = 1) 
                     Color.BLACK
                 }
             })
-        })
+        }
     }
 
     val kanjiView = FX.find(KanjiView::class.java)
@@ -182,7 +181,9 @@ fun main(args: Array<String>) {
 //    displayKanjis(encodedKanjis)
 
 
-    val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), mutableListOf(33760))
+//    val loadedKanji = loadKanjisFromDirectory(Paths.get("kanji_output8"), mutableListOf(33760))
+    val loadedKanji = loadKanjisFromDirectory(Paths.get("/home/student/workspace/testEncodings/temp/kanjiOutput"), mutableListOf(33760))
+
 
 //    println("Loaded kanji: ${loadedKanji.size}")
 

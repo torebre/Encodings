@@ -1,3 +1,5 @@
+package com.kjipo.experiments
+
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.representation.raster.getFlowDirectionForOffset

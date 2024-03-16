@@ -1,3 +1,5 @@
+package com.kjipo.experiments
+
 import com.kjipo.readetl.EtlDataReader
 import com.kjipo.readetl.EtlDataSet
 import com.kjipo.readetl.KanjiFromEtlData
@@ -9,7 +11,6 @@ import java.io.File
 import java.lang.IllegalArgumentException
 import java.nio.file.Path
 import javax.imageio.ImageIO
-import kotlin.math.max
 
 
 val colourMap = mapOf(

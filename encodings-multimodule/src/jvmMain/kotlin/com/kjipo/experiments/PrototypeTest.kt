@@ -1,6 +1,6 @@
+package com.kjipo.experiments
+
 import com.kjipo.matching.PrototypeStructure
-import com.kjipo.readetl.EtlDataReader
-import com.kjipo.readetl.EtlDataSet
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.prototype2.EndpointPrototype
 import com.kjipo.representation.prototype2.LinePrototype
@@ -11,7 +11,6 @@ import com.kjipo.segmentation.RegionExtractor
 import java.awt.image.BufferedImage
 import java.awt.image.BufferedImage.TYPE_INT_RGB
 import java.io.File
-import java.nio.file.Path
 import javax.imageio.ImageIO
 import kotlin.io.path.name
 

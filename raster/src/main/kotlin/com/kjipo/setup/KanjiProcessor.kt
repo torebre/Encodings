@@ -4,7 +4,7 @@ import com.kjipo.parser.FontFileParser
 import com.kjipo.parser.KanjiDicParser
 import com.kjipo.parser.Parsers
 import com.kjipo.representation.EncodedKanji
-import com.kjipo.skeleton.makeThin
+import com.kjipo.representation.raster.makeThin
 import com.kjipo.skeleton.transformArraysToMatrix
 import org.slf4j.LoggerFactory
 import java.awt.Font

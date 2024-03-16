@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import static com.kjipo.representation.raster.BwmethodsKt.makeThin;
+
 public class CreatePrototypeDataset {
     private static final Gson gson;
 
@@ -64,7 +66,7 @@ public class CreatePrototypeDataset {
 
                     List<AngleLine> allLines = Lists.newArrayList(top);
 
-                    boolean[][] processedImage = BwmethodsKt.transformToBooleanArrays(BwmethodsKt.makeThin(encodedKanji.getImage()));
+                    boolean[][] processedImage = BwmethodsKt.transformToBooleanArrays(makeThin(encodedKanji.getImage()));
 
                     List<Prototype> prototypes = fitPrototype.addPrototypes(processedImage, allLines, false);
                     Path outputFile = outputDirectory.resolve(encodedKanji.getUnicode() + ".json");

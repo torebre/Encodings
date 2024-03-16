@@ -1,20 +1,7 @@
 package com.kjipo.setup
 
-import com.kjipo.parser.FontFileParser
-import com.kjipo.parser.KanjiDicParser
-import com.kjipo.parser.Parsers
-import com.kjipo.representation.EncodedKanji
-import com.kjipo.segmentation.Matrix
-import com.kjipo.setupUtilities.EncodingUtilities
-import com.kjipo.skeleton.makeThin
+import com.kjipo.representation.Matrix
 import org.slf4j.LoggerFactory
-import java.awt.Font
-import java.awt.font.FontRenderContext
-import java.io.FileInputStream
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.stream.Collectors
 
 
 private val logger = LoggerFactory.getLogger("EncodedDataSetCreation")
