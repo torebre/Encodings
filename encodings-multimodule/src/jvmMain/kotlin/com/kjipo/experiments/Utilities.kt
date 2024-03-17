@@ -17,3 +17,9 @@ fun loadKanjiMatrix(path: Path): Matrix<Boolean> {
         bitSet[16 + row * numberOfRows + column]
     }
 }
+
+inline fun <reified T> transposeMatrix(matrix: Matrix<T>): Matrix<T> {
+    return Matrix<T>(matrix.numberOfRows, matrix.numberOfColumns) { row, column ->
+        matrix[column, row]
+    }
+}

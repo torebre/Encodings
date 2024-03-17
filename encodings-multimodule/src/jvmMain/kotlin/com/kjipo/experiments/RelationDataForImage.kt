@@ -8,9 +8,8 @@ import kotlin.math.sqrt
 
 class RelationDataForImage(
     val endpointsRelationData: List<EndpointFeature>,
-    val relationData: Map<Pair<Int, Int>, PointsTest.EndpointsRelationData>
+    val relationData: Map<Pair<Int, Int>, EndpointsRelationData>
 ) {
-
 
     fun computeRelationsForEndpoint(endpointFeature: EndpointFeature): EndpointTriplet? {
         val closestPointsData = getClosestPoints(endpointFeature, 2)
@@ -53,7 +52,7 @@ class RelationDataForImage(
     }
 
 
-    fun getClosestPoints(endpointFeature: EndpointFeature, numberOfPointsToGet: Int): List<PointsTest.EndpointsRelationData> {
+    fun getClosestPoints(endpointFeature: EndpointFeature, numberOfPointsToGet: Int): List<EndpointsRelationData> {
        return relationData.filter { it.key.first == endpointFeature.id || it.key.second == endpointFeature.id }
             .map { it.value }
             .sortedBy { it.distance }

@@ -11,12 +11,10 @@ import com.kjipo.representation.pointsmatching.PointsPlacer
 import com.kjipo.representation.raster.bwmorphEndpoints
 import com.kjipo.representation.raster.makeSquare
 import com.kjipo.representation.raster.makeThin
+import com.kjipo.representation.raster.thin
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.File
-import java.nio.file.Files
 import java.nio.file.Path
-import java.util.Base64
-import java.util.BitSet
 import kotlin.io.path.createDirectory
 import kotlin.io.path.exists
 import kotlin.io.path.nameWithoutExtension
@@ -150,7 +148,6 @@ class PointsTest {
 
         return result
     }
-
 
 
     fun createImagesForUnicode() {
@@ -302,49 +299,67 @@ class PointsTest {
             }
     }
 
-    class EndpointsRelationData(val endpoint1: EndpointFeature, val endpoint2: EndpointFeature, val distance: Double)
 
-
-    fun setupEndpointMatching() {
+    fun setupEndpointMatching(): List<VisualizationData> {
         val unicode = 32769
-
-        val imageMatrix =
-            makeThin(makeSquare(loadKanjiMatrix(Path.of("/home/student/workspace/testEncodings/temp/kanjiOutput/$unicode.dat"))))
+        val squareMatrix =
+            transposeMatrix(makeSquare(loadKanjiMatrix(Path.of("/home/student/workspace/testEncodings/temp/kanjiOutput/$unicode.dat"))))
+        val imageMatrix = makeThin(squareMatrix)
 
         // TODO Remove restriction on the number of images to load
-        val endpointRelationData = extractEtlImagesForUnicodeToKanjiData(unicode, 5).map {
-            Pair(it.filePath, makeThin(makeSquare(transformToBooleanMatrix(it.kanjiData, Companion::simpleThreshold))))
-        }
-            .map {
-                val endPoints = mutableSetOf<Pair<Int, Int>>()
+        return extractEtlImagesForUnicodeToKanjiData(unicode, 5).map {
+            val squareMatrix = transposeMatrix(
+                makeSquare(
+                    transformToBooleanMatrix(
+                        it.kanjiData,
+                        Companion::simpleThreshold
+                    )
+                )
+            )
 
-                bwmorphEndpoints(it.second).forEachIndexed { row, column, value ->
-                    if (value) {
-                        endPoints.add(Pair(row, column))
-                    }
+            val thinnedImage = makeThin(squareMatrix)
+            val endPoints = mutableSetOf<Pair<Int, Int>>()
+
+            bwmorphEndpoints(thinnedImage).forEachIndexed { row, column, value ->
+                if (value) {
+                    endPoints.add(Pair(row, column))
                 }
-
-                setupMatchData(endPoints)
             }
 
-//        endpointRelationData.forEach {
-//            println("Endpoint relation data: ${it.relationData.size}")
-//        }
-
-        val endpointDataFirstInput = endpointRelationData.first()
-        endpointDataFirstInput.computeRelationsForEndpoints()
-
-
-        println(endpointDataFirstInput)
-
-
+            val relationalDataForImage = setupMatchData(endPoints)
+            extractVisualizationData(squareMatrix, relationalDataForImage)
+        }.toList()
 
     }
 
+    private fun extractVisualizationData(
+        imageMatrix: Matrix<Boolean>,
+        relationDataImage: RelationDataForImage
+    ): VisualizationData {
+        val pointSpecifications =
+            Matrix<Array<PointType>>(imageMatrix.numberOfRows, imageMatrix.numberOfColumns) { row, column ->
+                if (imageMatrix[row, column]) {
+                    arrayOf(PointType.LINE)
+                } else {
+                    arrayOf(PointType.EMPTY)
+                }
+            }
 
-    private fun matchEndpointTriplets(endpointTriplet: EndpointTriplet, endpointTripletsToMatch: List<EndpointTriplet>): List<EndpointTripletDistance> {
+        relationDataImage.endpointsRelationData.forEach { endpointFeature ->
+            pointSpecifications[endpointFeature.location.first, endpointFeature.location.second] += arrayOf(PointType.ENDPOINT)
+        }
+
+        return VisualizationData(imageMatrix, pointSpecifications)
+    }
+
+
+    private fun matchEndpointTriplets(
+        endpointTriplet: EndpointTriplet,
+        endpointTripletsToMatch: List<EndpointTriplet>
+    ): List<EndpointTripletDistance> {
         val endpointTripletDistances = endpointTripletsToMatch.map { endpointTripletToMatch ->
-            val distance = (endpointTriplet.relativeDistance - endpointTripletToMatch.relativeDistance).absoluteValue + (endpointTriplet.dotProduct - endpointTripletToMatch.dotProduct).absoluteValue
+            val distance =
+                (endpointTriplet.relativeDistance - endpointTripletToMatch.relativeDistance).absoluteValue + (endpointTriplet.dotProduct - endpointTripletToMatch.dotProduct).absoluteValue
             EndpointTripletDistance(endpointTriplet, endpointTripletToMatch, distance)
         }.toList()
 
@@ -523,6 +538,7 @@ class PointsTest {
     }
 
 }
+
 
 fun main() {
     val pointsTest = PointsTest()

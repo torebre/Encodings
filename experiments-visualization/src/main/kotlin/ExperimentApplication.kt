@@ -1,5 +1,7 @@
 package com.kjipo
 
+import com.kjipo.experiments.PointType
+import com.kjipo.experiments.VisualizationData
 import com.kjipo.representation.EncodedKanji
 import com.kjipo.representation.Matrix
 import javafx.application.Application
@@ -64,6 +66,35 @@ fun displayKanjiImage(kanjiImage: Matrix<Boolean>, squareSize: Int = 1) {
     }
 }
 
+fun displayVisualizationData(visualizationDataList: List<VisualizationData>, squareSize: Int = 1) {
+    val dataToDisplay = visualizationDataList.map { visualizationData ->
+        val matrix = Matrix(
+            visualizationData.pointTypeImage.numberOfRows,
+            visualizationData.pointTypeImage.numberOfColumns
+        ) { row, column ->
+            transformPointTypeToColour(*visualizationData.pointTypeImage[row, column])
+        }
+
+//        println("Number of rows: ${matrix.numberOfRows}. Number of columns: ${matrix.numberOfColumns}")
+
+        matrix
+    }
+
+    showMatrixImages(dataToDisplay, squareSize)
+}
+
+private fun transformPointTypeToColour(vararg pointType: PointType): Color {
+    // TODO Should have better handling of multiple point types
+    return pointType.map {
+        when (it) {
+            PointType.EMPTY -> Color.color(0.0, 0.0, 0.0)
+            PointType.ENDPOINT -> Color.color(1.0, 0.0, 0.0)
+            PointType.LINE -> Color.color(1.0, 1.0, 1.0)
+        }
+    }.last()
+}
+
+
 fun displayKanjiImage(kanjiImages: List<Matrix<Boolean>>, squareSize: Int = 1) {
     val startThread = Thread {
         Application.launch(ExperimentApplication::class.java)
@@ -86,6 +117,33 @@ fun displayKanjiImage(kanjiImages: List<Matrix<Boolean>>, squareSize: Int = 1) {
     FX.runAndWait {
         experimentView.loadRasters(
             kanjiImagesAsArrays,
+            Collections.emptyList(),
+            squareSize
+        )
+    }
+}
+
+
+private fun showMatrixImages(colourRasters: Collection<Matrix<Color>>, squareSize: Int = 1) {
+    showImages(colourRasters.map { matrix ->
+        Array(matrix.numberOfRows) { row ->
+            Array(matrix.numberOfColumns) { column ->
+                matrix[row, column]
+            }
+        }
+    }, squareSize)
+}
+
+private fun showImages(colourRasters: Collection<Array<Array<Color>>>, squareSize: Int = 1) {
+    val startThread = Thread {
+        Application.launch(ExperimentApplication::class.java)
+    }
+    startThread.start()
+
+    val experimentView = FX.find(ExperimentView::class.java)
+    FX.runAndWait {
+        experimentView.loadRasters(
+            colourRasters,
             Collections.emptyList(),
             squareSize
         )
