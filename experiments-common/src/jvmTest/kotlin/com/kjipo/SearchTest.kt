@@ -2,8 +2,8 @@ package com.kjipo
 
 import org.junit.Test
 import mu.KotlinLogging
-import com.kjipo.experiments.LookupSample
-import com.kjipo.experiments.FindSimilarLines
+import com.kjipo.experiments2.LookupSample
+import com.kjipo.experiments2.FindSimilarLines
 import com.kjipo.datageneration.CreateSamples
 
 class SearchTest {

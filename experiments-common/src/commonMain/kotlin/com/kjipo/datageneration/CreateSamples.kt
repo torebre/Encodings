@@ -1,8 +1,7 @@
 package com.kjipo.datageneration
 
-import com.kjipo.experiments.LookupSample
+import com.kjipo.experiments2.LookupSample
 import com.kjipo.representation.prototype.LinePrototype
-import com.kjipo.representation.segment.Pair
 import kotlin.math.*
 import kotlin.random.Random
 

@@ -21,7 +21,7 @@ dependencies {
     implementation project(":raster")
     implementation project(":encodings")
     implementation project(":visualization")
-    implementation project(":encodings-multimodule")
+    implementation project(":common")
 
 //    compile project(":opencv")
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"

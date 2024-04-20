@@ -12,7 +12,7 @@ javafx {
 }
 
 dependencies {
-    implementation project(":encodings-multimodule")
+    implementation project(":common")
     implementation project(":encodings")
     implementation group: 'com.google.guava', name: 'guava', version: '17.0'
 

@@ -2,7 +2,7 @@ apply plugin: 'kotlin'
 
 
 dependencies {
-    implementation project(":encodings-multimodule")
+    implementation project(":common")
     implementation group: 'org.slf4j', name: 'slf4j-api', version:'1.8.0-beta2'
     implementation group: 'org.slf4j', name: 'slf4j-simple', version:'1.8.0-beta2'
     implementation group: 'com.google.guava', name: 'guava', version:'17.0'

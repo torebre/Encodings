@@ -1,7 +1,7 @@
 package com.kjipo.graph
 
 
-import com.kjipo.experiments.LoadKanjiFromCsvFile
+import com.kjipo.experiments2.LoadKanjiFromCsvFile
 import com.kjipo.segmentation.Matrix
 import com.kjipo.skeleton.transformToArrays
 import com.kjipo.visualization.displayColourRasters
@@ -15,7 +15,6 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
 import kotlin.math.abs
-import kotlin.streams.toList
 
 
 object LoadAllKanjiGraphs {

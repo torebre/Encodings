@@ -1,6 +1,7 @@
 package com.kjipo.segmentation
 
 import com.kjipo.raster.EncodingUtilities
+import com.kjipo.representation.Matrix
 import com.kjipo.representation.prototype.AngleLine
 import kotlin.math.floor
 import kotlin.math.roundToInt

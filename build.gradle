@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.9.0'
+    ext.kotlin_version = '1.9.22'
 
     repositories {
         mavenCentral()
@@ -15,21 +15,21 @@ buildscript {
 
 
 ext {
-    nodeVersion = '8.11.1'
-    qunitVersion = '2.6.0'
-    napierVersion = '0.0.3'
-    assert4jVersion = '3.12.2'
-    kotlinLogging = '3.0.2'
-    libraries = [
-            junit                         : "junit:junit:4.12",
-            kotlin_stdlib                 : "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version",
-            kotlin_stdlib_common          : "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlin_version",
-            kotlin_stdlib_js              : "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version",
-            kotlin_test_annotations_common: "org.jetbrains.kotlin:kotlin-test-annotations-common:$kotlin_version",
-            kotlin_test_common            : "org.jetbrains.kotlin:kotlin-test-common:$kotlin_version",
-            kotlin_test_js                : "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version",
-            kotlin_test_junit             : "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version",
-    ]
+//    nodeVersion = '8.11.1'
+//    qunitVersion = '2.6.0'
+//    napierVersion = '0.0.3'
+//    assert4jVersion = '3.12.2'
+//    kotlinLogging = '3.0.2'
+//    libraries = [
+//            junit                         : "junit:junit:4.12",
+//            kotlin_stdlib                 : "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version",
+//            kotlin_stdlib_common          : "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlin_version",
+//            kotlin_stdlib_js              : "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version",
+//            kotlin_test_annotations_common: "org.jetbrains.kotlin:kotlin-test-annotations-common:$kotlin_version",
+//            kotlin_test_common            : "org.jetbrains.kotlin:kotlin-test-common:$kotlin_version",
+//            kotlin_test_js                : "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version",
+//            kotlin_test_junit             : "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version",
+//    ]
 }
 
 

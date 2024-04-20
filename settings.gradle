@@ -22,18 +22,13 @@ rootProject.name = 'KanjiRecognizer'
 
 include ':raster'
 include ':encodings'
+include ':common'
 //include ':tensorflow'
 include ':visualization'
 include ':experiments'
+include ':experiments-visualization'
 //include ':opencv'
-include ':graphimport'
+//include ':graphimport'
 //include ':webview-js'
-include ':kanjiserver'
-include ':encodings-multimodule'
-include ':experiments-common'
-//include ':experiments-visualization-js'
-
-
-//enableFeaturePreview('GRADLE_METADATA')
-include 'experiments-visualization'
-
+//include ':kanjiserver'
+//include ':experiments-common'

@@ -7,7 +7,13 @@
 //}
 plugins {
     id 'kotlin'
+//    id 'org.jetbrains.kotlin.jvm'
     id 'org.openjfx.javafxplugin' version '0.0.10'
+}
+
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 javafx {
@@ -16,7 +22,8 @@ javafx {
 }
 
 dependencies {
-    implementation project(":encodings-multimodule")
+    implementation project(":common")
+    implementation project(":experiments")
     implementation project(":raster")
     implementation project(":visualization")
     implementation "no.tornado:tornadofx:1.7.5"

@@ -28,7 +28,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation project(":encodings-multimodule")
+                implementation project(":common")
                 implementation kotlin('stdlib-common')
 
                 implementation "io.github.microutils:kotlin-logging:$kotlinLogging"

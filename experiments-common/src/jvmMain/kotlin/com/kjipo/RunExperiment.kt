@@ -1,8 +1,8 @@
 package com.kjipo
 
 import com.kjipo.datageneration.CreateSamples
-import com.kjipo.experiments.FindSimilarLines.findSimilarPaths
-import com.kjipo.experiments.LookupSample
+import com.kjipo.experiments2.FindSimilarLines.findSimilarPaths
+import com.kjipo.experiments2.LookupSample
 
 object RunExperiment {
 

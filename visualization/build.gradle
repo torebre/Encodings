@@ -16,7 +16,7 @@ javafx {
 }
 
 dependencies {
-    implementation project(":encodings-multimodule")
+    implementation project(":common")
     implementation project(":raster")
     implementation "no.tornado:tornadofx:1.7.5"
     implementation group: 'org.slf4j', name: 'slf4j-api', version:'1.7.7'
