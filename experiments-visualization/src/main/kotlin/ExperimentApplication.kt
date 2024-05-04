@@ -10,6 +10,8 @@ import tornadofx.*
 import java.util.*
 
 
+val logger = System.getLogger(ExperimentApplication::class.qualifiedName!!)
+
 class ExperimentApplication : App() {
     override val primaryView = ExperimentView::class
 }
@@ -126,6 +128,9 @@ fun displayKanjiImage(kanjiImages: List<Matrix<Boolean>>, squareSize: Int = 1) {
 
 private fun showMatrixImages(colourRasters: Collection<Matrix<Color>>, squareSize: Int = 1) {
     showImages(colourRasters.map { matrix ->
+
+        logger.log(System.Logger.Level.INFO, "Matrix: " +matrix.numberOfRows +", " +matrix.numberOfColumns)
+
         Array(matrix.numberOfRows) { row ->
             Array(matrix.numberOfColumns) { column ->
                 matrix[row, column]

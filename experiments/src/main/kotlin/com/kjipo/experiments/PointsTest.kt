@@ -11,6 +11,7 @@ import com.kjipo.representation.pointsmatching.PointsPlacer
 import com.kjipo.representation.raster.bwmorphEndpoints
 import com.kjipo.representation.raster.makeSquare
 import com.kjipo.representation.raster.makeThin
+import com.kjipo.representation.raster.scaleMatrix
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.createDirectory
@@ -302,13 +303,16 @@ class PointsTest {
             transposeMatrix(makeSquare(loadKanjiMatrix(Path.of("/home/student/workspace/testEncodings/temp/kanjiOutput/$unicode.dat"))))
         val imageMatrix = makeThin(inputSquareMatrix)
 
+
         // TODO Remove restriction on the number of images to load
         return extractEtlImagesForUnicodeToKanjiData(unicode, 5).map {
             val squareMatrix = transposeMatrix(
                 makeSquare(
-                    transformToBooleanMatrix(
-                        it.kanjiData,
-                        Companion::simpleThreshold
+                    scaleMatrix(
+                        transformToBooleanMatrix(
+                            it.kanjiData,
+                            Companion::simpleThreshold
+                        ), 128, 128
                     )
                 )
             )

@@ -1872,7 +1872,7 @@ fun makeSquare(matrix: Matrix<Boolean>): Matrix<Boolean> {
     var maxColumn = 0
 
     matrix.forEachIndexed { row, column, value ->
-        if (matrix[row, column]) {
+        if (value) {
             if (minRow > row) {
                 minRow = row
             }
@@ -2012,5 +2012,20 @@ fun <T> getNeighbourhoodType(matrix: Matrix<T>, row: Int, column: Int, valueFunc
                 ) && valueFunction(matrix[row + rowOffset, column + columnOffset])
             }
         }
+    }
+}
+
+
+inline fun <reified T> scaleMatrix(matrix: Matrix<T>,
+                                           newNumberOfRows: Int,
+                                           newNumberOfColumns: Int): Matrix<T> {
+    val scaleRow = matrix.numberOfRows / newNumberOfRows.toDouble()
+    val scaleColumn = matrix.numberOfColumns / newNumberOfColumns.toDouble()
+
+    return Matrix<T>(newNumberOfRows, newNumberOfColumns) { row, column ->
+        val lookupRow: Int = kotlin.math.floor(row * scaleRow).toInt()
+        val lookupColumn: Int = kotlin.math.floor(column * scaleColumn).toInt()
+
+        matrix[lookupRow, lookupColumn]
     }
 }
