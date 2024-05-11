@@ -26,7 +26,7 @@ class PointsTest {
 
     fun runRegionExtraction() {
         val dataset = loadImagesFromEtl9G(1).first()
-        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, Companion::simpleThreshold))
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, ::simpleThreshold))
 
         val pointsPlacer = PointsPlacer(imageMatrix)
 
@@ -55,7 +55,7 @@ class PointsTest {
 
 
     fun extractBorders(dataset: KanjiFromEtlData = loadImagesFromEtl9G(1).first()) {
-        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, Companion::simpleThreshold))
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, ::simpleThreshold))
 
         val pointsPlacer = PointsPlacer(imageMatrix)
 
@@ -82,7 +82,7 @@ class PointsTest {
 
     fun runFindLinePoints() {
         val dataset = loadImagesFromEtl9G(1).first()
-        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, Companion::simpleThreshold))
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, ::simpleThreshold))
         val pointsPlacer = PointsPlacer(imageMatrix)
 
         writeOutputMatrixToPngFile(
@@ -94,7 +94,7 @@ class PointsTest {
 
     fun runFindCenterMass() {
         val dataset = loadImagesFromEtl9G(1).first()
-        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, Companion::simpleThreshold))
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, ::simpleThreshold))
         val pointsPlacer = PointsPlacer(imageMatrix)
 
         val result = Matrix(imageMatrix.numberOfRows, imageMatrix.numberOfColumns)
@@ -165,7 +165,7 @@ class PointsTest {
         }
 
         extractEtlImagesForUnicodeToKanjiData(unicode).forEach {
-            val tranformedEtlKanjiData = makeSquare(transformToBooleanMatrix(it.kanjiData, Companion::simpleThreshold))
+            val tranformedEtlKanjiData = makeSquare(transformToBooleanMatrix(it.kanjiData, ::simpleThreshold))
             writeOutputMatrixToPngFile(
                 tranformedEtlKanjiData,
                 outputDirectory.resolve("example_${it.getFileNameWithoutSuffix()}.png").toFile()
@@ -194,7 +194,7 @@ class PointsTest {
         }
 
         extractEtlImagesForUnicodeToKanjiData(unicode).map {
-            Pair(it.filePath, makeSquare(transformToBooleanMatrix(it.kanjiData, Companion::simpleThreshold)))
+            Pair(it.filePath, makeSquare(transformToBooleanMatrix(it.kanjiData, ::simpleThreshold)))
         }
             .map {
                 Pair(it.first, PointsPlacer(it.second))
@@ -261,7 +261,7 @@ class PointsTest {
         }
 
         extractEtlImagesForUnicodeToKanjiData(unicode).map {
-            Pair(it.filePath, makeThin(makeSquare(transformToBooleanMatrix(it.kanjiData, Companion::simpleThreshold))))
+            Pair(it.filePath, makeThin(makeSquare(transformToBooleanMatrix(it.kanjiData, ::simpleThreshold))))
         }
             .forEach {
                 val pointsPlacer = PointsPlacer(it.second)
@@ -311,7 +311,7 @@ class PointsTest {
                     scaleMatrix(
                         transformToBooleanMatrix(
                             it.kanjiData,
-                            Companion::simpleThreshold
+                            ::simpleThreshold
                         ), 128, 128
                     )
                 )
@@ -415,7 +415,7 @@ class PointsTest {
 //            makeThin(makeSquare(loadKanjiMatrix(Path.of("/home/student/workspace/testEncodings/temp/kanjiOutput/$unicode.dat"))))
 
         val endPointMatchData = extractEtlImagesForUnicodeToKanjiData(unicode, 5).map {
-            Pair(it.filePath, makeThin(makeSquare(transformToBooleanMatrix(it.kanjiData, Companion::simpleThreshold))))
+            Pair(it.filePath, makeThin(makeSquare(transformToBooleanMatrix(it.kanjiData, ::simpleThreshold))))
         }.map {
             val endPoints = mutableSetOf<Pair<Int, Int>>()
 
@@ -446,7 +446,7 @@ class PointsTest {
      */
     fun runBorderExtraction() {
         val dataset = loadImagesFromEtl9G(1).first()
-        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, Companion::simpleThreshold))
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, ::simpleThreshold))
         val pointsPlacer = PointsPlacer(imageMatrix)
         val result = pointsPlacer.extractBorders()
         val borderMatrix = Matrix(
@@ -474,7 +474,7 @@ class PointsTest {
      */
     fun runBorderExtractionShowOneBorderRegion() {
         val dataset = loadImagesFromEtl9G(1).first()
-        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, Companion::simpleThreshold))
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, ::simpleThreshold))
         val pointsPlacer = PointsPlacer(imageMatrix)
         val result = pointsPlacer.extractBorderStructure()
         val borderMatrix = Matrix(
@@ -496,7 +496,7 @@ class PointsTest {
 
     fun runBorderEncodingOnOneRegion() {
         val dataset = loadImagesFromEtl9G(1).first()
-        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, Companion::simpleThreshold))
+        val imageMatrix = makeSquare(transformToBooleanMatrix(dataset.kanjiData, ::simpleThreshold))
         val pointsPlacer = PointsPlacer(imageMatrix)
         val allBordersMatrix = pointsPlacer.extractBorderStructure()
         val borderMatrix = Matrix(
@@ -519,22 +519,6 @@ class PointsTest {
             result,
             File("${dataset.filePath.fileName.toString().substringBefore('.')}_border_encoding_single_region.png")
         ) { value -> colourFunction(value) }
-    }
-
-
-    companion object {
-
-        private fun simpleThreshold(rgbValue: Int): Boolean {
-            if (rgbValue != -1) {
-                // https://stackoverflow.com/questions/49676862/srgb-to-rgb-color-conversion
-                val blue: Int = rgbValue and 255
-                val green: Int = rgbValue shr 8 and 255
-                val red: Int = rgbValue shr 16 and 255
-
-                return red > 20 || green > 20 || blue > 20
-            }
-            return false
-        }
     }
 
 }

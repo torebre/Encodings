@@ -1,5 +1,6 @@
 package com.kjipo
 
+import com.kjipo.experiments.CircleLineTest
 import com.kjipo.experiments.PointsTest
 import com.kjipo.experiments.loadKanjiMatrix
 import com.kjipo.representation.Matrix
@@ -30,7 +31,15 @@ private fun showKanjiImage() {
     displayKanjiImage(listOf(updatedMatrix, imageMatrix))
 }
 
+private fun showMatrixVisualizations() {
+    val circleLineTest = CircleLineTest()
+    val matrixVisualization = circleLineTest.extractLineSegments(32769)
+
+    showMatrixVisualization(matrixVisualization)
+}
+
 
 fun main() {
-    showEndpointResults()
+//    showEndpointResults()
+    showMatrixVisualizations()
 }

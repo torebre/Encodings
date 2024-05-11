@@ -1,5 +1,6 @@
 package com.kjipo
 
+import com.kjipo.experiments.MatrixVisualization
 import com.kjipo.experiments.PointType
 import com.kjipo.experiments.VisualizationData
 import com.kjipo.representation.EncodedKanji
@@ -68,6 +69,28 @@ fun displayKanjiImage(kanjiImage: Matrix<Boolean>, squareSize: Int = 1) {
     }
 }
 
+fun <T> showMatrixVisualization(matrixVisualization: MatrixVisualization<T>, squareSize: Int = 1) {
+    showMatrixImages(Collections.singletonList(createColorMatrix(matrixVisualization)), squareSize)
+}
+
+fun <T> showMatrixVisualization(matrixVisualizations: Collection<MatrixVisualization<T>>, squareSize: Int = 1) {
+    showMatrixImages(matrixVisualizations.map { createColorMatrix(it) }, squareSize)
+}
+
+private fun <T> createColorMatrix(matrixVisualization: MatrixVisualization<T>): Matrix<Color> {
+    val colorMatrix =
+        Matrix(matrixVisualization.matrix.numberOfRows, matrixVisualization.matrix.numberOfColumns) { _, _ ->
+            Color.BLACK
+        }
+
+    matrixVisualization.matrix.forEachIndexed { row, column, value ->
+        colorMatrix[row, column] = matrixVisualization.colorFunction(value)
+            .let { rgbColor -> Color.color(rgbColor.red, rgbColor.green, rgbColor.blue) }
+    }
+
+    return colorMatrix
+}
+
 fun displayVisualizationData(visualizationDataList: List<VisualizationData>, squareSize: Int = 1) {
     val dataToDisplay = visualizationDataList.map { visualizationData ->
         val matrix = Matrix(
@@ -129,7 +152,7 @@ fun displayKanjiImage(kanjiImages: List<Matrix<Boolean>>, squareSize: Int = 1) {
 private fun showMatrixImages(colourRasters: Collection<Matrix<Color>>, squareSize: Int = 1) {
     showImages(colourRasters.map { matrix ->
 
-        logger.log(System.Logger.Level.INFO, "Matrix: " +matrix.numberOfRows +", " +matrix.numberOfColumns)
+        logger.log(System.Logger.Level.INFO, "Matrix: " + matrix.numberOfRows + ", " + matrix.numberOfColumns)
 
         Array(matrix.numberOfRows) { row ->
             Array(matrix.numberOfColumns) { column ->

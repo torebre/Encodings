@@ -23,3 +23,15 @@ inline fun <reified T> transposeMatrix(matrix: Matrix<T>): Matrix<T> {
         matrix[column, row]
     }
 }
+
+fun simpleThreshold(rgbValue: Int): Boolean {
+    if (rgbValue != -1) {
+        // https://stackoverflow.com/questions/49676862/srgb-to-rgb-color-conversion
+        val blue: Int = rgbValue and 255
+        val green: Int = rgbValue shr 8 and 255
+        val red: Int = rgbValue shr 16 and 255
+
+        return red > 20 || green > 20 || blue > 20
+    }
+    return false
+}
