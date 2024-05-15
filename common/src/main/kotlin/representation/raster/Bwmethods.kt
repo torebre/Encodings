@@ -1972,10 +1972,14 @@ fun bwmorphEndpoints(image: Matrix<Boolean>): Matrix<Boolean> {
 }
 
 
+fun getNeighbourhood(matrix: Matrix<Boolean>, center: Pair<Int, Int>): Matrix<Boolean> {
+    return getNeighbourhood(matrix, center.first, center.second)
+}
+
 fun getNeighbourhood(matrix: Matrix<Boolean>, row: Int, column: Int): Matrix<Boolean> {
-    val result = Matrix(3, 3, { row2, column2 -> false })
+    val result = Matrix(3, 3) { _, _ -> false }
     result[1, 1] = matrix[row, column]
-    FlowDirection.values().forEach {
+    FlowDirection.entries.forEach {
         if (EncodingUtilities.validCell(row, column, it, matrix.numberOfRows, matrix.numberOfColumns)) {
             result[1 + it.rowShift, 1 + it.columnShift] = matrix[row + it.rowShift, column + it.columnShift]
         }
@@ -2016,9 +2020,11 @@ fun <T> getNeighbourhoodType(matrix: Matrix<T>, row: Int, column: Int, valueFunc
 }
 
 
-inline fun <reified T> scaleMatrix(matrix: Matrix<T>,
-                                           newNumberOfRows: Int,
-                                           newNumberOfColumns: Int): Matrix<T> {
+inline fun <reified T> scaleMatrix(
+    matrix: Matrix<T>,
+    newNumberOfRows: Int,
+    newNumberOfColumns: Int
+): Matrix<T> {
     val scaleRow = matrix.numberOfRows / newNumberOfRows.toDouble()
     val scaleColumn = matrix.numberOfColumns / newNumberOfColumns.toDouble()
 

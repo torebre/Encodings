@@ -2,12 +2,8 @@ package com.kjipo.experiments
 
 import com.kjipo.readetl.EtlDataReader.extractEtlImagesForUnicodeToKanjiData
 import com.kjipo.representation.Matrix
-import com.kjipo.representation.raster.makeSquare
-import com.kjipo.representation.raster.makeThin
-import com.kjipo.representation.raster.scaleMatrix
-import kotlin.math.cos
-import kotlin.math.roundToInt
-import kotlin.math.sin
+import com.kjipo.representation.raster.*
+import kotlin.math.*
 
 class CircleLineTest {
 
@@ -29,44 +25,67 @@ class CircleLineTest {
         // TODO Remove restriction on number of images to load
         val kanjiImages = extractEtlImagesForUnicodeToKanjiData(unicode, 5).take(1)
             .map {
-            val squareMatrix = transposeMatrix(
-                makeSquare(
-                    scaleMatrix(
-                        transformToBooleanMatrix(
-                            it.kanjiData,
-                            ::simpleThreshold
-                        ), 128, 128
+                val squareMatrix = transposeMatrix(
+                    makeSquare(
+                        scaleMatrix(
+                            transformToBooleanMatrix(
+                                it.kanjiData,
+                                ::simpleThreshold
+                            ), 128, 128
+                        )
                     )
                 )
-            )
 
-            val thinnedImage = makeThin(squareMatrix)
+                val thinnedImage = makeThin(squareMatrix)
 
-            val matrix2 = Matrix(squareMatrix.numberOfRows, squareMatrix.numberOfColumns) { row, column ->
-                if (squareMatrix[row, column]) {
-                    if (thinnedImage[row, column]) {
-                        1
+                val matrix2 = Matrix(squareMatrix.numberOfRows, squareMatrix.numberOfColumns) { row, column ->
+                    if (squareMatrix[row, column]) {
+                        if (thinnedImage[row, column]) {
+                            1
+                        } else {
+                            2
+                        }
                     } else {
-                        2
+                        0
                     }
-                } else {
-                    0
                 }
-            }
 
-            placeCircles(matrix2, thinnedImage)
+                placeCircles(matrix2, thinnedImage)
 
-            MatrixVisualization(matrix2) { value ->
-                colourFunction(value, 5).let {
-                    PointColor(
-                        it[0].toDouble() / 255.0,
-                        it[1].toDouble() / 255.0,
-                        it[2].toDouble() / 255.0
-                    )
+                var maxValue = 0
+                matrix2.forEach {
+                   if(it > maxValue) {
+                       maxValue = it
+                   }
                 }
-            }
 
-        }
+                MatrixVisualization(matrix2) { value ->
+//                    if (value == 3) {
+//                        PointColor(1.0, 0.0, 0.0)
+//                    } else {
+//                        PointColor(0.0, 0.0, 0.0)
+//                    }
+
+                    colourFunction(value, maxValue).let {
+                        PointColor(
+                            it[0].toDouble() / 255.0,
+                            it[1].toDouble() / 255.0,
+                            it[2].toDouble() / 255.0
+                        )
+                    }
+                }
+
+//                MatrixVisualization(matrix2) { value ->
+//                    colourFunction(value, 5).let {
+//                        PointColor(
+//                            it[0].toDouble() / 255.0,
+//                            it[1].toDouble() / 255.0,
+//                            it[2].toDouble() / 255.0
+//                        )
+//                    }
+//                }
+
+            }
             .toList()
 
         return kanjiImages
@@ -74,32 +93,139 @@ class CircleLineTest {
 
 
     private fun placeCircles(matrixWithCenterLines: Matrix<Int>, thinnedImage: Matrix<Boolean>) {
-//        val matrix = Matrix.copy(matrixWithCenterLines)
-//        val thinnedCopy = Matrix.copy(thinnedImage)
-
+        val matrix = Matrix.copy(matrixWithCenterLines)
+        val thinnedCopy = Matrix.copy(thinnedImage)
         val circleMask = determineCircleMask()
 
         // TODO Only here for testing
-        applyCircleMask(thinnedImage.numberOfRows / 2, thinnedImage.numberOfColumns / 2, matrixWithCenterLines, circleMask)
+//        applyCircleMask(thinnedImage.numberOfRows / 2, thinnedImage.numberOfColumns / 2, matrixWithCenterLines, circleMask)
 
-//        for (row in 0 until matrix.numberOfRows) {
-//            for (column in 0 until matrix.numberOfColumns) {
-//                if (thinnedCopy[row, column]) {
-//                    // TODO
-//
+        var colourCounter = 3
+        for (row in 0 until matrix.numberOfRows) {
+            for (column in 0 until matrix.numberOfColumns) {
+                if (thinnedCopy[row, column]) {
+                    // TODO
+
+                    followCenterLine(Pair(row, column), thinnedCopy)?.let {
+                        it.steps.forEach {
+                            matrixWithCenterLines[it.first, it.second] =  colourCounter
+                            thinnedCopy[it.first, it.second] = false
+                        }
+                    }
+                    ++colourCounter
+
+//                    return
+
+
 //                    val circlePoints =
 //                        determineCircle(row, column, thinnedImage.numberOfRows, thinnedImage.numberOfColumns, offsets)
-//
-//
-//                }
-//
-//
-//            }
-//
-//        }
+
+//                    applyCircleMask(
+//                        thinnedImage.numberOfRows / 2,
+//                        thinnedImage.numberOfColumns / 2,
+//                        matrixWithCenterLines,
+//                        circleMask
+//                    )
+
+                }
+
+
+            }
+
+        }
 
 
     }
+
+    private class Path(val startPoint: Pair<Int, Int>, val steps: MutableList<Pair<Int, Int>> = mutableListOf()) {
+
+        fun extendPath(step: Pair<Int, Int>): Path {
+            steps.add(step)
+
+            return this
+        }
+
+        fun getLatestStep(): Pair<Int, Int> {
+            if (steps.isEmpty()) {
+                return startPoint
+            }
+            return steps.last()
+        }
+
+        fun getLength(): Double {
+            return sqrt(
+                (startPoint.first - steps.last().first).toDouble()
+                    .pow(2) + (startPoint.second - steps.last().second).toDouble().pow(2)
+            )
+        }
+
+    }
+
+    private fun followCenterLine(startPoint: Pair<Int, Int>, thinnedImage: Matrix<Boolean>): Path? {
+        val directionsToFollow = mutableListOf<FlowDirection>()
+        val paths = mutableListOf<Path>()
+
+        val thinnedImageCopy = Matrix.copy(thinnedImage)
+
+        thinnedImageCopy[startPoint.first, startPoint.second] = false
+
+        val firstNeighbourhood = getNeighbourhood(thinnedImageCopy, startPoint)
+        FlowDirection.entries.forEach { direction ->
+            if (firstNeighbourhood[1 + direction.rowShift, 1 + direction.columnShift]) {
+                directionsToFollow.add(direction)
+                paths.add(
+                    Path(startPoint).extendPath(
+                        Pair(
+                            startPoint.first + direction.rowShift,
+                            startPoint.second + direction.columnShift
+                        )
+                    )
+                )
+                thinnedImageCopy[startPoint.first + direction.rowShift, startPoint.second + direction.columnShift] =
+                    false
+            }
+        }
+
+        var pathsExtended = true
+        while (pathsExtended) {
+            pathsExtended = false
+
+            for (path1 in paths) {
+                val neighbourhood = getNeighbourhood(thinnedImageCopy, path1.getLatestStep())
+                FlowDirection.entries.forEach { direction ->
+                    if (neighbourhood[1 + direction.rowShift, 1 + direction.columnShift]) {
+                        directionsToFollow.add(direction)
+
+                        thinnedImageCopy[path1.getLatestStep().first + direction.rowShift,
+                            path1.getLatestStep().second + direction.columnShift] = false
+
+                        path1.extendPath(
+                            Pair(
+                                path1.getLatestStep().first + direction.rowShift,
+                                path1.getLatestStep().second + direction.columnShift
+                            )
+                        )
+                        pathsExtended = true
+                    }
+                }
+
+                if (path1.getLength() > 2 * CIRCLE_RADIUS) {
+                    return path1
+                }
+            }
+        }
+
+        // TODO
+        if(paths.isEmpty()) {
+            return null
+        }
+        else {
+            return paths.first()
+        }
+
+//        return null
+    }
+
 
     private fun applyCircleMask(row: Int, column: Int, matrix: Matrix<Int>, circleMask: Matrix<Boolean>) {
         val rowCenter = circleMask.numberOfRows / 2
@@ -109,7 +235,7 @@ class CircleLineTest {
         val upperLeftColumn = column - columnCenter
 
         circleMask.forEachIndexed { rowMask, columnMask, value ->
-            if(circleMask[rowMask, columnMask]) {
+            if (circleMask[rowMask, columnMask]) {
                 val rowInMatrix = rowMask + upperLeftRow
                 val columnInMatrix = columnMask + upperLeftColumn
 
@@ -174,7 +300,7 @@ class CircleLineTest {
 
         for (row in 0 until maskMatrix.numberOfRows) {
             for (column in 0 until maskMatrix.numberOfColumns) {
-                if(!maskMatrix[row, column]) {
+                if (!maskMatrix[row, column]) {
                     break
                 }
                 maskMatrix[row, column] = false
@@ -183,7 +309,7 @@ class CircleLineTest {
 
         for (row in maskMatrix.numberOfRows - 1 downTo 0) {
             for (column in maskMatrix.numberOfColumns - 1 downTo 0) {
-                if(!maskMatrix[row, column]) {
+                if (!maskMatrix[row, column]) {
                     break
                 }
                 maskMatrix[row, column] = false
@@ -219,7 +345,7 @@ class CircleLineTest {
 
 
     companion object {
-        const val CIRCLE_RADIUS = 20
+        const val CIRCLE_RADIUS = 3
 
     }
 

@@ -15,13 +15,13 @@ enum class FlowDirection(val rowShift: Int, val columnShift: Int, val angleInRad
 }
 
 fun getFlowDirectionForOffset(rowShift: Int, columnShift: Int): FlowDirection? {
-   return FlowDirection.values().find { it.rowShift == rowShift && it.columnShift == columnShift }
+   return FlowDirection.entries.find { it.rowShift == rowShift && it.columnShift == columnShift }
 }
 
 fun FlowDirection.shiftTwoStepsForward(): FlowDirection {
-    return FlowDirection.values()[(this.ordinal + 2) % FlowDirection.values().size]
+    return FlowDirection.entries[(this.ordinal + 2) % FlowDirection.entries.size]
 }
 
 fun FlowDirection.oppositeDirection(): FlowDirection {
-    return FlowDirection.values()[(this.ordinal + 4) % FlowDirection.values().size]
+    return FlowDirection.entries[(this.ordinal + 4) % FlowDirection.entries.size]
 }

@@ -2,13 +2,12 @@ package com.kjipo.segmentation
 
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.raster.getNeighbourhood
-import java.lang.IllegalArgumentException
 
 
 class RegionExtractor {
 
 
-    fun markEdgePixels(imageMatrix: Matrix<Boolean>): List<Pair<Int,Int>> {
+    fun markEdgePixels(imageMatrix: Matrix<Boolean>): List<Pair<Int, Int>> {
         val edgePixels = mutableListOf<Pair<Int, Int>>()
 
         // Do not process the pixels at the edges of the image
@@ -29,8 +28,5 @@ class RegionExtractor {
 
         return edgePixels
     }
-
-
-
 
 }
