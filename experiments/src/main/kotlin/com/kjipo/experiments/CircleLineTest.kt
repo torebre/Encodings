@@ -7,6 +7,8 @@ import kotlin.math.*
 
 class CircleLineTest {
 
+    val logger = System.getLogger(CircleLineTest::class.qualifiedName!!)
+
 
     fun extractLineSegments(unicode: Int): List<MatrixVisualization<Int>> {
 //        val unicode = 32769
@@ -54,18 +56,12 @@ class CircleLineTest {
 
                 var maxValue = 0
                 matrix2.forEach {
-                   if(it > maxValue) {
-                       maxValue = it
-                   }
+                    if (it > maxValue) {
+                        maxValue = it
+                    }
                 }
 
                 MatrixVisualization(matrix2) { value ->
-//                    if (value == 3) {
-//                        PointColor(1.0, 0.0, 0.0)
-//                    } else {
-//                        PointColor(0.0, 0.0, 0.0)
-//                    }
-
                     colourFunction(value, maxValue).let {
                         PointColor(
                             it[0].toDouble() / 255.0,
@@ -74,17 +70,6 @@ class CircleLineTest {
                         )
                     }
                 }
-
-//                MatrixVisualization(matrix2) { value ->
-//                    colourFunction(value, 5).let {
-//                        PointColor(
-//                            it[0].toDouble() / 255.0,
-//                            it[1].toDouble() / 255.0,
-//                            it[2].toDouble() / 255.0
-//                        )
-//                    }
-//                }
-
             }
             .toList()
 
@@ -95,26 +80,40 @@ class CircleLineTest {
     private fun placeCircles(matrixWithCenterLines: Matrix<Int>, thinnedImage: Matrix<Boolean>) {
         val matrix = Matrix.copy(matrixWithCenterLines)
         val thinnedCopy = Matrix.copy(thinnedImage)
-        val circleMask = determineCircleMask()
+        val circleMask = determineCircleMask(5)
 
-        // TODO Only here for testing
-//        applyCircleMask(thinnedImage.numberOfRows / 2, thinnedImage.numberOfColumns / 2, matrixWithCenterLines, circleMask)
-
+        var pathCounter = 0
         var colourCounter = 3
+        var circleColourCounter = 10
+
         for (row in 0 until matrix.numberOfRows) {
             for (column in 0 until matrix.numberOfColumns) {
                 if (thinnedCopy[row, column]) {
-                    // TODO
+                    val path = followCenterLine(Pair(row, column), thinnedCopy)
+                    if (path != null) {
+                        pathCounter++
 
-                    followCenterLine(Pair(row, column), thinnedCopy)?.let {
-                        it.steps.forEach {
-                            matrixWithCenterLines[it.first, it.second] =  colourCounter
-                            thinnedCopy[it.first, it.second] = false
+                        path.let {
+                            it.steps.forEach {
+                                matrixWithCenterLines[it.first, it.second] = colourCounter
+                                thinnedCopy[it.first, it.second] = false
+                            }
                         }
-                    }
-                    ++colourCounter
 
-//                    return
+                        path.getCenterPoint()?.let { centerPoint ->
+                            applyCircleMask(
+                                centerPoint.first,
+                                centerPoint.second,
+                                matrixWithCenterLines,
+                                circleMask
+                            ) {
+                                circleColourCounter
+                            }
+                        }
+                        circleColourCounter += 10
+                    }
+
+                    ++colourCounter
 
 
 //                    val circlePoints =
@@ -129,13 +128,14 @@ class CircleLineTest {
 
                 }
 
-
             }
 
         }
 
+        logger.log(System.Logger.Level.INFO, "Number of paths: " + pathCounter)
 
     }
+
 
     private class Path(val startPoint: Pair<Int, Int>, val steps: MutableList<Pair<Int, Int>> = mutableListOf()) {
 
@@ -157,6 +157,34 @@ class CircleLineTest {
                 (startPoint.first - steps.last().first).toDouble()
                     .pow(2) + (startPoint.second - steps.last().second).toDouble().pow(2)
             )
+        }
+
+        fun getCenterPoint(): Pair<Int, Int>? {
+            if (steps.isEmpty()) {
+                return null
+            }
+
+            var minRow = Int.MAX_VALUE
+            var maxRow = Int.MIN_VALUE
+            var minColumn = Int.MAX_VALUE
+            var maxColumn = Int.MIN_VALUE
+
+            for (step in steps) {
+                if (minRow > step.first) {
+                    minRow = step.first
+                }
+                if (maxRow < step.first) {
+                    maxRow = step.first
+                }
+                if (minColumn > step.second) {
+                    minColumn = step.second
+                }
+                if (maxColumn < step.second) {
+                    maxColumn = step.second
+                }
+            }
+
+            return Pair(minRow + (maxRow - minRow), minColumn + (maxColumn - minColumn))
         }
 
     }
@@ -216,10 +244,9 @@ class CircleLineTest {
         }
 
         // TODO
-        if(paths.isEmpty()) {
+        if (paths.isEmpty()) {
             return null
-        }
-        else {
+        } else {
             return paths.first()
         }
 
@@ -227,7 +254,13 @@ class CircleLineTest {
     }
 
 
-    private fun applyCircleMask(row: Int, column: Int, matrix: Matrix<Int>, circleMask: Matrix<Boolean>) {
+    private fun applyCircleMask(
+        row: Int,
+        column: Int,
+        matrix: Matrix<Int>,
+        circleMask: Matrix<Boolean>,
+        valueFunction: (Pair<Int, Int>) -> Int
+    ) {
         val rowCenter = circleMask.numberOfRows / 2
         val columnCenter = circleMask.numberOfColumns / 2
 
@@ -244,8 +277,7 @@ class CircleLineTest {
                     && columnInMatrix >= 0
                     && columnInMatrix < matrix.numberOfColumns
                 ) {
-                    // TODO Set some other value
-                    matrix[rowInMatrix, columnInMatrix] = 1
+                    matrix[rowInMatrix, columnInMatrix] = valueFunction(Pair(rowInMatrix, columnInMatrix))
                 }
             }
         }
@@ -284,10 +316,10 @@ class CircleLineTest {
         }.toSet()
     }
 
-    private fun determineCircleMask(): Matrix<Boolean> {
-        val offsets = getOffsetsForCircle(CIRCLE_RADIUS)
+    private fun determineCircleMask(radius: Int = CIRCLE_RADIUS): Matrix<Boolean> {
+        val offsets = getOffsetsForCircle(radius)
 
-        val maskMatrix = Matrix(2 * CIRCLE_RADIUS + 1, 2 * CIRCLE_RADIUS + 1) { _, _ ->
+        val maskMatrix = Matrix(2 * radius + 1, 2 * radius + 1) { _, _ ->
             true
         }
 
@@ -345,7 +377,7 @@ class CircleLineTest {
 
 
     companion object {
-        const val CIRCLE_RADIUS = 3
+        const val CIRCLE_RADIUS = 10
 
     }
 
