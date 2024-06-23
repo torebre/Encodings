@@ -14,10 +14,12 @@ class ExperimentView : View("Experiment view") {
     var rasters: Collection<Array<Array<Color>>> = emptyList()
     val group: Group = Group()
 
-    val rastersPerLine = 20
 
-
-    fun loadRasters(colourRasters: Collection<Array<Array<Color>>>, texts: List<String> = emptyList(), squareSize: Int = 1) {
+    fun loadRasters(
+        colourRasters: Collection<Array<Array<Color>>>,
+        texts: List<String> = emptyList(),
+        squareSize: Int = 1
+    ) {
         this.rasters = colourRasters
         group.children.clear()
         drawRasters(group.children, texts, squareSize)
@@ -29,62 +31,84 @@ class ExperimentView : View("Experiment view") {
     }
 
     fun drawRasters(root: ObservableList<Node>, texts: List<String> = emptyList(), squareSize: Int) {
-        if (rasters.isEmpty()) {
-            return
-        }
-
-        var currentRow = 0
-        var currentColumn = 0
-        var rasterCounter = 0
-        val rectangles = Group()
-
-//        val firstRaster = rasters.iterator().next()
-
-        rasters.forEach { colourRaster ->
-
-            if (texts.isNotEmpty()) {
-                val text = Text(currentColumn.toDouble() * colourRaster[0].size * squareSize, currentRow.toDouble() * colourRaster.size * squareSize, texts[rasterCounter])
-                text.font = Font(20.0)
-                text.fill = Color.BLUE
-
-                rectangles.add(text)
-            }
-
-            val canvas = Canvas(colourRaster[0].size.toDouble() * squareSize + 1, colourRaster.size.toDouble() * squareSize + 1)
-            val gc = canvas.graphicsContext2D
-
-            canvas.layoutX = currentColumn * colourRaster[0].size.toDouble() * squareSize + currentColumn
-            canvas.layoutY = currentRow * colourRaster.size.toDouble() * squareSize + currentRow
-
-            gc.fill = Color.RED
-            gc.fillRect(0.0,
-                0.0,
-                colourRaster[0].size.toDouble() * squareSize + 1,
-                colourRaster.size.toDouble() * squareSize + 1)
-
-            for (row in colourRaster.indices) {
-                for (column in 0 until colourRaster[0].size) {
-                    gc.fill = colourRaster[row][column]
-                    gc.fillRect(column * squareSize.toDouble(),
-                        row * squareSize.toDouble(),
-                        squareSize.toDouble(),
-                        squareSize.toDouble())
-                }
-            }
-            rectangles.add(canvas)
-
-            ++currentColumn
-            if (currentColumn == rastersPerLine) {
-                ++currentRow
-                currentColumn = 0
-            }
-
-            ++rasterCounter
-        }
-
-        root.add(rectangles)
-
+        drawRasters(root, texts, squareSize, rasters)
     }
 
+
+    companion object {
+        val rastersPerLine = 20
+
+
+        fun drawRasters(
+            root: ObservableList<Node>,
+            texts: List<String> = emptyList(),
+            squareSize: Int,
+            inputRasters: Collection<Array<Array<Color>>>
+        ) {
+            if (inputRasters.isEmpty()) {
+                return
+            }
+
+            var currentRow = 0
+            var currentColumn = 0
+            var rasterCounter = 0
+            val rectangles = Group()
+
+            inputRasters.forEach { colourRaster ->
+
+                if (texts.isNotEmpty()) {
+                    val text = Text(
+                        currentColumn.toDouble() * colourRaster[0].size * squareSize,
+                        currentRow.toDouble() * colourRaster.size * squareSize,
+                        texts[rasterCounter]
+                    )
+                    text.font = Font(20.0)
+                    text.fill = Color.BLUE
+
+                    rectangles.add(text)
+                }
+
+                val kanjiImageCanvas =
+                    Canvas(
+                        colourRaster[0].size.toDouble() * squareSize + 1,
+                        colourRaster.size.toDouble() * squareSize + 1
+                    )
+                val gc = kanjiImageCanvas.graphicsContext2D
+                gc.fill = Color.RED
+                gc.fillRect(
+                    0.0,
+                    0.0,
+                    colourRaster[0].size.toDouble() * squareSize + 1,
+                    colourRaster.size.toDouble() * squareSize + 1
+                )
+
+                kanjiImageCanvas.layoutX = currentColumn * colourRaster[0].size.toDouble() * squareSize + currentColumn
+                kanjiImageCanvas.layoutY = currentRow * colourRaster.size.toDouble() * squareSize + currentRow
+
+                for (row in colourRaster.indices) {
+                    for (column in 0 until colourRaster[0].size) {
+                        gc.fill = colourRaster[row][column]
+                        gc.fillRect(
+                            column * squareSize.toDouble(),
+                            row * squareSize.toDouble(),
+                            squareSize.toDouble(),
+                            squareSize.toDouble()
+                        )
+                    }
+                }
+                rectangles.add(kanjiImageCanvas)
+
+                ++currentColumn
+                if (currentColumn == rastersPerLine) {
+                    ++currentRow
+                    currentColumn = 0
+                }
+                ++rasterCounter
+            }
+
+            root.add(rectangles)
+        }
+
+    }
 
 }

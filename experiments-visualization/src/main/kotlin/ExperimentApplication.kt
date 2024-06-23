@@ -77,7 +77,13 @@ fun <T> showMatrixVisualization(matrixVisualizations: Collection<MatrixVisualiza
     showMatrixImages(matrixVisualizations.map { createColorMatrix(it) }, squareSize)
 }
 
-private fun <T> createColorMatrix(matrixVisualization: MatrixVisualization<T>): Matrix<Color> {
+fun <T> transformToColourArrays(matrixVisualizations: Collection<MatrixVisualization<T>>, squareSize: Int = 1): List<Matrix<Color>> {
+    return matrixVisualizations.map {
+        createColorMatrix(it)
+    }
+}
+
+fun <T> createColorMatrix(matrixVisualization: MatrixVisualization<T>): Matrix<Color> {
     val colorMatrix =
         Matrix(matrixVisualization.matrix.numberOfRows, matrixVisualization.matrix.numberOfColumns) { _, _ ->
             Color.BLACK
@@ -151,16 +157,16 @@ fun displayKanjiImage(kanjiImages: List<Matrix<Boolean>>, squareSize: Int = 1) {
 
 private fun showMatrixImages(colourRasters: Collection<Matrix<Color>>, squareSize: Int = 1) {
     showImages(colourRasters.map { matrix ->
-
-        logger.log(System.Logger.Level.INFO, "Matrix: " + matrix.numberOfRows + ", " + matrix.numberOfColumns)
-
-        Array(matrix.numberOfRows) { row ->
-            Array(matrix.numberOfColumns) { column ->
-                matrix[row, column]
-            }
-        }
+        transformMatrixToColourArrays(matrix)
     }, squareSize)
 }
+
+fun transformMatrixToColourArrays(matrix: Matrix<Color>) =
+    Array(matrix.numberOfRows) { row ->
+        Array(matrix.numberOfColumns) { column ->
+            matrix[row, column]
+        }
+    }
 
 private fun showImages(colourRasters: Collection<Array<Array<Color>>>, squareSize: Int = 1) {
     val startThread = Thread {
