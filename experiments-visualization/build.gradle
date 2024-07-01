@@ -26,5 +26,4 @@ dependencies {
     implementation project(":experiments")
     implementation project(":raster")
     implementation project(":visualization")
-    implementation "no.tornado:tornadofx:1.7.5"
 }

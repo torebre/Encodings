@@ -7,32 +7,36 @@ import javafx.scene.canvas.Canvas
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import javafx.scene.text.Text
-import tornadofx.*
 
 
-class ExperimentView : View("Experiment view") {
-    var rasters: Collection<Array<Array<Color>>> = emptyList()
-    val group: Group = Group()
+class ExperimentView {
+//    var rasters: Collection<Array<Array<Color>>> = emptyList()
+//    val group: Group = Group()
+
+//    override val root = scrollpane {
+//        content = group
+//        drawRasters(group.children, squareSize = 1)
+//    }
+
+//    fun loadRasters(
+//        colourRasters: Collection<Array<Array<Color>>>,
+//        texts: List<String> = emptyList(),
+//        squareSize: Int = 1
+//    ) {
+//        this.rasters = colourRasters
+//        group.children.clear()
+//        drawRasters(group.children, texts, squareSize)
+//    }
 
 
-    fun loadRasters(
-        colourRasters: Collection<Array<Array<Color>>>,
-        texts: List<String> = emptyList(),
-        squareSize: Int = 1
-    ) {
-        this.rasters = colourRasters
-        group.children.clear()
-        drawRasters(group.children, texts, squareSize)
-    }
-
-    override val root = scrollpane {
-        content = group
-        drawRasters(group.children, squareSize = 1)
-    }
-
-    fun drawRasters(root: ObservableList<Node>, texts: List<String> = emptyList(), squareSize: Int) {
-        drawRasters(root, texts, squareSize, rasters)
-    }
+//    fun drawRasters(
+//        root: ObservableList<Node>,
+//        texts: List<String> = emptyList(),
+//        squareSize: Int,
+//        rasters: Collection<Array<Array<Color>>>
+//    ) {
+//        drawRasters(root, texts, squareSize, rasters)
+//    }
 
 
     companion object {
@@ -65,7 +69,7 @@ class ExperimentView : View("Experiment view") {
                     text.font = Font(20.0)
                     text.fill = Color.BLUE
 
-                    rectangles.add(text)
+                    rectangles.children.add(text)
                 }
 
                 val kanjiImageCanvas =
@@ -96,7 +100,7 @@ class ExperimentView : View("Experiment view") {
                         )
                     }
                 }
-                rectangles.add(kanjiImageCanvas)
+                rectangles.children.add(kanjiImageCanvas)
 
                 ++currentColumn
                 if (currentColumn == rastersPerLine) {

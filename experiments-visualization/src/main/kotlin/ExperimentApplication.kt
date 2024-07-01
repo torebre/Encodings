@@ -1,185 +1,129 @@
 package com.kjipo
 
 import com.kjipo.experiments.MatrixVisualization
-import com.kjipo.experiments.PointType
 import com.kjipo.experiments.VisualizationData
-import com.kjipo.representation.EncodedKanji
 import com.kjipo.representation.Matrix
 import javafx.application.Application
+import javafx.application.Platform
+import javafx.scene.Scene
+import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
-import tornadofx.*
+import javafx.stage.Stage
 import java.util.*
 
 
-val logger = System.getLogger(ExperimentApplication::class.qualifiedName!!)
+class ExperimentApplication : Application() {
+    private var root: StackPane? = null
 
-class ExperimentApplication : App() {
-    override val primaryView = ExperimentView::class
-}
+    val logger = System.getLogger(ExperimentApplication::class.qualifiedName!!)
 
+    override fun start(primaryStage: Stage?) {
+        primaryStage?.let { stage ->
+            root = StackPane().also {
+                stage.scene = Scene(it, 300.0, 250.0)
+            }
 
-fun displayKanjis(encodedKanjis: Collection<EncodedKanji>, squareSize: Int = 1) {
-    val startThread = Thread {
-        Application.launch(ExperimentApplication::class.java)
+            stage.show()
+        }
+
+        instance = this
     }
-    startThread.start()
 
-    val characters = mutableListOf<String>()
-    val colourRasters = encodedKanjis.map {
-        characters.add(String(Character.toChars(it.unicode)))
 
-        Array(it.image.size) { row ->
-            Array(it.image[0].size) { column ->
-                if (it.image[row][column]) {
-                    Color.WHITE
-                } else {
-                    Color.BLACK
+    companion object {
+        var instance: ExperimentApplication? = null
+
+
+        fun displayVisualizationData(visualizationDataList: List<VisualizationData>, squareSize: Int = 1) {
+            val dataToDisplay = visualizationDataList.map { visualizationData ->
+                val matrix = Matrix(
+                    visualizationData.pointTypeImage.numberOfRows,
+                    visualizationData.pointTypeImage.numberOfColumns
+                ) { row, column ->
+                    transformPointTypeToColour(*visualizationData.pointTypeImage[row, column])
+                }
+                matrix
+            }
+
+            showMatrixImages(dataToDisplay, squareSize)
+        }
+
+        fun showMatrixImages(colourRasters: Collection<Matrix<Color>>, squareSize: Int = 1) {
+            showImages(colourRasters.map { matrix ->
+                transformMatrixToColourArrays(matrix)
+            }, squareSize)
+        }
+
+        fun <T> showMatrixVisualization(matrixVisualization: MatrixVisualization<T>, squareSize: Int = 1) {
+            showMatrixImages(Collections.singletonList(createColorMatrix(matrixVisualization)), squareSize)
+        }
+
+        fun <T> showMatrixVisualization(matrixVisualizations: Collection<MatrixVisualization<T>>, squareSize: Int = 1) {
+            showMatrixImages(matrixVisualizations.map { createColorMatrix(it) }, squareSize)
+        }
+
+        fun showColourRasters(
+            characters: MutableList<String>,
+            squareSize: Int,
+            colourRasters: Collection<Array<Array<Color>>>
+        ) {
+            val startThread = Thread {
+                launch(ExperimentApplication::class.java)
+            }
+            startThread.start()
+
+            var counter = 0
+            do {
+                if (counter > 10) {
+                    throw RuntimeException("Application did not start in 10 seconds")
+                }
+                Thread.sleep(500)
+                ++counter
+            } while (instance == null)
+
+            Platform.runLater {
+                instance?.root?.let {
+                    ExperimentView.drawRasters(it.children, characters, squareSize, colourRasters)
                 }
             }
         }
-    }
-
-    val experimentView = FX.find(ExperimentView::class.java)
-    FX.runAndWait { experimentView.loadRasters(colourRasters, characters, squareSize) }
-}
-
-fun displayKanjiImage(kanjiImage: Matrix<Boolean>, squareSize: Int = 1) {
-    val startThread = Thread {
-        Application.launch(ExperimentApplication::class.java)
-    }
-    startThread.start()
-
-    val kanjiImageAsArrays = Array(kanjiImage.numberOfRows) { row ->
-        Array(kanjiImage.numberOfColumns) { column ->
-            if (kanjiImage[row, column]) {
-                Color.WHITE
-            } else {
-                Color.BLACK
-            }
-        }
-    }
-
-    val experimentView = FX.find(ExperimentView::class.java)
-    FX.runAndWait {
-        experimentView.loadRasters(
-            Collections.singletonList(kanjiImageAsArrays),
-            Collections.emptyList(),
-            squareSize
-        )
-    }
-}
-
-fun <T> showMatrixVisualization(matrixVisualization: MatrixVisualization<T>, squareSize: Int = 1) {
-    showMatrixImages(Collections.singletonList(createColorMatrix(matrixVisualization)), squareSize)
-}
-
-fun <T> showMatrixVisualization(matrixVisualizations: Collection<MatrixVisualization<T>>, squareSize: Int = 1) {
-    showMatrixImages(matrixVisualizations.map { createColorMatrix(it) }, squareSize)
-}
-
-fun <T> transformToColourArrays(matrixVisualizations: Collection<MatrixVisualization<T>>, squareSize: Int = 1): List<Matrix<Color>> {
-    return matrixVisualizations.map {
-        createColorMatrix(it)
-    }
-}
-
-fun <T> createColorMatrix(matrixVisualization: MatrixVisualization<T>): Matrix<Color> {
-    val colorMatrix =
-        Matrix(matrixVisualization.matrix.numberOfRows, matrixVisualization.matrix.numberOfColumns) { _, _ ->
-            Color.BLACK
-        }
-
-    matrixVisualization.matrix.forEachIndexed { row, column, value ->
-        colorMatrix[row, column] = matrixVisualization.colorFunction(value)
-            .let { rgbColor -> Color.color(rgbColor.red, rgbColor.green, rgbColor.blue) }
-    }
-
-    return colorMatrix
-}
-
-fun displayVisualizationData(visualizationDataList: List<VisualizationData>, squareSize: Int = 1) {
-    val dataToDisplay = visualizationDataList.map { visualizationData ->
-        val matrix = Matrix(
-            visualizationData.pointTypeImage.numberOfRows,
-            visualizationData.pointTypeImage.numberOfColumns
-        ) { row, column ->
-            transformPointTypeToColour(*visualizationData.pointTypeImage[row, column])
-        }
-
-//        println("Number of rows: ${matrix.numberOfRows}. Number of columns: ${matrix.numberOfColumns}")
-
-        matrix
-    }
-
-    showMatrixImages(dataToDisplay, squareSize)
-}
-
-private fun transformPointTypeToColour(vararg pointType: PointType): Color {
-    // TODO Should have better handling of multiple point types
-    return pointType.map {
-        when (it) {
-            PointType.EMPTY -> Color.color(0.0, 0.0, 0.0)
-            PointType.ENDPOINT -> Color.color(1.0, 0.0, 0.0)
-            PointType.LINE -> Color.color(1.0, 1.0, 1.0)
-        }
-    }.last()
-}
 
 
-fun displayKanjiImage(kanjiImages: List<Matrix<Boolean>>, squareSize: Int = 1) {
-    val startThread = Thread {
-        Application.launch(ExperimentApplication::class.java)
-    }
-    startThread.start()
-
-    val kanjiImagesAsArrays = kanjiImages.map { kanjiImage ->
-        Array(kanjiImage.numberOfRows) { row ->
-            Array(kanjiImage.numberOfColumns) { column ->
-                if (kanjiImage[row, column]) {
-                    Color.WHITE
-                } else {
-                    Color.BLACK
+        fun displayKanjiImage(kanjiImage: Matrix<Boolean>, squareSize: Int = 1) {
+            val kanjiImageAsArrays = Array(kanjiImage.numberOfRows) { row ->
+                Array(kanjiImage.numberOfColumns) { column ->
+                    if (kanjiImage[row, column]) {
+                        Color.WHITE
+                    } else {
+                        Color.BLACK
+                    }
                 }
             }
+
+            showImages(Collections.singletonList(kanjiImageAsArrays), squareSize)
+        }
+
+        fun displayKanjiImage(kanjiImages: List<Matrix<Boolean>>, squareSize: Int = 1) {
+            val kanjiImagesAsArrays = kanjiImages.map { kanjiImage ->
+                Array(kanjiImage.numberOfRows) { row ->
+                    Array(kanjiImage.numberOfColumns) { column ->
+                        if (kanjiImage[row, column]) {
+                            Color.WHITE
+                        } else {
+                            Color.BLACK
+                        }
+                    }
+                }
+            }
+
+            showImages(kanjiImagesAsArrays, squareSize)
+        }
+
+
+        private fun showImages(colourRasters: Collection<Array<Array<Color>>>, squareSize: Int = 1) {
+            showColourRasters(Collections.emptyList(), squareSize, colourRasters)
         }
     }
 
-    val experimentView = FX.find(ExperimentView::class.java)
-    FX.runAndWait {
-        experimentView.loadRasters(
-            kanjiImagesAsArrays,
-            Collections.emptyList(),
-            squareSize
-        )
-    }
-}
 
-
-private fun showMatrixImages(colourRasters: Collection<Matrix<Color>>, squareSize: Int = 1) {
-    showImages(colourRasters.map { matrix ->
-        transformMatrixToColourArrays(matrix)
-    }, squareSize)
-}
-
-fun transformMatrixToColourArrays(matrix: Matrix<Color>) =
-    Array(matrix.numberOfRows) { row ->
-        Array(matrix.numberOfColumns) { column ->
-            matrix[row, column]
-        }
-    }
-
-private fun showImages(colourRasters: Collection<Array<Array<Color>>>, squareSize: Int = 1) {
-    val startThread = Thread {
-        Application.launch(ExperimentApplication::class.java)
-    }
-    startThread.start()
-
-    val experimentView = FX.find(ExperimentView::class.java)
-    FX.runAndWait {
-        experimentView.loadRasters(
-            colourRasters,
-            Collections.emptyList(),
-            squareSize
-        )
-    }
 }

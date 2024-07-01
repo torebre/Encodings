@@ -13,7 +13,7 @@ private fun showEndpointResults() {
     val pointsTest = PointsTest()
     val visualizationData = pointsTest.setupEndpointMatching()
 
-    displayVisualizationData(visualizationData)
+    ExperimentApplication.displayVisualizationData(visualizationData)
 }
 
 
@@ -28,14 +28,14 @@ private fun showKanjiImage() {
 
     val imageMatrix = makeThin(updatedMatrix)
 
-    displayKanjiImage(listOf(updatedMatrix, imageMatrix))
+    ExperimentApplication.displayKanjiImage(listOf(updatedMatrix, imageMatrix))
 }
 
 private fun showMatrixVisualizations() {
     val circleLineTest = CircleLineTest()
     val matrixVisualization = circleLineTest.extractLineSegments(32769)
 
-    showMatrixVisualization(matrixVisualization)
+    ExperimentApplication.showMatrixVisualization(matrixVisualization)
 }
 
 
