@@ -1,6 +1,9 @@
 package com.kjipo.experiments
 
 import com.kjipo.representation.Matrix
+import com.kjipo.representation.pointsmatching.Border
+import com.kjipo.representation.pointsmatching.PointsPlacer.Companion.backgroundRegion
+import com.kjipo.representation.pointsmatching.PointsPlacer.Companion.interiorPointRegion
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
@@ -34,4 +37,50 @@ fun simpleThreshold(rgbValue: Int): Boolean {
         return red > 20 || green > 20 || blue > 20
     }
     return false
+}
+
+
+fun extractBorders(valueMatrix: Matrix<Boolean>): List<Pair<Int, Int>> {
+    val borderMatrix = Matrix(valueMatrix.numberOfRows, valueMatrix.numberOfColumns)
+    { row, column ->
+        if (!valueMatrix[row, column]) {
+            backgroundRegion
+        } else {
+            interiorPointRegion
+        }
+    }
+
+    valueMatrix.forEachIndexed { row, column, value ->
+        val neighbourhood = valueMatrix.getNeighbourhood<Boolean?>(row, column)
+        var surroundedByEqualValues = true
+        neighbourhood.forEach {
+            if (it != null && it != value) {
+                surroundedByEqualValues = false
+                return@forEach
+            }
+        }
+
+        if (surroundedByEqualValues) {
+            borderMatrix[row, column] = backgroundRegion
+        }
+    }
+
+    val borders = mutableListOf<Pair<Int, Int>>()
+    while (true) {
+        val borderPoint = findBorderPoint(borderMatrix, interiorPointRegion) ?: break
+
+        borders.add(borderPoint)
+    }
+
+    return borders
+}
+
+
+private fun findBorderPoint(borderMatrix: Matrix<Int>, borderValue: Int): Pair<Int, Int>? {
+    borderMatrix.forEachIndexed { row, column, _ ->
+        if (borderMatrix[row, column] == borderValue) {
+            return Pair(row, column)
+        }
+    }
+    return null
 }
