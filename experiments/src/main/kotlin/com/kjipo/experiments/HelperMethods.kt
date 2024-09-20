@@ -78,7 +78,7 @@ internal fun loadImagesFromEtl9G(maxNumberOfFilesToRead: Int): List<KanjiFromEtl
     )
 }
 
-internal fun transformToBooleanMatrix(
+fun transformToBooleanMatrix(
     imageMatrix: Matrix<Int>,
     thresholdFunction: (rgbValue: Int) -> Boolean = { value -> handlePixelValue(value) }
 ): Matrix<Boolean> {

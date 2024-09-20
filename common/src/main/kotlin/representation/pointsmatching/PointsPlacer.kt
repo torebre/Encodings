@@ -2,6 +2,10 @@ package com.kjipo.representation.pointsmatching
 
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.raster.*
+import representation.backgroundRegion
+import representation.identifyRegions
+import representation.interiorPointRegion
+import representation.startRegionCount
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -9,7 +13,7 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
     private val points = mutableListOf<Pair<Int, Int>>()
 
     val regionMatrix: Matrix<Int> by lazy {
-        identifyRegions()
+        identifyRegions(imageMatrix)
     }
 
     val linePointMatrix: Matrix<Double> by lazy {
@@ -235,69 +239,6 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
     }
 
 
-    private fun identifyRegions(): Matrix<Int> {
-        val regionMatrix = Matrix<Int>(imageMatrix.numberOfRows, imageMatrix.numberOfColumns) { row, column ->
-            if (imageMatrix[row, column]) {
-                -1
-            } else {
-                0
-            }
-        }
-
-        var fillValue = startRegionCount
-        var foundHit = true
-
-        while (foundHit) {
-            foundHit = false
-
-            for (row in 0 until regionMatrix.numberOfRows) {
-                for (column in 0 until regionMatrix.numberOfColumns) {
-                    if (regionMatrix[row, column] == -1) {
-                        spreadAcrossRegion(row, column, fillValue, regionMatrix)
-                        foundHit = true
-                        ++fillValue
-                    }
-                }
-            }
-        }
-
-        return regionMatrix
-    }
-
-
-    private fun spreadAcrossRegion(
-        startRow: Int, startColumn: Int, fillValue: Int,
-        regionData: Matrix<Int>
-    ) {
-        val cellsToVisit = ArrayDeque<Pair<Int, Int>>()
-        cellsToVisit.add(Pair(startRow, startColumn))
-
-        while (cellsToVisit.isNotEmpty()) {
-            val (row, column) = cellsToVisit.removeFirst()
-
-            if (EncodingUtilities.validCoordinates(row, column, regionData.numberOfRows, regionData.numberOfColumns)
-            ) {
-                regionData[row, column] = fillValue
-            }
-            for (flowDirection in FlowDirection.values()) {
-                val nextRow = row + flowDirection.rowShift
-                val nextColumn = column + flowDirection.columnShift
-                val nextPair = Pair(nextRow, nextColumn)
-
-                if ((EncodingUtilities.validCoordinates(
-                        nextRow,
-                        nextColumn,
-                        regionData.numberOfRows,
-                        regionData.numberOfColumns
-                    )
-                            && regionData[nextRow, nextColumn] == -1)
-                    && !cellsToVisit.contains(nextPair)
-                ) {
-                    cellsToVisit.add(nextPair)
-                }
-            }
-        }
-    }
 
 
     fun checkLinePoint(row: Int, column: Int, imageMatrix: Matrix<Int>): Pair<FlowDirection, Double> {
@@ -496,8 +437,8 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
             return Direction.NONE
         }
 
-        for (i in 0 until FlowDirection.values().count() / 2) {
-            val direction = FlowDirection.values()[i]
+        for (i in 0 until FlowDirection.entries.toTypedArray().count() / 2) {
+            val direction = FlowDirection.entries[i]
             val oppositeDirection = direction.oppositeDirection()
 
             if (neighbourHood[direction.rowShift + 1, direction.columnShift + 1] &&
@@ -577,11 +518,5 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
 
     class CenterOfMassPoint(val coordinates: Pair<Int, Int>, val region: Int)
 
-    companion object {
-        val backgroundRegion = 0
-        val interiorPointRegion = 1
-        val borderRegion = 2
-        val startRegionCount = 10
-    }
 
 }

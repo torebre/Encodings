@@ -150,6 +150,10 @@ class ExperimentApplication : Application() {
             })
         }
 
+        fun <T> showMatrixVisualization(matrixVisualization: MatrixVisualization<T>, squareSize: Int = 1) {
+            showMatrixImages(listOf(createColorMatrix(matrixVisualization)))
+        }
+
         fun <T> showMatrixVisualization(matrixVisualizations: Collection<MatrixVisualization<T>>, squareSize: Int = 1) {
             showMatrixImages(matrixVisualizations.map { createColorMatrix(it) })
         }

@@ -1,11 +1,11 @@
 package com.kjipo
 
-import com.kjipo.experiments.CircleLineTest
-import com.kjipo.experiments.PointsTest
-import com.kjipo.experiments.loadKanjiMatrix
+import com.kjipo.experiments.*
+import com.kjipo.readetl.EtlDataReader.extractEtlImagesForUnicodeToKanjiData
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.raster.makeSquare
 import com.kjipo.representation.raster.makeThin
+import com.kjipo.representation.raster.scaleMatrix
 import java.nio.file.Path
 
 
@@ -39,7 +39,41 @@ private fun showMatrixVisualizations() {
 }
 
 
+private fun findMidpoints() {
+    val midpointTest = MidpointTest()
+
+    val kanjiImage = extractEtlImagesForUnicodeToKanjiData(32769, 5).take(1)
+        .map {
+            transposeMatrix(
+                makeSquare(
+                    scaleMatrix(
+                        transformToBooleanMatrix(
+                            it.kanjiData,
+                            ::simpleThreshold
+                        ), 128, 128
+                    )
+                )
+            )
+        }.first()
+
+    val midpointImage = midpointTest.findMidpointsInRegions(kanjiImage)
+
+    val backgroundColor = PointColor(0.0, 0.0, 0.0)
+    val midpointColor = PointColor(1.0, 1.0, 1.0)
+
+    ExperimentApplication.showMatrixVisualization(MatrixVisualization(midpointImage, { value ->
+        if (value) {
+            midpointColor
+        } else {
+            backgroundColor
+        }
+    }))
+
+}
+
+
 fun main() {
-//    showEndpointResults()
-    showMatrixVisualizations()
+    // showEndpointResults()
+    // showMatrixVisualizations()
+    findMidpoints()
 }

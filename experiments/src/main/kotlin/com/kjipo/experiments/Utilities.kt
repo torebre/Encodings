@@ -1,9 +1,8 @@
 package com.kjipo.experiments
 
 import com.kjipo.representation.Matrix
-import com.kjipo.representation.pointsmatching.Border
-import com.kjipo.representation.pointsmatching.PointsPlacer.Companion.backgroundRegion
-import com.kjipo.representation.pointsmatching.PointsPlacer.Companion.interiorPointRegion
+import representation.backgroundRegion
+import representation.interiorPointRegion
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
@@ -70,6 +69,7 @@ fun extractBorders(valueMatrix: Matrix<Boolean>): List<Pair<Int, Int>> {
         val borderPoint = findBorderPoint(borderMatrix, interiorPointRegion) ?: break
 
         borders.add(borderPoint)
+        borderMatrix[borderPoint.first, borderPoint.second] = backgroundRegion
     }
 
     return borders

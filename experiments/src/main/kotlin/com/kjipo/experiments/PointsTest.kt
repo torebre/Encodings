@@ -12,6 +12,8 @@ import com.kjipo.representation.raster.bwmorphEndpoints
 import com.kjipo.representation.raster.makeSquare
 import com.kjipo.representation.raster.makeThin
 import com.kjipo.representation.raster.scaleMatrix
+import representation.backgroundRegion
+import representation.startRegionCount
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.createDirectory
@@ -102,7 +104,7 @@ class PointsTest {
 
         for (row in 0 until imageMatrix.numberOfRows) {
             for (column in 0 until imageMatrix.numberOfColumns) {
-                if (pointsPlacer.centerOfMassMatrix[row, column] != PointsPlacer.backgroundRegion) {
+                if (pointsPlacer.centerOfMassMatrix[row, column] != backgroundRegion) {
                     result[row, column] = 1
                 }
             }
@@ -133,7 +135,7 @@ class PointsTest {
 
         for (row in 0 until imageMatrix.numberOfRows) {
             for (column in 0 until imageMatrix.numberOfColumns) {
-                if (pointsPlacer.centerOfMassMatrix[row, column] != PointsPlacer.backgroundRegion) {
+                if (pointsPlacer.centerOfMassMatrix[row, column] != backgroundRegion) {
                     result[row, column] = 1
                 }
             }
@@ -206,7 +208,7 @@ class PointsTest {
                 }
 //                logger.info { "Number of regions: ${regions.size}" }
 
-                val numberOfColoursNeeded = regions.size + PointsPlacer.startRegionCount + 1
+                val numberOfColoursNeeded = regions.size + startRegionCount + 1
                 val centerOfMassPoints = it.second.getCenterOfMassPoints().map { it.coordinates }.toSet()
 
                 writeOutputMatrixToPngFile(
@@ -452,11 +454,11 @@ class PointsTest {
         val borderMatrix = Matrix(
             imageMatrix.numberOfRows,
             imageMatrix.numberOfColumns
-        ) { _, _ -> PointsPlacer.backgroundRegion }
+        ) { _, _ -> backgroundRegion }
 
         result.forEachIndexed { index, value ->
             value.points.forEach {
-                borderMatrix[it.first, it.second] = index + PointsPlacer.startRegionCount
+                borderMatrix[it.first, it.second] = index + startRegionCount
             }
         }
 
@@ -480,10 +482,10 @@ class PointsTest {
         val borderMatrix = Matrix(
             imageMatrix.numberOfRows,
             imageMatrix.numberOfColumns
-        ) { _, _ -> PointsPlacer.backgroundRegion }
+        ) { _, _ -> backgroundRegion }
 
         result.borders[1].points.forEach { point ->
-            borderMatrix[point.first, point.second] = PointsPlacer.startRegionCount
+            borderMatrix[point.first, point.second] = startRegionCount
         }
 
         writeOutputMatrixToPngFile(
@@ -502,10 +504,10 @@ class PointsTest {
         val borderMatrix = Matrix(
             imageMatrix.numberOfRows,
             imageMatrix.numberOfColumns
-        ) { _, _ -> PointsPlacer.backgroundRegion }
+        ) { _, _ -> backgroundRegion }
 
         allBordersMatrix.borders[1].points.forEach { point ->
-            borderMatrix[point.first, point.second] = PointsPlacer.startRegionCount
+            borderMatrix[point.first, point.second] = startRegionCount
         }
 
         val encodedBorder = pointsPlacer.encodeBorderIntoDirectionList(borderMatrix)

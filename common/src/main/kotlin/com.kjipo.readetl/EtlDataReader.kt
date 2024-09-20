@@ -37,7 +37,9 @@ object EtlDataReader {
     fun extractEtlImagesForUnicodeToKanjiData(unicode: Int,
                                               numberOfImagesToLoad: Long = Long.MAX_VALUE): List<KanjiFromEtlData> {
         return extractEtlImagesForUnicodeToKanjiData(
-            Path.of("/home/student/Downloads/etlcbd_datasets"),
+            //Path.of("/home/student/Downloads/etlcbd_datasets"),
+//            Path.of("/home/student/Nedlastinger/ETL/"),
+            Path.of("/home/student/data/etlcdb-image-extractor/etl_data/images/"),
             EtlDataSet.ETL9G,
             unicode,
             numberOfImagesToLoad

@@ -28,10 +28,11 @@ class Matrix<T>(val numberOfRows: Int, val numberOfColumns: Int, val array: Arra
 
     }
 
+
     inline fun <reified T> getNeighbourhood(row: Int, column: Int): Matrix<T?> {
         val result = Matrix<T?>(3, 3) { _, _ -> null }
         result[1, 1] = array[row][column] as T?
-        FlowDirection.values().forEach {
+        FlowDirection.entries.forEach {
             if (EncodingUtilities.validCell(row, column, it, numberOfRows, numberOfColumns)) {
                 result[1 + it.rowShift, 1 + it.columnShift] = array[row + it.rowShift][column + it.columnShift] as T?
             }
