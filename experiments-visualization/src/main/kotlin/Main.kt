@@ -60,12 +60,34 @@ private fun findMidpoints() {
 
     val backgroundColor = PointColor(0.0, 0.0, 0.0)
     val midpointColor = PointColor(1.0, 1.0, 1.0)
+    val kanjiColor = PointColor(0.0, 0.0, 1.0)
 
-    ExperimentApplication.showMatrixVisualization(MatrixVisualization(midpointImage, { value ->
-        if (value) {
-            midpointColor
-        } else {
-            backgroundColor
+    val matrixToVisualize = Matrix(kanjiImage.numberOfRows, kanjiImage.numberOfColumns) { row, column ->
+       if(midpointImage[row, column]) {
+          1
+       }
+        else if(kanjiImage[row, column]) {
+           2
+        }
+        else {
+            0
+       }
+
+    }
+
+//    ExperimentApplication.showMatrixVisualization(MatrixVisualization(midpointImage, { value ->
+//        if (value) {
+//            midpointColor
+//        } else {
+//            backgroundColor
+//        }
+//    }))
+
+    ExperimentApplication.showMatrixVisualization(MatrixVisualization(matrixToVisualize, { value ->
+        when(value) {
+            1 -> midpointColor
+            2 -> kanjiColor
+            else -> backgroundColor
         }
     }))
 

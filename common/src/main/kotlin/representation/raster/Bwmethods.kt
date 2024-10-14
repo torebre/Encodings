@@ -1987,8 +1987,8 @@ fun getNeighbourhood(matrix: Matrix<Boolean>, row: Int, column: Int): Matrix<Boo
     return result
 }
 
-fun getNeighbourhood(
-    matrix: Matrix<Boolean>,
+fun <T> getNeighbourhood(
+    matrix: Matrix<T>,
     row: Int,
     column: Int,
     directionList: Array<FlowDirection>
@@ -1996,6 +1996,19 @@ fun getNeighbourhood(
     return directionList.map {
         Pair(it, EncodingUtilities.validCell(row, column, it, matrix.numberOfRows, matrix.numberOfColumns))
     }
+}
+
+fun getFlowDirectionArray(): Array<FlowDirection> {
+    return arrayOf(
+        FlowDirection.EAST,
+        FlowDirection.SOUTH_EAST,
+        FlowDirection.NORTH_EAST,
+        FlowDirection.SOUTH,
+        FlowDirection.SOUTH_WEST,
+        FlowDirection.WEST,
+        FlowDirection.NORTH_WEST,
+        FlowDirection.NORTH,
+    )
 }
 
 fun <T> getNeighbourhoodType(matrix: Matrix<T>, row: Int, column: Int, valueFunction: (T) -> Boolean): Matrix<Boolean> {
