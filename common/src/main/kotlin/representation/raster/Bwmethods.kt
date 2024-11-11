@@ -1991,7 +1991,7 @@ fun <T> getNeighbourhood(
     matrix: Matrix<T>,
     row: Int,
     column: Int,
-    directionList: Array<FlowDirection>
+    directionList: Array<FlowDirection> = FlowDirection.entries.toTypedArray()
 ): List<Pair<FlowDirection, Boolean>> {
     return directionList.map {
         Pair(it, EncodingUtilities.validCell(row, column, it, matrix.numberOfRows, matrix.numberOfColumns))

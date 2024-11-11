@@ -3,41 +3,19 @@ package com.kjipo.experiments
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.raster.getFlowDirectionArray
 import com.kjipo.representation.raster.getNeighbourhood
-import com.kjipo.representation.raster.getNeighbourhoodType
 import representation.identifyRegions
 
 
 class MidpointTest {
 
 
-    fun extractBordersUntilNoneLeft(matrix: Matrix<Boolean>): List<List<Pair<Int, Int>>> {
-        val copyMatrix = Matrix.copy(matrix)
-        var border = extractBorders(copyMatrix)
-        val borders = mutableListOf(border)
-
-        do {
-            border.forEach {
-                copyMatrix[it.first, it.second] = false
-            }
-
-            border = extractBorders(copyMatrix)
-            if (border.isNotEmpty()) {
-                borders.add(border)
-            }
-        } while (border.isNotEmpty())
-
-        return borders
-    }
-
-
     fun findMidpointsInRegions(matrix: Matrix<Boolean>): Matrix<Boolean> {
         val regions = identifyRegions(matrix, 1)
-        val borderLists = extractBordersUntilNoneLeft(matrix)
-
         val borderImage = Matrix(matrix.numberOfRows, matrix.numberOfColumns, { _, _ ->
             0
         })
 
+        val borderLists = extractBordersUntilNoneLeft(matrix)
         var distanceFromRegionEdge = 0
         for (borderList in borderLists) {
             borderList.forEach { borderImage[it.first, it.second] = distanceFromRegionEdge }

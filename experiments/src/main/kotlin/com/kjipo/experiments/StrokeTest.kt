@@ -3,8 +3,6 @@ package com.kjipo.experiments
 import com.kjipo.readetl.EtlDataReader.extractEtlImagesForUnicodeToKanjiData
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.raster.*
-import org.slf4j.helpers.Util
-import javax.swing.text.Utilities
 import kotlin.math.*
 
 
@@ -40,9 +38,6 @@ class StrokeTest {
                         )
                     )
                 )
-
-
-
 
                 val thinnedImage = makeThin(squareMatrix)
 
@@ -81,17 +76,6 @@ class StrokeTest {
 
         return kanjiImages
     }
-
-    private fun findStroke(image: Matrix<Boolean>) {
-        val point = findFilledPoint(image)
-
-        // TODO
-
-
-
-
-    }
-
 
     private fun findFilledPoint(image: Matrix<Boolean>): Pair<Int, Int>? {
         for(row in 0 until image.numberOfRows) {

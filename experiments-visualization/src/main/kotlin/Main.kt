@@ -63,15 +63,13 @@ private fun findMidpoints() {
     val kanjiColor = PointColor(0.0, 0.0, 1.0)
 
     val matrixToVisualize = Matrix(kanjiImage.numberOfRows, kanjiImage.numberOfColumns) { row, column ->
-       if(midpointImage[row, column]) {
-          1
-       }
-        else if(kanjiImage[row, column]) {
-           2
-        }
-        else {
+        if (midpointImage[row, column]) {
+            1
+        } else if (kanjiImage[row, column]) {
+            2
+        } else {
             0
-       }
+        }
 
     }
 
@@ -84,7 +82,7 @@ private fun findMidpoints() {
 //    }))
 
     ExperimentApplication.showMatrixVisualization(MatrixVisualization(matrixToVisualize, { value ->
-        when(value) {
+        when (value) {
             1 -> midpointColor
             2 -> kanjiColor
             else -> backgroundColor
@@ -94,8 +92,58 @@ private fun findMidpoints() {
 }
 
 
+private fun extractStrokes() {
+    val ballRoller = BallRoller()
+
+    val kanjiImage = extractEtlImagesForUnicodeToKanjiData(32769, 5).take(1)
+        .map {
+            transposeMatrix(
+                makeSquare(
+                    scaleMatrix(
+                        transformToBooleanMatrix(
+                            it.kanjiData,
+                            ::simpleThreshold
+                        ), 128, 128
+                    )
+                )
+            )
+        }.first()
+
+
+    val backgroundColor = PointColor(0.0, 0.0, 0.0)
+    val strokeColor = PointColor(1.0, 1.0, 1.0)
+    val kanjiColor = PointColor(0.0, 0.0, 1.0)
+
+    val matrixToVisualize = Matrix(kanjiImage.numberOfRows, kanjiImage.numberOfColumns) { row, column ->
+        if (kanjiImage[row, column]) {
+            1
+        } else {
+            0
+        }
+    }
+
+    val strokes = ballRoller.extractStrokes(kanjiImage)
+    for (stroke in strokes) {
+        stroke.path.forEach { point ->
+            matrixToVisualize[point.first, point.second] = 2
+        }
+    }
+
+    ExperimentApplication.showMatrixVisualization(MatrixVisualization(matrixToVisualize, { value ->
+        when (value) {
+            1 -> strokeColor
+            2 -> kanjiColor
+            else -> backgroundColor
+        }
+    }))
+
+
+}
+
+
 fun main() {
     // showEndpointResults()
     // showMatrixVisualizations()
-    findMidpoints()
+    // findMidpoints()
+    extractStrokes()
 }
