@@ -20,6 +20,9 @@ class BallRoller {
                 !kanjiImage[row, column]
             })
 
+
+        var counter = 0
+
         for (row in 0 until kanjiImage.numberOfRows) {
             for (column in 0 until kanjiImage.numberOfColumns) {
                 if (!usedPointsImage[row, column]) {
@@ -27,9 +30,12 @@ class BallRoller {
 
                     strokes.add(path)
 
-                    // TODO For testing only extract one stroke
-                    return strokes
+                    ++counter
 
+                    // TODO Limit the number of strokes returned while testing
+                    if(counter == 20) {
+                        return strokes
+                    }
 
 
                     // TODO
@@ -54,7 +60,7 @@ class BallRoller {
         usedPointsImage: Matrix<Boolean>
     ): Stroke {
         val neighbourhood = getNeighbourhood(gradientImage, row, column)
-        val path = mutableListOf<Pair<Int, Int>>()
+        val path = mutableListOf<PathPoint>()
 
         val pointsToExamine = mutableListOf<Pair<Int, Int>>()
         pointsToExamine.add(Pair(row, column))
@@ -62,7 +68,7 @@ class BallRoller {
         while (pointsToExamine.isNotEmpty()) {
             var currentPoint = pointsToExamine.removeFirst()
             usedPointsImage[currentPoint.first, currentPoint.second] = true
-            path.add(currentPoint)
+//            path.add(currentPoint)
 
             var maxDistanceFromEdge = 0
             val maxDistancePoints = mutableListOf<FlowDirection>()
@@ -90,7 +96,7 @@ class BallRoller {
                 }
             }
 
-            for(pair in neighbourhood) {
+            for (pair in neighbourhood) {
                 if (pair.second) {
                     val direction = pair.first
                     val rowNeighbour = currentPoint.first + direction.rowShift
@@ -108,9 +114,9 @@ class BallRoller {
                 val row = currentPoint.first + maxDistancePoint.rowShift
                 val column = currentPoint.second + maxDistancePoint.columnShift
 
+                path.add(PathPoint(row, column, maxDistancePoint))
                 pointsToExamine.add(Pair(row, column))
             }
-
         }
 
         return Stroke(path)
