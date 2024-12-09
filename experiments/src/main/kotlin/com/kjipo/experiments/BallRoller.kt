@@ -28,7 +28,9 @@ class BallRoller {
                 if (!usedPointsImage[row, column]) {
                     val path = generatePath(row, column, gradientImage, usedPointsImage)
 
-                    strokes.add(path)
+                    if(path.path.isNotEmpty()) {
+                        strokes.add(path)
+                    }
 
                     ++counter
 
@@ -109,6 +111,7 @@ class BallRoller {
             if (maxDistanceFromEdge == 0) {
                 continue
             }
+
 
             for (maxDistancePoint in maxDistancePoints) {
                 val row = currentPoint.first + maxDistancePoint.rowShift

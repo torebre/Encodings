@@ -1,5 +1,6 @@
 package com.kjipo
 
+import com.kjipo.ExperimentApplication.Companion.directionDrawFunction
 import com.kjipo.experiments.*
 import com.kjipo.readetl.EtlDataReader.extractEtlImagesForUnicodeToKanjiData
 import com.kjipo.representation.Matrix
@@ -151,7 +152,9 @@ private fun extractStrokes() {
         }
     }
 
-    ExperimentApplication.showColourRasters(Collections.emptyList(), 128, Collections.singletonList(matrixToVisualize))
+    ExperimentApplication.showColourRastersForStrokes(Collections.emptyList(),
+        128,
+        Collections.singletonList(strokes))
 }
 
 

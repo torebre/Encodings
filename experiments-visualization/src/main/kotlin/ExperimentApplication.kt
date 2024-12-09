@@ -1,8 +1,6 @@
 package com.kjipo
 
-import com.kjipo.experiments.MatrixVisualization
-import com.kjipo.experiments.PointColor
-import com.kjipo.experiments.VisualizationData
+import com.kjipo.experiments.*
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.raster.FlowDirection
 import javafx.application.Application
@@ -12,19 +10,23 @@ import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
+import javafx.scene.paint.Paint
 import javafx.scene.text.Font
 import javafx.scene.text.Text
 import javafx.stage.Stage
+import java.lang.System.Logger.Level
 import java.util.*
+import java.util.logging.Logger
 import kotlin.math.min
 
+
+private val logger = System.getLogger(ExperimentApplication::class.qualifiedName!!)
 
 class ExperimentApplication : Application() {
     private var root: StackPane? = null
     private var inputRasterData: InputRasterData? = null
     private var inputRasterDataWithDrawFunction: InputRasterDataWithDrawFunction? = null
 
-    val logger = System.getLogger(ExperimentApplication::class.qualifiedName!!)
 
 
     override fun start(primaryStage: Stage?) {
@@ -223,7 +225,7 @@ class ExperimentApplication : Application() {
             showMatrixImages(matrixVisualizations.map { createColorMatrix(it) })
         }
 
-        fun showColourRasters(
+        fun showColourRastersForStrokes(
             characters: MutableList<String>,
             colourRasters: Collection<Array<Array<Color>>>
         ) {
@@ -251,6 +253,35 @@ class ExperimentApplication : Application() {
             imageSize: Int,
             directionMatrices: List<Matrix<FlowDirection?>>
         ) {
+            showColourRastersForStrokes(
+                characters,
+                imageSize,
+                directionMatrices.size,
+                { index, canvas, squareSize ->
+                    directionDrawFunction(index, canvas, squareSize, directionMatrices)
+                })
+        }
+
+        fun showColourRastersForStrokes(
+            characters: MutableList<String>,
+            imageSize: Int,
+            strokes: List<List<Stroke>>
+        ) {
+            showColourRastersForStrokes(
+                characters,
+                imageSize,
+                strokes.size,
+                { index, canvas, squareSize ->
+                    strokesDrawFunction(index, canvas, squareSize, strokes)
+                })
+        }
+
+        fun showColourRastersForStrokes(
+            characters: MutableList<String>,
+            imageSize: Int,
+            numberOfImages: Int,
+            drawFunction: (Int, Canvas, Int) -> Unit
+        ) {
             val startThread = Thread {
                 launch(ExperimentApplication::class.java)
             }
@@ -270,10 +301,10 @@ class ExperimentApplication : Application() {
                     InputRasterDataWithDrawFunction(
                         characters,
                         imageSize,
-                        directionMatrices.size,
-                        { index, canvas, squareSize ->
-                            directionDrawFunction(index, canvas, squareSize, directionMatrices)
-                        }))
+                        numberOfImages,
+                        drawFunction
+                    )
+                )
             }
         }
 
@@ -295,7 +326,7 @@ class ExperimentApplication : Application() {
 
 
         private fun showImages(colourRasters: Collection<Array<Array<Color>>>) {
-            showColourRasters(Collections.emptyList(), colourRasters)
+            showColourRastersForStrokes(Collections.emptyList(), colourRasters)
         }
 
 
@@ -324,6 +355,51 @@ class ExperimentApplication : Application() {
             }
         }
 
+
+        fun strokesDrawFunction(index: Int, canvas: Canvas, squareSize: Int, strokes: List<List<Stroke>>) {
+            val squareSizeAsDouble = squareSize.toDouble()
+
+            val gc = canvas.graphicsContext2D
+            var counter = 0
+
+            for (stroke in strokes[index]) {
+                val pathLength = stroke.path.size.toDouble()
+
+                logger.log(Level.INFO, "Path length: $pathLength")
+
+//                gc.fill = colourFunction(counter, strokes[index].size).let {
+//                    Color.color(
+//                        it[0].toDouble() / 255.0,
+//                        it[1].toDouble() / 255.0,
+//                        it[2].toDouble() / 255.0,
+//                    )
+//                }
+
+                var stepCounter = 0
+                for (pathPoint in stroke.path) {
+
+                    gc.fill = colourFunction(stepCounter, stroke.path.size).let {
+                        Color.color(
+                            it[0].toDouble() / 255.0,
+                            it[1].toDouble() / 255.0,
+                            it[2].toDouble() / 255.0,
+                        )
+                    }
+
+                    gc.fillRect(
+                        pathPoint.column.toDouble(),
+                        pathPoint.row.toDouble(),
+                        squareSizeAsDouble,
+                        squareSizeAsDouble
+                    )
+
+                    ++stepCounter
+                }
+
+                ++counter
+            }
+
+        }
 
         private fun getColorForFlowDirection(flowDirection: FlowDirection): PointColor {
             return when (flowDirection) {
