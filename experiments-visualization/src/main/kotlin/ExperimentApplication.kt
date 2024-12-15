@@ -377,7 +377,6 @@ class ExperimentApplication : Application() {
 
                 var stepCounter = 0
                 for (pathPoint in stroke.path) {
-
                     gc.fill = colourFunction(stepCounter, stroke.path.size).let {
                         Color.color(
                             it[0].toDouble() / 255.0,

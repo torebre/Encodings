@@ -106,7 +106,7 @@ class CircleLineTest {
                                 centerPoint.second,
                                 matrixWithCenterLines,
                                 circleMask
-                            ) {
+                            ) { _, _ ->
                                 circleColourCounter
                             }
                         }
@@ -254,37 +254,6 @@ class CircleLineTest {
     }
 
 
-    private fun applyCircleMask(
-        row: Int,
-        column: Int,
-        matrix: Matrix<Int>,
-        circleMask: Matrix<Boolean>,
-        valueFunction: (Pair<Int, Int>) -> Int
-    ) {
-        val rowCenter = circleMask.numberOfRows / 2
-        val columnCenter = circleMask.numberOfColumns / 2
-
-        val upperLeftRow = row - rowCenter
-        val upperLeftColumn = column - columnCenter
-
-        circleMask.forEachIndexed { rowMask, columnMask, value ->
-            if (circleMask[rowMask, columnMask]) {
-                val rowInMatrix = rowMask + upperLeftRow
-                val columnInMatrix = columnMask + upperLeftColumn
-
-                if (rowInMatrix >= 0
-                    && rowInMatrix < matrix.numberOfRows
-                    && columnInMatrix >= 0
-                    && columnInMatrix < matrix.numberOfColumns
-                ) {
-                    matrix[rowInMatrix, columnInMatrix] = valueFunction(Pair(rowInMatrix, columnInMatrix))
-                }
-            }
-        }
-
-    }
-
-
     private fun determineCircle(
         row: Int,
         column: Int,
@@ -299,7 +268,6 @@ class CircleLineTest {
                     && column + it.second < maxColumn
         }.toList()
     }
-
 
 
     companion object {

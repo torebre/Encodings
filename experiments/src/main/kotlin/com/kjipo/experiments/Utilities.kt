@@ -1,6 +1,5 @@
 package com.kjipo.experiments
 
-import com.kjipo.experiments.CircleLineTest.Companion.CIRCLE_RADIUS
 import com.kjipo.representation.Matrix
 import representation.backgroundRegion
 import representation.interiorPointRegion
@@ -87,82 +86,6 @@ private fun findBorderPoint(borderMatrix: Matrix<Int>, borderValue: Int): Pair<I
         }
     }
     return null
-}
-
-private fun getOffsetsForCircle(circleRadius: Int): Collection<Pair<Int, Int>> {
-    val slice = 2 * Math.PI / 500
-
-    val offsets = (0..500).map {
-        val angle = it * slice
-        val rowOffset = sin(angle) * circleRadius
-        val columnOffset = cos(angle) * circleRadius
-
-        Pair(rowOffset, columnOffset)
-    }.toList()
-
-    return offsets.map {
-        Pair(it.first.roundToInt(), it.second.roundToInt())
-    }.toSet()
-}
-
-
-fun determineCircleMask(radius: Int = CIRCLE_RADIUS): Matrix<Boolean> {
-    val offsets = getOffsetsForCircle(radius)
-
-    val maskMatrix = Matrix(2 * radius + 1, 2 * radius + 1) { _, _ ->
-        true
-    }
-
-    val centerRow = maskMatrix.numberOfRows / 2
-    val centerColumn = maskMatrix.numberOfColumns / 2
-
-    offsets.forEach {
-        maskMatrix[it.first + centerRow, it.second + centerColumn] = false
-    }
-
-    for (row in 0 until maskMatrix.numberOfRows) {
-        for (column in 0 until maskMatrix.numberOfColumns) {
-            if (!maskMatrix[row, column]) {
-                break
-            }
-            maskMatrix[row, column] = false
-        }
-    }
-
-    for (row in maskMatrix.numberOfRows - 1 downTo 0) {
-        for (column in maskMatrix.numberOfColumns - 1 downTo 0) {
-            if (!maskMatrix[row, column]) {
-                break
-            }
-            maskMatrix[row, column] = false
-        }
-    }
-
-//        for (row in 0 until maskMatrix.numberOfRows) {
-//            var inCircle = false
-//            for (column in 0 until maskMatrix.numberOfColumns) {
-//                if (maskMatrix[row, column] && !inCircle) {
-//                    maskMatrix[row, column] = true
-//                    inCircle = true
-//                }
-//                else if(!maskMatrix[row, column] && inCircle) {
-//                    maskMatrix[row, column] = true
-//                }
-//                else if (maskMatrix[row, column] && inCircle) {
-//                    maskMatrix[row, column] = true
-//                    inCircle = false
-//                }
-//                else if (!maskMatrix[row, column] && !inCircle) {
-//                    maskMatrix[row, column] = false
-//                }
-//            }
-//        }
-
-    offsets.forEach {
-        maskMatrix[it.first + centerRow, it.second + centerColumn] = true
-    }
-
-    return maskMatrix
 }
 
 fun extractBordersUntilNoneLeft(matrix: Matrix<Boolean>): List<List<Pair<Int, Int>>> {
