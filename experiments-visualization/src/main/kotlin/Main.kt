@@ -145,16 +145,36 @@ private fun extractStrokes() {
     val matrixToVisualize = Matrix<FlowDirection?>(kanjiImage.numberOfRows, kanjiImage.numberOfColumns) { _, _ ->
         null
     }
-    val strokes = ballRoller.extractStrokes(kanjiImage)
-    for (stroke in strokes) {
-        stroke.path.forEach { point ->
-            matrixToVisualize[point.row, point.column] = point.direction
-        }
-    }
 
-    ExperimentApplication.showColourRastersForStrokes(Collections.emptyList(),
-        128,
-        Collections.singletonList(strokes))
+//    val strokes = ballRoller.extractStrokes2(kanjiImage)
+//    for (stroke in strokes) {
+//        stroke.path.forEach { point ->
+//            when (point) {
+//                // TODO Is this correct?
+//                is PathPoint.PathPointWithDirection -> {
+//                    matrixToVisualize[point.row, point.column] = point.direction
+//                }
+//                else -> {
+//                    matrixToVisualize[point.row, point.column] = null
+//                }
+//
+//            }
+//        }
+//    }
+
+//    ExperimentApplication.showColourRastersForStrokes(Collections.emptyList(),
+//        128,
+//        Collections.singletonList(strokes))
+
+
+    val updatedImage = ballRoller.extractStrokes2(kanjiImage)
+    ExperimentApplication.showMatrixVisualization(MatrixVisualization(updatedImage, { value ->
+        if (value) {
+            PointColor(1.0, 1.0, 1.0)
+        } else {
+            PointColor(0.0, 0.0, 0.0)
+        }
+    }))
 }
 
 

@@ -7,6 +7,8 @@ class Stroke(val path: List<PathPoint>) {
 
 }
 
-class PathPoint(val row: Int, val column: Int, val direction: FlowDirection) {
+sealed class PathPoint(val row: Int, val column: Int) {
+
+    class PathPointWithDirection(row: Int, column: Int, val direction: FlowDirection): PathPoint(row, column)
 
 }
