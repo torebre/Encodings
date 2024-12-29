@@ -169,10 +169,10 @@ private fun extractStrokes() {
 
     val updatedImage = ballRoller.extractStrokes2(kanjiImage)
     ExperimentApplication.showMatrixVisualization(MatrixVisualization(updatedImage, { value ->
-        if (value) {
-            PointColor(1.0, 1.0, 1.0)
-        } else {
-            PointColor(0.0, 0.0, 0.0)
+        when (value) {
+            1 -> PointColor(1.0, 1.0, 1.0)
+            2 -> PointColor(1.0, 0.0, 0.0)
+            else -> PointColor(0.0, 0.0, 0.0)
         }
     }))
 }

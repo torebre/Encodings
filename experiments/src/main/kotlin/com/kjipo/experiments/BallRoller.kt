@@ -60,7 +60,7 @@ class BallRoller {
     }
 
 
-    fun extractStrokes2(kanjiImage: Matrix<Boolean>): Matrix<Boolean> {
+    fun extractStrokes2(kanjiImage: Matrix<Boolean>): Matrix<Int> {
 //        val regions = identifyRegions(kanjiImage, 1)
         val gradientImage = generateGradientImage(kanjiImage)
 //        val strokes = mutableListOf<Stroke>()
@@ -97,7 +97,7 @@ class BallRoller {
                     // TODO Limit the number of strokes returned while testing
                     if (counter == 20) {
 //                        return strokes
-                        return updatedKanjiImage
+                        return colorImage(kanjiImage, updatedKanjiImage)
                     }
 
 
@@ -110,7 +110,22 @@ class BallRoller {
 
         }
 
-        return updatedKanjiImage
+        return colorImage(kanjiImage, updatedKanjiImage)
+    }
+
+
+    private fun colorImage(originalImage: Matrix<Boolean>, updateImage: Matrix<Boolean>): Matrix<Int> {
+        return Matrix(updateImage.numberOfRows, updateImage.numberOfColumns, { row, column ->
+            if(originalImage[row, column] && updateImage[row, column]) {
+                1
+            }
+            else if(originalImage[row, column] && !updateImage[row, column]) {
+               2
+            }
+            else {
+                0
+            }
+        })
     }
 
 
