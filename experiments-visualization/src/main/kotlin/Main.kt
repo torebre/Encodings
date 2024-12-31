@@ -167,7 +167,10 @@ private fun extractStrokes() {
 //        Collections.singletonList(strokes))
 
 
-    val updatedImage = ballRoller.extractStrokes2(kanjiImage)
+//    val updatedImage = ballRoller.extractStrokes2(kanjiImage)
+    val updatedImage = ballRoller.addCircle(kanjiImage)
+
+
     ExperimentApplication.showMatrixVisualization(MatrixVisualization(updatedImage, { value ->
         when (value) {
             1 -> PointColor(1.0, 1.0, 1.0)

@@ -3,8 +3,10 @@ package com.kjipo.experiments
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.representation.raster.getNeighbourhood
+import com.kjipo.segmentation.getOffset
 import representation.identifyRegions
 import kotlin.math.absoluteValue
+import kotlin.math.max
 
 
 class BallRoller {
@@ -114,20 +116,167 @@ class BallRoller {
     }
 
 
+    fun addCircle(kanjiImage: Matrix<Boolean>): Matrix<Int> {
+//        val regions = identifyRegions(kanjiImage, 1)
+        val gradientImage = generateGradientImage(kanjiImage)
+//        val strokes = mutableListOf<Stroke>()
+
+        val usedPointsImage = Matrix(
+            kanjiImage.numberOfRows, kanjiImage.numberOfColumns,
+            { row, column ->
+                // If the point is outside the figure, it counts as
+                // being a used point
+                !kanjiImage[row, column]
+            })
+
+        var counter = 0
+
+//        val updatedKanjiImage = Matrix.copy(kanjiImage)
+        val updatedKanjiImage = Matrix(kanjiImage.numberOfRows, kanjiImage.numberOfColumns, { row, column ->
+            if (kanjiImage[row, column]) {
+                1
+            } else {
+                0
+            }
+        })
+
+        var radius = 5
+        val circleMask = determineCircleMask(radius)
+
+        var sizeOfMask = 0
+        circleMask.forEach { value ->
+            if (value) {
+                ++sizeOfMask
+            }
+        }
+
+        for (row in 0 until kanjiImage.numberOfRows) {
+            for (column in 0 until kanjiImage.numberOfColumns) {
+//                if (!usedPointsImage[row, column]) {
+                if (updatedKanjiImage[row, column] == 1) {
+//                    val path = generatePath(row, column, gradientImage, usedPointsImage)
+
+                    // TODO
+
+//                    applyCircleMask(
+//                        row,
+//                        column,
+//                        matrix,
+//                        circleMask,
+//                        valueFunction)
+
+
+                    var pointsCovered = determinePointsCovered(row, column, updatedKanjiImage, circleMask)
+                    var pointsWronglyCovered = determinePointsWronglyCovered(row, column, updatedKanjiImage, circleMask)
+
+                    var maxPoint = Pair(row, column)
+                    var maxPointsCovered = pointsCovered
+                    val neighbourhood = getNeighbourhood(updatedKanjiImage, row, column)
+                    neighbourhood.forEach { directionValidPair ->
+                        val direction = directionValidPair.first
+                        val validValue = directionValidPair.second
+
+                        if (validValue) {
+                            val covered = determinePointsCovered(row + direction.rowShift, column + direction.columnShift, updatedKanjiImage, circleMask)
+                            val wronglyCovered = determinePointsWronglyCovered(row + direction.rowShift, column + direction.columnShift, updatedKanjiImage, circleMask)
+
+                            if(covered >= maxPointsCovered) {
+                                println("Test23")
+
+                                if(wronglyCovered == 0) {
+                                    println("Test24")
+
+                                    maxPoint = Pair(row + direction.rowShift, column + direction.columnShift)
+                                    maxPointsCovered = covered
+                                }
+
+                            }
+
+                        }
+                    }
+
+                    applyCircleMask(maxPoint.first, maxPoint.second,
+                        updatedKanjiImage, circleMask, {row, column ->
+                           2
+                        })
+
+                    return updatedKanjiImage
+
+
+//                    generatePath2(
+//                        row, column,
+//                        gradientImage,
+//                        kanjiImage,
+//                        regionMatrix,
+//                        updatedKanjiImage
+//                    )
+
+                    ++counter
+
+                    // TODO Limit the number of strokes returned while testing
+//                    if (counter == 20) {
+////                        return strokes
+////                        return colorImage(kanjiImage, updatedKanjiImage)
+//                        return updatedKanjiImage
+//                    }
+
+
+                    // TODO
+
+
+                }
+
+            }
+
+        }
+
+//        return colorImage(kanjiImage, updatedKanjiImage)
+
+        return updatedKanjiImage
+    }
+
+
+    private fun determinePointsCovered(row: Int, column: Int, updatedKanjiImage: Matrix<Int>, circleMask: Matrix<Boolean>): Int {
+        var pointsCovered = 0
+
+        applyCircleMask(row, column, updatedKanjiImage, circleMask, { rowInImage, columnInImage ->
+            if (updatedKanjiImage[rowInImage, columnInImage] == 1) {
+                ++pointsCovered
+            }
+
+            // Just return the original value
+            updatedKanjiImage[rowInImage, columnInImage]
+        })
+
+        return pointsCovered
+    }
+
+    private fun determinePointsWronglyCovered(row: Int, column: Int, updatedKanjiImage: Matrix<Int>, circleMask: Matrix<Boolean>): Int {
+        var pointsWronglyCovered = 0
+
+        applyCircleMask(row, column, updatedKanjiImage, circleMask, { rowInImage, columnInImage ->
+            if(updatedKanjiImage[rowInImage, columnInImage] == 0) {
+                ++pointsWronglyCovered
+            }
+
+            // Just return the original value
+            updatedKanjiImage[rowInImage, columnInImage]
+        })
+
+        return pointsWronglyCovered
+    }
+
     private fun colorImage(originalImage: Matrix<Boolean>, updateImage: Matrix<Boolean>): Matrix<Int> {
         return Matrix(updateImage.numberOfRows, updateImage.numberOfColumns, { row, column ->
-            if(originalImage[row, column] && updateImage[row, column]) {
+            if (originalImage[row, column] && updateImage[row, column]) {
                 1
-            }
-            else if(originalImage[row, column] && !updateImage[row, column]) {
-               2
-            }
-            else {
+            } else if (originalImage[row, column] && !updateImage[row, column]) {
+                2
+            } else {
                 0
             }
         })
     }
-
 
     private fun generatePath(
         row: Int,
