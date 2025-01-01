@@ -5,11 +5,14 @@ import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.representation.raster.getNeighbourhood
 import com.kjipo.segmentation.getOffset
 import representation.identifyRegions
+import java.awt.Point
 import kotlin.math.absoluteValue
 import kotlin.math.max
 
 
 class BallRoller {
+
+    private val circleMaskCache: Map<Int, CircleMaskInformation> = mutableMapOf()
 
 
     fun extractStrokes(kanjiImage: Matrix<Boolean>): List<Stroke> {
@@ -117,21 +120,19 @@ class BallRoller {
 
 
     fun addCircle(kanjiImage: Matrix<Boolean>): Matrix<Int> {
-//        val regions = identifyRegions(kanjiImage, 1)
-        val gradientImage = generateGradientImage(kanjiImage)
-//        val strokes = mutableListOf<Stroke>()
-
-        val usedPointsImage = Matrix(
+        val examinedPoints = Matrix(
             kanjiImage.numberOfRows, kanjiImage.numberOfColumns,
             { row, column ->
                 // If the point is outside the figure, it counts as
-                // being a used point
+                // being an examined point
                 !kanjiImage[row, column]
             })
 
-        var counter = 0
+        val circleMatrix: Matrix<CircleMaskInformation?> = Matrix(
+            kanjiImage.numberOfRows,
+            kanjiImage.numberOfColumns,
+            { _, _ -> null })
 
-//        val updatedKanjiImage = Matrix.copy(kanjiImage)
         val updatedKanjiImage = Matrix(kanjiImage.numberOfRows, kanjiImage.numberOfColumns, { row, column ->
             if (kanjiImage[row, column]) {
                 1
@@ -140,107 +141,160 @@ class BallRoller {
             }
         })
 
-        var radius = 5
-        val circleMask = determineCircleMask(radius)
-
-        var sizeOfMask = 0
-        circleMask.forEach { value ->
-            if (value) {
-                ++sizeOfMask
+        for (row in 0 until kanjiImage.numberOfRows) {
+            for (column in 0 until kanjiImage.numberOfColumns) {
+                if (kanjiImage[row, column]) {
+                    circleMatrix[row, column] = getLargestCircle(row, column, kanjiImage)
+                }
             }
         }
+
+        var largestCirclePoint = Pair(0, 0)
+        var largestCircle = CircleMaskInformation(0, Matrix(1, 1, { _, _ -> true }), 1)
 
         for (row in 0 until kanjiImage.numberOfRows) {
             for (column in 0 until kanjiImage.numberOfColumns) {
-//                if (!usedPointsImage[row, column]) {
-                if (updatedKanjiImage[row, column] == 1) {
-//                    val path = generatePath(row, column, gradientImage, usedPointsImage)
+                val circle = circleMatrix[row, column]
 
-                    // TODO
-
-//                    applyCircleMask(
-//                        row,
-//                        column,
-//                        matrix,
-//                        circleMask,
-//                        valueFunction)
-
-
-                    var pointsCovered = determinePointsCovered(row, column, updatedKanjiImage, circleMask)
-                    var pointsWronglyCovered = determinePointsWronglyCovered(row, column, updatedKanjiImage, circleMask)
-
-                    var maxPoint = Pair(row, column)
-                    var maxPointsCovered = pointsCovered
-                    val neighbourhood = getNeighbourhood(updatedKanjiImage, row, column)
-                    neighbourhood.forEach { directionValidPair ->
-                        val direction = directionValidPair.first
-                        val validValue = directionValidPair.second
-
-                        if (validValue) {
-                            val covered = determinePointsCovered(row + direction.rowShift, column + direction.columnShift, updatedKanjiImage, circleMask)
-                            val wronglyCovered = determinePointsWronglyCovered(row + direction.rowShift, column + direction.columnShift, updatedKanjiImage, circleMask)
-
-                            if(covered >= maxPointsCovered) {
-                                println("Test23")
-
-                                if(wronglyCovered == 0) {
-                                    println("Test24")
-
-                                    maxPoint = Pair(row + direction.rowShift, column + direction.columnShift)
-                                    maxPointsCovered = covered
-                                }
-
-                            }
-
-                        }
+                if (circle != null) {
+                    if (circle.radius > largestCircle.radius) {
+                        largestCircle = circle
+                        largestCirclePoint = Pair(row, column)
                     }
-
-                    applyCircleMask(maxPoint.first, maxPoint.second,
-                        updatedKanjiImage, circleMask, {row, column ->
-                           2
-                        })
-
-                    return updatedKanjiImage
-
-
-//                    generatePath2(
-//                        row, column,
-//                        gradientImage,
-//                        kanjiImage,
-//                        regionMatrix,
-//                        updatedKanjiImage
-//                    )
-
-                    ++counter
-
-                    // TODO Limit the number of strokes returned while testing
-//                    if (counter == 20) {
-////                        return strokes
-////                        return colorImage(kanjiImage, updatedKanjiImage)
-//                        return updatedKanjiImage
-//                    }
-
-
-                    // TODO
-
-
                 }
-
             }
-
         }
 
-//        return colorImage(kanjiImage, updatedKanjiImage)
+
+//        for (row in 0 until kanjiImage.numberOfRows) {
+//            for (column in 0 until kanjiImage.numberOfColumns) {
+//                val circle = circleMatrix[row, column]
+//
+//                if (circle != null) {
+//                    applyCircleMask(
+//                        row, column,
+//                        updatedKanjiImage, circle.circleMask, { row, column ->
+//                            2
+//                        })
+//                }
+//            }
+//        }
+
+        applyCircleMask(
+            largestCirclePoint.first, largestCirclePoint.second,
+            updatedKanjiImage, largestCircle.circleMask, { row, column ->
+                2
+            })
+
+
+//        for (row in 0 until kanjiImage.numberOfRows) {
+//            for (column in 0 until kanjiImage.numberOfColumns) {
+//                if (updatedKanjiImage[row, column] == 1) {
+//
+//                    var pointsCovered = determinePointsCovered(row, column, updatedKanjiImage, circleMask)
+//                    var pointsWronglyCovered = determinePointsWronglyCovered(row, column, updatedKanjiImage, circleMask)
+//
+//                    while (pointsWronglyCovered > 0) {
+//                        --radius
+//                        circleMask = determineCircleMask(radius)
+//
+//                        pointsCovered = determinePointsCovered(row, column, updatedKanjiImage, circleMask)
+//                        pointsWronglyCovered = determinePointsWronglyCovered(row, column, updatedKanjiImage, circleMask)
+//
+//                        println("Points covered: $pointsCovered. Points wrongly covered: $pointsWronglyCovered")
+//                    }
+//
+//                    var maxPoint = Pair(row, column)
+//                    var maxPointsCovered = pointsCovered
+//
+//                    val neighbourhood = getNeighbourhood(updatedKanjiImage, row, column)
+//                    neighbourhood.forEach { directionValidPair ->
+//                        val direction = directionValidPair.first
+//                        val validValue = directionValidPair.second
+//
+//                        if (validValue) {
+//                            val covered = determinePointsCovered(
+//                                row + direction.rowShift,
+//                                column + direction.columnShift,
+//                                updatedKanjiImage,
+//                                circleMask
+//                            )
+//                            val wronglyCovered = determinePointsWronglyCovered(
+//                                row + direction.rowShift,
+//                                column + direction.columnShift,
+//                                updatedKanjiImage,
+//                                circleMask
+//                            )
+//
+//                            if (covered >= maxPointsCovered) {
+//                                if (wronglyCovered == 0) {
+//                                    maxPoint = Pair(row + direction.rowShift, column + direction.columnShift)
+//                                    maxPointsCovered = covered
+//                                }
+//                            }
+//                        }
+//                    }
+//
+//                    applyCircleMask(
+//                        maxPoint.first, maxPoint.second,
+//                        updatedKanjiImage, circleMask, { row, column ->
+//                            2
+//                        })
+//
+//                    return updatedKanjiImage
+//
+//                    ++counter
+//
+//                }
+//            }
+//        }
 
         return updatedKanjiImage
     }
 
+    private fun getLargestCircle(row: Int, column: Int, kanjiImage: Matrix<Boolean>): CircleMaskInformation {
+        var radius = 5
+        var circleMask = getCachedCircleMask(radius)
 
-    private fun determinePointsCovered(row: Int, column: Int, updatedKanjiImage: Matrix<Int>, circleMask: Matrix<Boolean>): Int {
+        var pointsWronglyCovered = determinePointsWronglyCovered(row, column, kanjiImage, circleMask.circleMask, false)
+
+        if (pointsWronglyCovered > 0) {
+            do {
+                --radius
+                circleMask = getCachedCircleMask(radius)
+
+                pointsWronglyCovered =
+                    determinePointsWronglyCovered(row, column, kanjiImage, circleMask.circleMask, false)
+            } while (pointsWronglyCovered > 0)
+        } else if (pointsWronglyCovered == 0) {
+            var largestCircle: CircleMaskInformation
+
+            do {
+                largestCircle = circleMask
+                ++radius
+                circleMask = getCachedCircleMask(radius)
+
+                pointsWronglyCovered =
+                    determinePointsWronglyCovered(row, column, kanjiImage, circleMask.circleMask, false)
+            } while (pointsWronglyCovered == 0)
+            return largestCircle
+        }
+
+        return circleMask
+    }
+
+
+    private fun <T> determinePointsCovered(
+        row: Int,
+        column: Int,
+        updatedKanjiImage: Matrix<T>,
+        circleMask: Matrix<Boolean>,
+        correctPointValue: T
+    ): Int {
         var pointsCovered = 0
 
         applyCircleMask(row, column, updatedKanjiImage, circleMask, { rowInImage, columnInImage ->
-            if (updatedKanjiImage[rowInImage, columnInImage] == 1) {
+            if (updatedKanjiImage[rowInImage, columnInImage] == correctPointValue) {
                 ++pointsCovered
             }
 
@@ -251,11 +305,17 @@ class BallRoller {
         return pointsCovered
     }
 
-    private fun determinePointsWronglyCovered(row: Int, column: Int, updatedKanjiImage: Matrix<Int>, circleMask: Matrix<Boolean>): Int {
+    private fun <T> determinePointsWronglyCovered(
+        row: Int,
+        column: Int,
+        updatedKanjiImage: Matrix<T>,
+        circleMask: Matrix<Boolean>,
+        wrongPointValue: T
+    ): Int {
         var pointsWronglyCovered = 0
 
         applyCircleMask(row, column, updatedKanjiImage, circleMask, { rowInImage, columnInImage ->
-            if(updatedKanjiImage[rowInImage, columnInImage] == 0) {
+            if (updatedKanjiImage[rowInImage, columnInImage] == wrongPointValue) {
                 ++pointsWronglyCovered
             }
 
@@ -441,5 +501,20 @@ class BallRoller {
                 && (point.second - last.second).absoluteValue < 2
     }
 
+    private fun getCachedCircleMask(radius: Int): CircleMaskInformation {
+        val circleMask = determineCircleMask(radius)
+
+        var sizeOfMask = 0
+        circleMask.forEach { value ->
+            if (value) {
+                ++sizeOfMask
+            }
+        }
+
+        return CircleMaskInformation(radius, circleMask, sizeOfMask)
+    }
+
+
+    private class CircleMaskInformation(val radius: Int, val circleMask: Matrix<Boolean>, val sizeOfMask: Int)
 
 }
