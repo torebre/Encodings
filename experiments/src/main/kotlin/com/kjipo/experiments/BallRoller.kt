@@ -165,26 +165,83 @@ class BallRoller {
             }
         }
 
+        val circleList = mutableListOf<Pair<Pair<Int, Int>, CircleMaskInformation>>()
+        for (row in 0 until kanjiImage.numberOfRows) {
+            for (column in 0 until kanjiImage.numberOfColumns) {
+                val circle = circleMatrix[row, column]
 
-//        for (row in 0 until kanjiImage.numberOfRows) {
-//            for (column in 0 until kanjiImage.numberOfColumns) {
-//                val circle = circleMatrix[row, column]
-//
-//                if (circle != null) {
-//                    applyCircleMask(
-//                        row, column,
-//                        updatedKanjiImage, circle.circleMask, { row, column ->
-//                            2
-//                        })
-//                }
-//            }
-//        }
+                if (circle != null) {
+                    circleList.add(Pair(Pair(row, column), circle))
+                }
+            }
+        }
+        val sortedCircleList = circleList.sortedByDescending { it.second.radius }
 
-        applyCircleMask(
-            largestCirclePoint.first, largestCirclePoint.second,
-            updatedKanjiImage, largestCircle.circleMask, { row, column ->
-                2
-            })
+        var counter = 0
+        for (row in 0 until kanjiImage.numberOfRows) {
+            for (column in 0 until kanjiImage.numberOfColumns) {
+                if(circleMatrix[row, column] != null) {
+                    ++counter
+                }
+            }
+        }
+        println("Test31: Number of circles: $counter")
+
+        for (pointCircleInfoPair in sortedCircleList) {
+            if (circleMatrix[pointCircleInfoPair.first.first, pointCircleInfoPair.first.second] == null) {
+                continue
+            }
+
+            applyCircleMask(
+                pointCircleInfoPair.first.first,
+                pointCircleInfoPair.first.second,
+                circleMatrix,
+                pointCircleInfoPair.second.circleMask,
+                { row, column ->
+                    if (pointCircleInfoPair.first.first == row && pointCircleInfoPair.first.second == column) {
+                        circleMatrix[row, column]
+                    } else {
+                        null
+                    }
+                })
+        }
+
+        counter = 0
+        for (row in 0 until kanjiImage.numberOfRows) {
+            for (column in 0 until kanjiImage.numberOfColumns) {
+                if(circleMatrix[row, column] != null) {
+                    ++counter
+                }
+            }
+        }
+        println("Test32: Number of circles: $counter")
+
+
+        for (row in 0 until kanjiImage.numberOfRows) {
+            for (column in 0 until kanjiImage.numberOfColumns) {
+                val circle = circleMatrix[row, column]
+
+                if (circle != null) {
+//                    println("Test32: Circle radius: ${circle.radius}")
+
+//                    if(circle.radius == 0) {
+//                        continue
+//                    }
+
+                    applyCircleMask(
+                        row, column,
+                        updatedKanjiImage, circle.circleMask, { row, column ->
+                            2
+                        })
+                }
+            }
+        }
+
+//        applyCircleMask(
+//            largestCirclePoint.first, largestCirclePoint.second,
+//            updatedKanjiImage, largestCircle.circleMask, { row, column ->
+//                2
+//            })
 
 
 //        for (row in 0 until kanjiImage.numberOfRows) {
