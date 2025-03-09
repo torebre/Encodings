@@ -168,7 +168,8 @@ private fun extractStrokes() {
 
 
 //    val updatedImage = ballRoller.extractStrokes2(kanjiImage)
-    val updatedImage = ballRoller.addCircle(kanjiImage)
+//    val updatedImage = ballRoller.addCircle(kanjiImage)
+    val updatedImage = ballRoller.createPathFromCircle(kanjiImage)
 
 
     ExperimentApplication.showMatrixVisualization(MatrixVisualization(updatedImage, { value ->

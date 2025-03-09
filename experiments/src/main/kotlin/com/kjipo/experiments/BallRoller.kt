@@ -3,11 +3,8 @@ package com.kjipo.experiments
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.representation.raster.getNeighbourhood
-import com.kjipo.segmentation.getOffset
 import representation.identifyRegions
-import java.awt.Point
 import kotlin.math.absoluteValue
-import kotlin.math.max
 
 
 class BallRoller {
@@ -144,7 +141,11 @@ class BallRoller {
         for (row in 0 until kanjiImage.numberOfRows) {
             for (column in 0 until kanjiImage.numberOfColumns) {
                 if (kanjiImage[row, column]) {
-                    circleMatrix[row, column] = getLargestCircle(row, column, kanjiImage)
+                    val largestCircle = getLargestCircle(row, column, kanjiImage)
+
+//                    println("Point: $row, $column. Largest circle: ${largestCircle.radius}")
+
+                    circleMatrix[row, column] = largestCircle
                 }
             }
         }
@@ -165,6 +166,8 @@ class BallRoller {
             }
         }
 
+        println("Test50: Largest circle: ${largestCircle.radius}")
+
         val circleList = mutableListOf<Pair<Pair<Int, Int>, CircleMaskInformation>>()
         for (row in 0 until kanjiImage.numberOfRows) {
             for (column in 0 until kanjiImage.numberOfColumns) {
@@ -175,41 +178,59 @@ class BallRoller {
                 }
             }
         }
-        val sortedCircleList = circleList.sortedByDescending { it.second.radius }
+
+        // TODO The filter is only here to see where the larger circles are
+        val sortedCircleList = circleList
+            .filter { it.second.radius > 2 }
+            .sortedByDescending { it.second.radius }
 
         var counter = 0
         for (row in 0 until kanjiImage.numberOfRows) {
             for (column in 0 until kanjiImage.numberOfColumns) {
-                if(circleMatrix[row, column] != null) {
+                if (circleMatrix[row, column] != null) {
                     ++counter
                 }
             }
         }
+
         println("Test31: Number of circles: $counter")
 
         for (pointCircleInfoPair in sortedCircleList) {
-            if (circleMatrix[pointCircleInfoPair.first.first, pointCircleInfoPair.first.second] == null) {
-                continue
-            }
+
+            println("Test60: ${pointCircleInfoPair.second.radius}")
+
+//            if (circleMatrix[pointCircleInfoPair.first.first, pointCircleInfoPair.first.second] == null) {
+//                continue
+//            }
+//
+//            applyCircleMask(
+//                pointCircleInfoPair.first.first,
+//                pointCircleInfoPair.first.second,
+//                circleMatrix,
+//                pointCircleInfoPair.second.circleMask,
+//                { row, column ->
+//                    if (pointCircleInfoPair.first.first == row && pointCircleInfoPair.first.second == column) {
+//                        circleMatrix[row, column]
+//
+//                    } else {
+//                        null
+//                    }
+//                })
 
             applyCircleMask(
                 pointCircleInfoPair.first.first,
                 pointCircleInfoPair.first.second,
-                circleMatrix,
+                updatedKanjiImage,
                 pointCircleInfoPair.second.circleMask,
                 { row, column ->
-                    if (pointCircleInfoPair.first.first == row && pointCircleInfoPair.first.second == column) {
-                        circleMatrix[row, column]
-                    } else {
-                        null
-                    }
+                    2
                 })
         }
 
         counter = 0
         for (row in 0 until kanjiImage.numberOfRows) {
             for (column in 0 until kanjiImage.numberOfColumns) {
-                if(circleMatrix[row, column] != null) {
+                if (circleMatrix[row, column] != null) {
                     ++counter
                 }
             }
@@ -217,91 +238,15 @@ class BallRoller {
         println("Test32: Number of circles: $counter")
 
 
-        for (row in 0 until kanjiImage.numberOfRows) {
-            for (column in 0 until kanjiImage.numberOfColumns) {
-                val circle = circleMatrix[row, column]
-
-                if (circle != null) {
-//                    println("Test32: Circle radius: ${circle.radius}")
-
-//                    if(circle.radius == 0) {
-//                        continue
-//                    }
-
-                    applyCircleMask(
-                        row, column,
-                        updatedKanjiImage, circle.circleMask, { row, column ->
-                            2
-                        })
-                }
-            }
-        }
-
-//        applyCircleMask(
-//            largestCirclePoint.first, largestCirclePoint.second,
-//            updatedKanjiImage, largestCircle.circleMask, { row, column ->
-//                2
-//            })
-
-
 //        for (row in 0 until kanjiImage.numberOfRows) {
 //            for (column in 0 until kanjiImage.numberOfColumns) {
-//                if (updatedKanjiImage[row, column] == 1) {
-//
-//                    var pointsCovered = determinePointsCovered(row, column, updatedKanjiImage, circleMask)
-//                    var pointsWronglyCovered = determinePointsWronglyCovered(row, column, updatedKanjiImage, circleMask)
-//
-//                    while (pointsWronglyCovered > 0) {
-//                        --radius
-//                        circleMask = determineCircleMask(radius)
-//
-//                        pointsCovered = determinePointsCovered(row, column, updatedKanjiImage, circleMask)
-//                        pointsWronglyCovered = determinePointsWronglyCovered(row, column, updatedKanjiImage, circleMask)
-//
-//                        println("Points covered: $pointsCovered. Points wrongly covered: $pointsWronglyCovered")
-//                    }
-//
-//                    var maxPoint = Pair(row, column)
-//                    var maxPointsCovered = pointsCovered
-//
-//                    val neighbourhood = getNeighbourhood(updatedKanjiImage, row, column)
-//                    neighbourhood.forEach { directionValidPair ->
-//                        val direction = directionValidPair.first
-//                        val validValue = directionValidPair.second
-//
-//                        if (validValue) {
-//                            val covered = determinePointsCovered(
-//                                row + direction.rowShift,
-//                                column + direction.columnShift,
-//                                updatedKanjiImage,
-//                                circleMask
-//                            )
-//                            val wronglyCovered = determinePointsWronglyCovered(
-//                                row + direction.rowShift,
-//                                column + direction.columnShift,
-//                                updatedKanjiImage,
-//                                circleMask
-//                            )
-//
-//                            if (covered >= maxPointsCovered) {
-//                                if (wronglyCovered == 0) {
-//                                    maxPoint = Pair(row + direction.rowShift, column + direction.columnShift)
-//                                    maxPointsCovered = covered
-//                                }
-//                            }
-//                        }
-//                    }
-//
+//                val circle = circleMatrix[row, column]
+//                if (circle != null) {
 //                    applyCircleMask(
-//                        maxPoint.first, maxPoint.second,
-//                        updatedKanjiImage, circleMask, { row, column ->
+//                        row, column,
+//                        updatedKanjiImage, circle.circleMask, { row, column ->
 //                            2
 //                        })
-//
-//                    return updatedKanjiImage
-//
-//                    ++counter
-//
 //                }
 //            }
 //        }
@@ -309,8 +254,100 @@ class BallRoller {
         return updatedKanjiImage
     }
 
+
+    fun createPathFromCircle(kanjiImage: Matrix<Boolean>): Matrix<Int> {
+        val circleMatrix: Matrix<CircleMaskInformation?> = Matrix(
+            kanjiImage.numberOfRows,
+            kanjiImage.numberOfColumns,
+            { _, _ -> null })
+
+
+        for (row in 0 until kanjiImage.numberOfRows) {
+            for (column in 0 until kanjiImage.numberOfColumns) {
+                if (kanjiImage[row, column]) {
+                    val largestCircle = getLargestCircle(row, column, kanjiImage)
+
+//                    println("Point: $row, $column. Largest circle: ${largestCircle.radius}")
+
+                    circleMatrix[row, column] = largestCircle
+                }
+            }
+        }
+
+        var largestCirclePoint = Pair(0, 0)
+        var largestCircle = CircleMaskInformation(0, Matrix(1, 1, { _, _ -> true }), 1)
+
+        for (row in 0 until kanjiImage.numberOfRows) {
+            for (column in 0 until kanjiImage.numberOfColumns) {
+                val circle = circleMatrix[row, column]
+
+                if (circle != null) {
+                    if (circle.radius > largestCircle.radius) {
+                        largestCircle = circle
+                        largestCirclePoint = Pair(row, column)
+                    }
+                }
+            }
+        }
+
+        println("Test50: Largest circle: ${largestCircle.radius}")
+
+        val usedPointsImage = Matrix(
+            kanjiImage.numberOfRows, kanjiImage.numberOfColumns,
+            { row, column ->
+                // If the point is outside the figure, it counts as
+                // being an examined point
+                kanjiImage[row, column]
+            })
+
+        val path = mutableListOf<CirclePathStep>()
+
+        var currentCircleCenter = largestCirclePoint
+        var updatedCircle = moveCircle(largestCirclePoint, usedPointsImage, kanjiImage)
+        path.add(CirclePathStep(largestCirclePoint, largestCircle))
+
+        while (updatedCircle !== null) {
+            applyCircleMask(
+                currentCircleCenter.first,
+                currentCircleCenter.second,
+                usedPointsImage,
+                updatedCircle.second.circleMask,
+                { _, _ -> false })
+            currentCircleCenter = Pair(
+                currentCircleCenter.first + updatedCircle.first.rowShift,
+                currentCircleCenter.second + updatedCircle.first.columnShift
+            )
+            path.add(CirclePathStep(currentCircleCenter, updatedCircle.second))
+            updatedCircle = moveCircle(currentCircleCenter, usedPointsImage, kanjiImage)
+        }
+
+        print("Test60: Path length: ${path.size}")
+
+        val updatedKanjiImage = Matrix(kanjiImage.numberOfRows, kanjiImage.numberOfColumns, { row, column ->
+            if (kanjiImage[row, column]) {
+                1
+            } else {
+                0
+            }
+        })
+
+        for (circlePathStep in path) {
+            applyCircleMask(
+                circlePathStep.circleCenter.first,
+                circlePathStep.circleCenter.second,
+                updatedKanjiImage,
+                circlePathStep.circleMaskInformation.circleMask,
+                { row, column ->
+                    2
+                })
+        }
+
+        return updatedKanjiImage
+    }
+
+
     private fun getLargestCircle(row: Int, column: Int, kanjiImage: Matrix<Boolean>): CircleMaskInformation {
-        var radius = 5
+        var radius = 3
         var circleMask = getCachedCircleMask(radius)
 
         var pointsWronglyCovered = determinePointsWronglyCovered(row, column, kanjiImage, circleMask.circleMask, false)
@@ -340,6 +377,60 @@ class BallRoller {
         return circleMask
     }
 
+    private fun moveCircle(
+        circleCenter: Pair<Int, Int>,
+        usedPointsImage: Matrix<Boolean>,
+        orignalKanjiImage: Matrix<Boolean>
+    ): Pair<FlowDirection, CircleMaskInformation>? {
+        val neighbourhood = getNeighbourhood(orignalKanjiImage, circleCenter.first, circleCenter.second)
+
+        val directionCircleMap = mutableMapOf<FlowDirection, CircleMaskInformation>()
+        for (entry in FlowDirection.entries) {
+            if (neighbourhood[1 + entry.rowShift, 1 + entry.columnShift]
+                && orignalKanjiImage[circleCenter.first + entry.rowShift, circleCenter.second + entry.columnShift]
+            ) {
+                directionCircleMap[entry] = getLargestCircle(
+                    circleCenter.first + entry.rowShift,
+                    circleCenter.second + entry.columnShift,
+                    orignalKanjiImage
+                )
+            }
+        }
+
+        var selectedDirection = FlowDirection.EAST
+        val matrix = Matrix(0, 0, arrayOf(arrayOf(false)))
+        var selectedCircleMaskInformation = CircleMaskInformation(0, matrix, 0)
+
+        var maxPointsCovered = 0
+        directionCircleMap.forEach { (direction, circleMask) ->
+            val pointsCovered = determinePointsCovered(
+                circleCenter.first + direction.rowShift,
+                circleCenter.second + direction.columnShift,
+                usedPointsImage,
+                circleMask.circleMask
+            )
+            if (pointsCovered > maxPointsCovered) {
+                selectedDirection = direction
+                maxPointsCovered = pointsCovered
+                selectedCircleMaskInformation = circleMask
+            }
+        }
+
+        if (maxPointsCovered == 0) {
+            return null
+        }
+
+        return Pair(selectedDirection, selectedCircleMaskInformation)
+    }
+
+    private fun determinePointsCovered(
+        row: Int,
+        column: Int,
+        updatedKanjiImage: Matrix<Boolean>,
+        circleMask: Matrix<Boolean>,
+    ): Int {
+        return determinePointsCovered(row, column, updatedKanjiImage, circleMask, true)
+    }
 
     private fun <T> determinePointsCovered(
         row: Int,
@@ -573,5 +664,10 @@ class BallRoller {
 
 
     private class CircleMaskInformation(val radius: Int, val circleMask: Matrix<Boolean>, val sizeOfMask: Int)
+
+    private data class CirclePathStep(
+        val circleCenter: Pair<Int, Int>,
+        val circleMaskInformation: CircleMaskInformation
+    )
 
 }
