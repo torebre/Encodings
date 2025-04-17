@@ -172,13 +172,33 @@ private fun extractStrokes() {
     val updatedImage = ballRoller.createPathFromCircle(kanjiImage)
 
 
-    ExperimentApplication.showMatrixVisualization(MatrixVisualization(updatedImage, { value ->
-        when (value) {
-            1 -> PointColor(1.0, 1.0, 1.0)
-            2 -> PointColor(1.0, 0.0, 0.0)
-            else -> PointColor(0.0, 0.0, 0.0)
+    val colourSet = mutableSetOf<Int>()
+    updatedImage.forEach { value ->
+        if(!colourSet.contains(value)) {
+            colourSet.add(value)
         }
-    }))
+    }
+
+    ExperimentApplication.showMatrixVisualization(MatrixVisualization(updatedImage, { value ->
+        if(value == 0) {
+            PointColor(0.0, 0.0, 0.0)
+        }
+        else {
+            colourFunction(value, colourSet.size).let { colourArray ->
+                PointColor(
+                    colourArray[0].div(255.0),
+                    colourArray[1].div(255.0),
+                    colourArray[2].div(255.0))
+            }
+        }
+
+//        when (value) {
+//            1 -> PointColor(1.0, 1.0, 1.0)
+//            2 -> PointColor(1.0, 0.0, 0.0)
+//            else -> PointColor(0.0, 0.0, 0.0)
+//        }
+    }
+    ))
 }
 
 
