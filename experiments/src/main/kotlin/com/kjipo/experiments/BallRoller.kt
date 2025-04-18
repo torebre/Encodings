@@ -256,7 +256,7 @@ class BallRoller {
     }
 
 
-    fun createPathFromCircle(kanjiImage: Matrix<Boolean>): Matrix<Int> {
+    fun createPathFromCircle(kanjiImage: Matrix<Boolean>): MutableList<CirclePath> {
         val circleMatrix: Matrix<CircleMaskInformation?> = Matrix(
             kanjiImage.numberOfRows,
             kanjiImage.numberOfColumns,
@@ -279,9 +279,10 @@ class BallRoller {
             }
         })
 
-
         var counter = 0
-        while(true) {
+        val paths = mutableListOf<CirclePath>()
+
+        while (true) {
             val usedPointsImage = Matrix(
                 kanjiImage.numberOfRows, kanjiImage.numberOfColumns,
                 { row, column ->
@@ -290,16 +291,17 @@ class BallRoller {
                     matrixWithCircleMasksApplied[row, column] == 1
                 })
 
-
             val (largestCirclePoint, largestCircle) = findLargestCirclePoint(usedPointsImage, circleMatrix)
 
             if (largestCircle.radius == 0) {
-                return matrixWithCircleMasksApplied
+//                return matrixWithCircleMasksApplied
+                return paths
             }
 
-            val path = extractSinglePath(largestCirclePoint, usedPointsImage, kanjiImage, largestCircle)
+            val circlePath = extractSinglePath(largestCirclePoint, usedPointsImage, kanjiImage, largestCircle)
+            paths.add(circlePath)
 
-            for (circlePathStep in path) {
+            for (circlePathStep in circlePath.path) {
                 applyCircleMask(
                     circlePathStep.circleCenter.row,
                     circlePathStep.circleCenter.column,
@@ -311,11 +313,27 @@ class BallRoller {
             }
 
             ++counter
-
-            println("Test30: ${path.map { it.circleCenter }.joinToString()}")
         }
 
-//        return matrixWithCircleMasksApplied
+    }
+
+    private fun drawPathsOnImage(kanjiImage: Matrix<Int>, paths: Iterable<CirclePath>, startCount: Int = 2) {
+        var counter = startCount
+
+        for (path in paths) {
+            for (circlePathStep in path.path) {
+                applyCircleMask(
+                    circlePathStep.circleCenter.row,
+                    circlePathStep.circleCenter.column,
+                    kanjiImage,
+                    circlePathStep.circleMaskInformation.circleMask,
+                    { row, column ->
+                        counter
+                    })
+            }
+            ++counter
+        }
+
     }
 
 
@@ -351,7 +369,7 @@ class BallRoller {
         usedPointsImage: Matrix<Boolean>,
         kanjiImage: Matrix<Boolean>,
         largestCircle: CircleMaskInformation
-    ): List<CirclePathStep> {
+    ): CirclePath {
         val path = mutableListOf<CirclePathStep>()
         var currentCircleCenter = largestCirclePoint
         var updatedCircle = moveCircle(largestCirclePoint, usedPointsImage, kanjiImage)
@@ -383,7 +401,7 @@ class BallRoller {
 
         }
 
-        return path
+        return CirclePath(path)
     }
 
 

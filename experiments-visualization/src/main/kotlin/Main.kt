@@ -141,62 +141,52 @@ private fun extractStrokes() {
 //        }
 //    }))
 
+    val paths = ballRoller.createPathFromCircle(kanjiImage)
+    val updatedImage = Matrix(kanjiImage.numberOfRows, kanjiImage.numberOfColumns, { row, column ->
+        if (kanjiImage[row, column]) {
+            1
+        } else {
+            0
+        }
+    })
 
-    val matrixToVisualize = Matrix<FlowDirection?>(kanjiImage.numberOfRows, kanjiImage.numberOfColumns) { _, _ ->
-        null
+    val numberOfColours = paths.size + 1
+    var counter = 0
+
+    for (path in paths) {
+        for (circlePathStep in path.path) {
+            applyCircleMask(
+                circlePathStep.circleCenter.row,
+                circlePathStep.circleCenter.column,
+                updatedImage,
+                circlePathStep.circleMaskInformation.circleMask,
+                { row, column ->
+                    counter + 2
+                })
+        }
+        ++counter
     }
 
-//    val strokes = ballRoller.extractStrokes2(kanjiImage)
-//    for (stroke in strokes) {
-//        stroke.path.forEach { point ->
-//            when (point) {
-//                // TODO Is this correct?
-//                is PathPoint.PathPointWithDirection -> {
-//                    matrixToVisualize[point.row, point.column] = point.direction
-//                }
-//                else -> {
-//                    matrixToVisualize[point.row, point.column] = null
-//                }
-//
-//            }
+//    val colourSet = mutableSetOf<Int>()
+//    updatedImage.forEach { value ->
+//        if(!colourSet.contains(value)) {
+//            colourSet.add(value)
 //        }
 //    }
 
-//    ExperimentApplication.showColourRastersForStrokes(Collections.emptyList(),
-//        128,
-//        Collections.singletonList(strokes))
-
-
-//    val updatedImage = ballRoller.extractStrokes2(kanjiImage)
-//    val updatedImage = ballRoller.addCircle(kanjiImage)
-    val updatedImage = ballRoller.createPathFromCircle(kanjiImage)
-
-
-    val colourSet = mutableSetOf<Int>()
-    updatedImage.forEach { value ->
-        if(!colourSet.contains(value)) {
-            colourSet.add(value)
-        }
-    }
-
     ExperimentApplication.showMatrixVisualization(MatrixVisualization(updatedImage, { value ->
-        if(value == 0) {
+        if (value == 0) {
             PointColor(0.0, 0.0, 0.0)
-        }
-        else {
-            colourFunction(value, colourSet.size).let { colourArray ->
+        } else {
+            colourFunction(value, numberOfColours).let { colourArray ->
                 PointColor(
                     colourArray[0].div(255.0),
                     colourArray[1].div(255.0),
-                    colourArray[2].div(255.0))
+                    colourArray[2].div(255.0)
+                )
             }
         }
 
-//        when (value) {
-//            1 -> PointColor(1.0, 1.0, 1.0)
-//            2 -> PointColor(1.0, 0.0, 0.0)
-//            else -> PointColor(0.0, 0.0, 0.0)
-//        }
     }
     ))
 }
