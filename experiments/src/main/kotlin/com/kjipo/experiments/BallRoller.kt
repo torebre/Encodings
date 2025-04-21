@@ -1,5 +1,6 @@
 package com.kjipo.experiments
 
+import com.kjipo.representation.LineUtilities.createLine
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.representation.raster.getNeighbourhood
@@ -317,7 +318,7 @@ class BallRoller {
 
     }
 
-    private fun drawPathsOnImage(kanjiImage: Matrix<Int>, paths: Iterable<CirclePath>, startCount: Int = 2) {
+    private fun drawCirclePathsOnImage(kanjiImage: Matrix<Int>, paths: Iterable<CirclePath>, startCount: Int = 2) {
         var counter = startCount
 
         for (path in paths) {
@@ -330,6 +331,31 @@ class BallRoller {
                     { row, column ->
                         counter
                     })
+            }
+            ++counter
+        }
+
+    }
+
+
+    fun drawPathsOnImage(kanjiImage: Matrix<Int>, paths: Iterable<CirclePath>, startCount: Int = 2) {
+        var counter = startCount
+
+        for (path in paths) {
+            var previousStep: CirclePathStep? = null
+
+            for (step in path.path) {
+                previousStep?.let { it ->
+                    val pointsInLine = createLine(
+                        it.circleCenter.column, it.circleCenter.row,
+                        step.circleCenter.column, step.circleCenter.row
+                    )
+
+                    for (point in pointsInLine) {
+                        kanjiImage[point.second, point.first] = counter
+                    }
+                }
+                previousStep = step
             }
             ++counter
         }

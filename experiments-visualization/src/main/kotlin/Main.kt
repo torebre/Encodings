@@ -114,33 +114,6 @@ private fun extractStrokes() {
             )
         }.first()
 
-//    val backgroundColor = PointColor(0.0, 0.0, 0.0)
-//    val strokeColor = PointColor(1.0, 1.0, 1.0)
-//    val kanjiColor = PointColor(0.0, 0.0, 1.0)
-//
-//    val matrixToVisualize = Matrix(kanjiImage.numberOfRows, kanjiImage.numberOfColumns) { row, column ->
-//        if (kanjiImage[row, column]) {
-//            1
-//        } else {
-//            0
-//        }
-//    }
-//
-//    val strokes = ballRoller.extractStrokes(kanjiImage)
-//    for (stroke in strokes) {
-//        stroke.path.forEach { point ->
-//            matrixToVisualize[point.first, point.second] = 2
-//        }
-//    }
-//
-//    ExperimentApplication.showMatrixVisualization(MatrixVisualization(matrixToVisualize, { value ->
-//        when (value) {
-//            1 -> strokeColor
-//            2 -> kanjiColor
-//            else -> backgroundColor
-//        }
-//    }))
-
     val paths = ballRoller.createPathFromCircle(kanjiImage)
     val updatedImage = Matrix(kanjiImage.numberOfRows, kanjiImage.numberOfColumns, { row, column ->
         if (kanjiImage[row, column]) {
@@ -151,42 +124,47 @@ private fun extractStrokes() {
     })
 
     val numberOfColours = paths.size + 1
-    var counter = 0
 
-    for (path in paths) {
-        for (circlePathStep in path.path) {
-            applyCircleMask(
-                circlePathStep.circleCenter.row,
-                circlePathStep.circleCenter.column,
-                updatedImage,
-                circlePathStep.circleMaskInformation.circleMask,
-                { row, column ->
-                    counter + 2
-                })
-        }
-        ++counter
-    }
-
-//    val colourSet = mutableSetOf<Int>()
-//    updatedImage.forEach { value ->
-//        if(!colourSet.contains(value)) {
-//            colourSet.add(value)
+//    var counter = 0
+//    for (path in paths) {
+//        for (circlePathStep in path.path) {
+//            applyCircleMask(
+//                circlePathStep.circleCenter.row,
+//                circlePathStep.circleCenter.column,
+//                updatedImage,
+//                circlePathStep.circleMaskInformation.circleMask,
+//                { row, column ->
+//                    counter + 2
+//                })
 //        }
+//        ++counter
 //    }
 
+    ballRoller.drawPathsOnImage(updatedImage, paths)
+
+//    ExperimentApplication.showMatrixVisualization(MatrixVisualization(updatedImage, { value ->
+//        if (value == 0) {
+//            PointColor(0.0, 0.0, 0.0)
+//        } else {
+//            colourFunction(value, numberOfColours).let { colourArray ->
+//                PointColor(
+//                    colourArray[0].div(255.0),
+//                    colourArray[1].div(255.0),
+//                    colourArray[2].div(255.0)
+//                )
+//            }
+//        }
+//
+//    }
+//    ))
+
+    val colors = generateEvenlyDistributedColors2(paths.size + 2)
     ExperimentApplication.showMatrixVisualization(MatrixVisualization(updatedImage, { value ->
         if (value == 0) {
             PointColor(0.0, 0.0, 0.0)
         } else {
-            colourFunction(value, numberOfColours).let { colourArray ->
-                PointColor(
-                    colourArray[0].div(255.0),
-                    colourArray[1].div(255.0),
-                    colourArray[2].div(255.0)
-                )
-            }
+            colors[value]
         }
-
     }
     ))
 }

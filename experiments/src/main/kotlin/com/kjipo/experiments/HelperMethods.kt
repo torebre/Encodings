@@ -78,6 +78,104 @@ internal fun loadImagesFromEtl9G(maxNumberOfFilesToRead: Int): List<KanjiFromEtl
     )
 }
 
+
+/**
+ * This method is AI-generated
+ *
+ */
+fun generateEvenlyDistributedColors(count: Int): List<PointColor> {
+    if (count <= 0) {
+        return emptyList()
+    }
+
+    // Use golden ratio to help spread the hues evenly
+    val goldenRatio = 0.618033988749895
+
+    return List(count) { i ->
+        // Use golden ratio to generate hue
+        val hue = (i * goldenRatio) % 1.0
+        // Keep saturation and value at maximum for most distinct colors
+        val saturation = 0.95
+        val value = 0.95
+
+        // Convert HSV to RGB
+        val h = hue * 6.0
+        val c = value * saturation
+        val x = c * (1 - Math.abs((h % 2) - 1))
+        val m = value - c
+
+        val (r, g, b) = when (h.toInt()) {
+            0 -> Triple(c, x, 0.0)
+            1 -> Triple(x, c, 0.0)
+            2 -> Triple(0.0, c, x)
+            3 -> Triple(0.0, x, c)
+            4 -> Triple(x, 0.0, c)
+            5 -> Triple(c, 0.0, x)
+            else -> Triple(c, x, 0.0)
+        }
+
+        PointColor(
+            (r + m).coerceIn(0.0, 1.0),
+            (g + m).coerceIn(0.0, 1.0),
+            (b + m).coerceIn(0.0, 1.0)
+        )
+    }
+}
+
+
+fun generateEvenlyDistributedColors2(count: Int): List<PointColor> {
+    if (count <= 0) {
+        return emptyList()
+    }
+
+    val colorStep = 360.0 / count
+    return List(count) { i ->
+        val hue = i * colorStep
+
+        val saturation = 0.95
+        val value = 0.95
+
+        hsvToRgb(hue, saturation, value)
+    }
+}
+
+/**
+ * This method is AI-generated
+ *
+ * Converts HSV color values to RGB color.
+ * @param hue Hue value in range [0, 360] degrees
+ * @param saturation Saturation value in range [0, 1]
+ * @param value Value/Brightness in range [0, 1]
+ * @return PointColor containing RGB values in range [0, 1]
+ */
+fun hsvToRgb(hue: Double, saturation: Double, value: Double): PointColor {
+    // Ensure hue is in [0, 360] range
+    val h = (hue % 360 + 360) % 360
+    // Clamp saturation and value to [0, 1]
+    val s = saturation.coerceIn(0.0, 1.0)
+    val v = value.coerceIn(0.0, 1.0)
+
+    val c = v * s // Chroma
+    val x = c * (1 - Math.abs((h / 60.0) % 2 - 1))
+    val m = v - c
+
+    val (r1, g1, b1) = when {
+        h < 60 -> Triple(c, x, 0.0)
+        h < 120 -> Triple(x, c, 0.0)
+        h < 180 -> Triple(0.0, c, x)
+        h < 240 -> Triple(0.0, x, c)
+        h < 300 -> Triple(x, 0.0, c)
+        else -> Triple(c, 0.0, x)
+    }
+
+    return PointColor(
+        (r1 + m).coerceIn(0.0, 1.0),
+        (g1 + m).coerceIn(0.0, 1.0),
+        (b1 + m).coerceIn(0.0, 1.0)
+    )
+}
+
+
 fun transformToBooleanMatrix(
     imageMatrix: Matrix<Int>,
     thresholdFunction: (rgbValue: Int) -> Boolean = { value -> handlePixelValue(value) }
