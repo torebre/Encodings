@@ -169,10 +169,19 @@ private fun extractStrokes() {
     ))
 }
 
+private fun runAnimationApplication() {
+
+    AnimationApplication.startAnimation()
+
+
+}
+
 
 fun main() {
     // showEndpointResults()
     // showMatrixVisualizations()
 //     findMidpoints()
-    extractStrokes()
+//    extractStrokes()
+
+    runAnimationApplication()
 }
