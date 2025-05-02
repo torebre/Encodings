@@ -8,6 +8,7 @@ import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.representation.raster.makeSquare
 import com.kjipo.representation.raster.makeThin
 import com.kjipo.representation.raster.scaleMatrix
+import javafx.scene.paint.Color
 import java.nio.file.Path
 import java.util.*
 
@@ -158,21 +159,43 @@ private fun extractStrokes() {
 //    }
 //    ))
 
+//    val colors = generateEvenlyDistributedColors2(paths.size + 2)
+//    ExperimentApplication.showMatrixVisualization(MatrixVisualization(updatedImage, { value ->
+//        if (value == 0) {
+//            PointColor(0.0, 0.0, 0.0)
+//        } else {
+//            colors[value]
+//        }
+//    }
+//    ))
+
+
     val colors = generateEvenlyDistributedColors2(paths.size + 2)
-    ExperimentApplication.showMatrixVisualization(MatrixVisualization(updatedImage, { value ->
-        if (value == 0) {
-            PointColor(0.0, 0.0, 0.0)
+    val colorMatrices = ballRoller.matricesToDisplay.map { matrix ->
+        Matrix(matrix.numberOfRows, matrix.numberOfColumns, { row, column ->
+            val pointColor = colors[matrix[row, column]]
+            Color.color(pointColor.red, pointColor.green, pointColor.blue)
+        })
+    }.toList()
+
+
+    AnimationApplication.startAnimation(colorMatrices.first(), { matrixToDisplay, counter ->
+        if (counter >= colorMatrices.size) {
+            false
         } else {
-            colors[value]
+            for (row in 0 until matrixToDisplay.numberOfRows) {
+                for (column in 0 until matrixToDisplay.numberOfColumns) {
+                    matrixToDisplay[row, column] = colorMatrices[counter][row, column]
+                }
+            }
+            true
         }
-    }
-    ))
+    })
+
 }
 
 private fun runAnimationApplication() {
-
     AnimationApplication.startAnimation()
-
 
 }
 
@@ -181,7 +204,7 @@ fun main() {
     // showEndpointResults()
     // showMatrixVisualizations()
 //     findMidpoints()
-//    extractStrokes()
+    extractStrokes()
 
-    runAnimationApplication()
+//    runAnimationApplication()
 }

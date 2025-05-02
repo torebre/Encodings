@@ -11,6 +11,8 @@ import kotlin.math.absoluteValue
 
 class BallRoller {
 
+    val matricesToDisplay = mutableListOf<Matrix<Int>>()
+
     private val circleMaskCache: Map<Int, CircleMaskInformation> = mutableMapOf()
 
 
@@ -258,6 +260,14 @@ class BallRoller {
 
 
     fun createPathFromCircle(kanjiImage: Matrix<Boolean>): MutableList<CirclePath> {
+        matricesToDisplay.clear()
+        setInitialDisplayMatrix(
+            Matrix(
+                kanjiImage.numberOfRows,
+                kanjiImage.numberOfColumns,
+                { row, column -> if (kanjiImage[row, column]) 1 else 0 })
+        )
+
         val circleMatrix: Matrix<CircleMaskInformation?> = Matrix(
             kanjiImage.numberOfRows,
             kanjiImage.numberOfColumns,
@@ -295,11 +305,11 @@ class BallRoller {
             val (largestCirclePoint, largestCircle) = findLargestCirclePoint(usedPointsImage, circleMatrix)
 
             if (largestCircle.radius == 0) {
-//                return matrixWithCircleMasksApplied
                 return paths
             }
 
-            val circlePath = extractSinglePath(largestCirclePoint, usedPointsImage, kanjiImage, largestCircle)
+            val circlePath =
+                extractSinglePath(largestCirclePoint, usedPointsImage, kanjiImage, largestCircle, counter + 2)
             paths.add(circlePath)
 
             for (circlePathStep in circlePath.path) {
@@ -394,13 +404,17 @@ class BallRoller {
         largestCirclePoint: Point,
         usedPointsImage: Matrix<Boolean>,
         kanjiImage: Matrix<Boolean>,
-        largestCircle: CircleMaskInformation
+        largestCircle: CircleMaskInformation,
+        pathId: Int
     ): CirclePath {
         val path = mutableListOf<CirclePathStep>()
         var currentCircleCenter = largestCirclePoint
         var updatedCircle = moveCircle(largestCirclePoint, usedPointsImage, kanjiImage)
 
-        path.add(CirclePathStep(largestCirclePoint, largestCircle))
+        CirclePathStep(largestCirclePoint, largestCircle).let {
+            path.add(it)
+            addPathStepToDisplayMatrices(it, pathId)
+        }
 
         while (updatedCircle !== null) {
             applyCircleMask(
@@ -410,19 +424,23 @@ class BallRoller {
                 updatedCircle.second.circleMask,
                 { _, _ -> false })
             currentCircleCenter = updatedCircle.first
-            path.add(CirclePathStep(currentCircleCenter, updatedCircle.second))
+
+            val circlePathStep = CirclePathStep(currentCircleCenter, updatedCircle.second)
+            path.add(circlePathStep)
+            addPathStepToDisplayMatrices(circlePathStep, pathId)
+
+            val pointsToApplyCirclesTo = determinePointsToApplyCircleTo2(
+                currentCircleCenter,
+                usedPointsImage,
+                updatedCircle.second
+            )
+
+            val circlesAppliedAtPoints = getCirclesAppliedAtPoints(pointsToApplyCirclesTo, kanjiImage)
 
             updatedCircle = moveCircle(
                 largestCirclePoint,
                 usedPointsImage,
-                getCirclesAppliedAtPoints(
-                    determinePointsToApplyCircleTo2(
-                        currentCircleCenter,
-                        usedPointsImage,
-                        updatedCircle.second
-                    ),
-                    kanjiImage
-                )
+                circlesAppliedAtPoints
             )
 
         }
@@ -837,6 +855,18 @@ class BallRoller {
         }
 
         return CircleMaskInformation(radius, circleMask, sizeOfMask)
+    }
+
+    private fun setInitialDisplayMatrix(initalDisplayMatrix: Matrix<Int>) {
+        matricesToDisplay.add(initalDisplayMatrix)
+    }
+
+    private fun addPathStepToDisplayMatrices(circlePathStep: CirclePathStep, pathNumber: Int) {
+        val matrix = matricesToDisplay.last()
+        val nextMatrixStep = Matrix.copy(matrix)
+
+        nextMatrixStep[circlePathStep.circleCenter.row, circlePathStep.circleCenter.column] = pathNumber
+        matricesToDisplay.add(nextMatrixStep)
     }
 
 

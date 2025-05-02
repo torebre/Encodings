@@ -84,11 +84,12 @@ class AnimationApplication : Application() {
     companion object {
         var instance: AnimationApplication? = null
 
-
+        /**
+         * Used for testing
+         */
         fun startAnimation() {
             val matrix = Matrix(10, 10) { _, _ -> Color.BLACK }
             val updateFunction = { matrix: Matrix<Color>, counter: Int ->
-
                 if (counter > matrix.numberOfRows * matrix.numberOfColumns) {
                     false
                 } else {
@@ -102,7 +103,9 @@ class AnimationApplication : Application() {
                     true
                 }
             }
+        }
 
+        fun startAnimation(matrix: Matrix<Color>, updateFunction: (Matrix<Color>, Int) -> Boolean) {
             val startThread = Thread {
                 launch(AnimationApplication::class.java)
             }
