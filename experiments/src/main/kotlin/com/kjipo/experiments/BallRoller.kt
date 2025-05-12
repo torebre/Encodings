@@ -416,29 +416,35 @@ class BallRoller {
             addPathStepToDisplayMatrices(it, pathId)
         }
 
-        while (updatedCircle !== null) {
-            applyCircleMask(
-                currentCircleCenter.row,
-                currentCircleCenter.column,
-                usedPointsImage,
-                updatedCircle.second.circleMask,
-                { _, _ -> false })
-            currentCircleCenter = updatedCircle.first
+        while (updatedCircle.isNotEmpty()) {
+            val pointsToApplyCirclesTo = mutableListOf<Point>()
 
-            val circlePathStep = CirclePathStep(currentCircleCenter, updatedCircle.second)
-            path.add(circlePathStep)
-            addPathStepToDisplayMatrices(circlePathStep, pathId)
+           for(step in updatedCircle) {
+               applyCircleMask(
+                   step.first.row,
+                   step.first.column,
+                   usedPointsImage,
+                   step.second.circleMask,
+                   { _, _ -> false })
+           }
 
-            val pointsToApplyCirclesTo = determinePointsToApplyCircleTo2(
-                currentCircleCenter,
-                usedPointsImage,
-                updatedCircle.second
-            )
+            for(step in updatedCircle) {
+                val circlePathStep = CirclePathStep(step.first, step.second)
+                path.add(circlePathStep)
+                addPathStepToDisplayMatrices(circlePathStep, pathId)
+
+                pointsToApplyCirclesTo.addAll(
+                    determinePointsToApplyCircleTo2(
+                        step.first,
+                        usedPointsImage,
+                        step.second
+                    )
+                )
+            }
 
             val circlesAppliedAtPoints = getCirclesAppliedAtPoints(pointsToApplyCirclesTo, kanjiImage)
 
             updatedCircle = moveCircle(
-                largestCirclePoint,
                 usedPointsImage,
                 circlesAppliedAtPoints
             )
@@ -480,31 +486,73 @@ class BallRoller {
         return circleMask
     }
 
-    private fun moveCircle(
-        circleCenter: Point,
-        usedPointsImage: Matrix<Boolean>,
-        orignalKanjiImage: Matrix<Boolean>
-    ): Pair<Point, CircleMaskInformation>? {
-        return moveCircle(
-            circleCenter,
-            usedPointsImage,
-            getCirclesAppliedAtPoints(
-                determinePointsToApplyCircleTo(circleCenter, orignalKanjiImage),
-                orignalKanjiImage
-            )
+//    private fun moveCircle(
+//        circleCenter: Point,
+//        usedPointsImage: Matrix<Boolean>,
+//        orignalKanjiImage: Matrix<Boolean>
+//    ): Pair<Point, CircleMaskInformation>? {
+//        return moveCircle(
+//            circleCenter,
+//            usedPointsImage,
+//            getCirclesAppliedAtPoints(
+//                determinePointsToApplyCircleTo(circleCenter, orignalKanjiImage),
+//                orignalKanjiImage
+//            )
+//        )
+//    }
+
+//    private fun moveCircle(
+//        circleCenter: Point,
+//        usedPointsImage: Matrix<Boolean>,
+//        circlesAppliedAtPoints: Map<Point, CircleMaskInformation>
+//    ): Pair<Point, CircleMaskInformation>? {
+//        val matrix = Matrix(0, 0, arrayOf(arrayOf(false)))
+//        var pathEndPoint = circleCenter
+//        var selectedCircleMaskInformation = CircleMaskInformation(0, matrix, 0)
+//
+//        var maxPointsCovered = 0
+//        for (circlePoint in circlesAppliedAtPoints) {
+//            val pointsCovered = determinePointsCovered(
+//                circlePoint.key.row,
+//                circlePoint.key.column,
+//                usedPointsImage,
+//                circlePoint.value.circleMask
+//            )
+//
+//            if (pointsCovered > maxPointsCovered) {
+//                maxPointsCovered = pointsCovered
+//                pathEndPoint = circlePoint.key
+//                selectedCircleMaskInformation = circlePoint.value
+//            }
+//        }
+//
+//        if (maxPointsCovered == 0) {
+//            return null
+//        }
+//
+//        return Pair(pathEndPoint, selectedCircleMaskInformation)
+//    }
+
+private fun moveCircle(
+    circleCenter: Point,
+    usedPointsImage: Matrix<Boolean>,
+    orignalKanjiImage: Matrix<Boolean>
+): List<Pair<Point, CircleMaskInformation>> {
+    return moveCircle(
+        usedPointsImage,
+        getCirclesAppliedAtPoints(
+            determinePointsToApplyCircleTo(circleCenter, orignalKanjiImage),
+            orignalKanjiImage
         )
-    }
+    )
+}
 
     private fun moveCircle(
-        circleCenter: Point,
         usedPointsImage: Matrix<Boolean>,
         circlesAppliedAtPoints: Map<Point, CircleMaskInformation>
-    ): Pair<Point, CircleMaskInformation>? {
-        val matrix = Matrix(0, 0, arrayOf(arrayOf(false)))
-        var pathEndPoint = circleCenter
-        var selectedCircleMaskInformation = CircleMaskInformation(0, matrix, 0)
+    ): List<Pair<Point, CircleMaskInformation>> {
+        val steps = mutableListOf<Pair<Point, CircleMaskInformation>>()
 
-        var maxPointsCovered = 0
         for (circlePoint in circlesAppliedAtPoints) {
             val pointsCovered = determinePointsCovered(
                 circlePoint.key.row,
@@ -513,18 +561,23 @@ class BallRoller {
                 circlePoint.value.circleMask
             )
 
-            if (pointsCovered > maxPointsCovered) {
-                maxPointsCovered = pointsCovered
-                pathEndPoint = circlePoint.key
-                selectedCircleMaskInformation = circlePoint.value
+            if(pointsCovered > 0) {
+                steps.add(Pair(circlePoint.key, circlePoint.value))
             }
+
+//            if (pointsCovered > maxPointsCovered) {
+//                maxPointsCovered = pointsCovered
+//                pathEndPoint = circlePoint.key
+//                selectedCircleMaskInformation = circlePoint.value
+//            }
         }
 
-        if (maxPointsCovered == 0) {
-            return null
-        }
+//        if (maxPointsCovered == 0) {
+//            return null
+//        }
 
-        return Pair(pathEndPoint, selectedCircleMaskInformation)
+        return steps
+
     }
 
     private fun determinePointsToApplyCircleTo(
