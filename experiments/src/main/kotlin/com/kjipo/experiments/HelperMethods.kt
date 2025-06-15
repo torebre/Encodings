@@ -122,6 +122,26 @@ fun generateEvenlyDistributedColors(count: Int): List<PointColor> {
     }
 }
 
+fun getNumberOfDistinctValues(imageMatrix: Matrix<Int>): Int {
+    val seenValues = mutableSetOf<Int>()
+    imageMatrix.forEach { value ->
+        if (!seenValues.contains(value)) {
+            seenValues.add(value)
+        }
+    }
+    return seenValues.size
+}
+
+fun getMaxValue(imageMatrix: Matrix<Int>): Int {
+    var maxValue = 0
+
+    imageMatrix.forEach { value ->
+        if (value > maxValue) {
+            maxValue = value
+        }
+    }
+    return maxValue
+}
 
 fun generateEvenlyDistributedColors2(count: Int): List<PointColor> {
     if (count <= 0) {

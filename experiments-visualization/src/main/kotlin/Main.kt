@@ -1,16 +1,12 @@
 package com.kjipo
 
-import com.kjipo.ExperimentApplication.Companion.directionDrawFunction
 import com.kjipo.experiments.*
 import com.kjipo.readetl.EtlDataReader.extractEtlImagesForUnicodeToKanjiData
 import com.kjipo.representation.Matrix
-import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.representation.raster.makeSquare
 import com.kjipo.representation.raster.makeThin
 import com.kjipo.representation.raster.scaleMatrix
-import javafx.scene.paint.Color
 import java.nio.file.Path
-import java.util.*
 
 
 private fun showEndpointResults() {
@@ -193,6 +189,41 @@ private fun extractStrokes() {
 
 }
 
+
+private fun extractStrokes2() {
+    val ballRoller = BallRoller()
+
+//    val kanjiImage = extractEtlImagesForUnicodeToKanjiData(32769, 5).take(1)
+    val kanjiImage = extractEtlImagesForUnicodeToKanjiData(34152, 5).take(1)
+        .map {
+            transposeMatrix(
+                makeSquare(
+                    scaleMatrix(
+                        transformToBooleanMatrix(
+                            it.kanjiData,
+                            ::simpleThreshold
+                        ), 128, 128
+                    )
+                )
+            )
+        }.first()
+
+    val paths = ballRoller.createPathFromCircle(kanjiImage)
+    val extractPathsFromAreas = ExtractPathsFromAreas(paths, kanjiImage)
+    val pathImage = extractPathsFromAreas.createPathImage()
+
+    val colors = generateEvenlyDistributedColors2(getMaxValue(pathImage) + 1)
+    ExperimentApplication.showMatrixVisualization(MatrixVisualization(pathImage, { value ->
+        if (value == 0) {
+            PointColor(0.0, 0.0, 0.0)
+        } else {
+            colors[value]
+        }
+    }
+    ))
+}
+
+
 private fun runAnimationApplication() {
     AnimationApplication.startAnimation()
 
@@ -203,7 +234,8 @@ fun main() {
     // showEndpointResults()
     // showMatrixVisualizations()
 //     findMidpoints()
-    extractStrokes()
+//    extractStrokes()
+    extractStrokes2()
 
 //    runAnimationApplication()
 }
