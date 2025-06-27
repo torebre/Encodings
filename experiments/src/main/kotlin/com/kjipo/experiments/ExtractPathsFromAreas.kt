@@ -2,6 +2,8 @@ package com.kjipo.experiments
 
 import com.kjipo.representation.LineUtilities.createLine
 import com.kjipo.representation.Matrix
+import com.kjipo.representation.raster.getNeighbourhood
+import com.kjipo.segmentation.getOffset
 import representation.identifyRegions
 import kotlin.Boolean
 
@@ -58,6 +60,7 @@ class ExtractPathsFromAreas(
         return distanceMatrix
     }
 
+
     fun createPathImage(): Matrix<Int> {
         val distanceMatrix = getDistanceMatrix()
 
@@ -103,6 +106,165 @@ class ExtractPathsFromAreas(
         }
 
         return pathMatrix
+    }
+
+
+    fun getPathSegments(): List<LineSegment> {
+        val distanceMatrix = getDistanceMatrix()
+        val lineSegments = mutableListOf<LineSegment>()
+        var counter = 0
+
+        for (extract in areaExtracts) {
+            var counter2 = 0
+            var minDistance = Int.MAX_VALUE
+            var minDistanceIndex = counter
+
+
+            for (extract2 in areaExtracts) {
+                if (counter == counter2) {
+                    ++counter2
+                    continue
+                }
+                if (distanceMatrix[counter, counter2] < minDistance) {
+                    minDistance = distanceMatrix[counter, counter2]
+                    minDistanceIndex = counter2
+                }
+                ++counter2
+            }
+
+            val straightLineLength = createLine(
+                extract.center.row, extract.center.column,
+                areaExtracts[minDistanceIndex].center.row, areaExtracts[minDistanceIndex].center.column
+            )
+
+            lineSegments.add(LineSegment(counter, straightLineLength))
+            ++counter
+        }
+
+        return lineSegments
+    }
+
+    fun joinSegments(): Matrix<Int> {
+        val pathSegments = getPathSegments()
+
+        val pathMatrix = Matrix(imageMatrix.numberOfRows, imageMatrix.numberOfColumns, { row, column ->
+            if (imageMatrix[row, column]) {
+                1
+            } else {
+                0
+            }
+        })
+
+        for (segment in pathSegments) {
+            for (pair in segment.straightLineLength) {
+                pathMatrix[pair.first, pair.second] = segment.id
+            }
+        }
+
+        return joinSegments(pathSegments, imageMatrix, regionMatrix, pathMatrix)
+    }
+
+
+    fun joinSegments(
+        lineSegments: List<LineSegment>,
+        imageMatrix: Matrix<Boolean>,
+        regionMatrix: Matrix<Int>,
+        lineSegmentMatrix: Matrix<Int>
+    ): Matrix<Int> {
+        for (segment in lineSegments) {
+            // TODO Only look at lines longer than 6 pixels to cut down on number of lines to examine while developing
+            if (segment.straightLineLength.size < 6) {
+                continue
+            }
+
+            val closestNeighbours = findClosestNeighboursForSegment(segment, imageMatrix, lineSegmentMatrix)
+            examineSegments(segment, lineSegments.filter { closestNeighbours.contains(it.id) })
+
+            // TODO Only look at one segment while developing
+            val testMatrix = Matrix(imageMatrix.numberOfRows, imageMatrix.numberOfColumns, { row, column ->
+                if (imageMatrix[row, column]) {
+                    1
+                } else {
+                    0
+                }
+            })
+            for (segment in lineSegments) {
+                for (point in segment.straightLineLength) {
+                    testMatrix[point.first, point.second] = 2
+                }
+            }
+            lineSegments.filter { closestNeighbours.contains(it.id) }
+                .forEach { segment ->
+                    for (point in segment.straightLineLength) {
+                        testMatrix[point.first, point.second] = 4
+                    }
+                }
+            for (point in segment.straightLineLength) {
+                testMatrix[point.first, point.second] = 3
+            }
+            return testMatrix
+
+        }
+
+        return Matrix(0, 0, { row, column -> 0 })
+    }
+
+
+    private fun examineSegments(lineSegment: LineSegment, closestNeighbours: List<LineSegment>) {
+
+        // TODO
+        println(lineSegment)
+
+
+    }
+
+
+    private fun findClosestNeighboursForSegment(
+        segment: LineSegment,
+        imageMatrix: Matrix<Boolean>,
+        lineSegmentMatrix: Matrix<Int>
+    ): MutableSet<Int> {
+        val updatableLineSegmentMatrix = Matrix.copy(lineSegmentMatrix)
+        val closestNeighbours = mutableSetOf<Int>()
+        val pointsToExamine = mutableListOf<Pair<Int, Int>>()
+            .also { it.addAll(segment.straightLineLength) }
+
+        while (pointsToExamine.isNotEmpty()) {
+            val point = pointsToExamine.removeFirst()
+            val neighbourhood = getNeighbourhood(imageMatrix, point)
+
+            neighbourhood.forEachIndexed { innerRow, innerColumn, value ->
+                if (value) {
+                    val rowOffset = getOffset(innerRow)
+                    val columnOffset = getOffset(innerColumn)
+
+                    val neighbourRow = point.first + rowOffset
+                    val neighbourColumn = point.second + columnOffset
+                    val neighbourValue = lineSegmentMatrix[neighbourRow, neighbourColumn]
+
+                    if (updatableLineSegmentMatrix[neighbourRow, neighbourColumn] != segment.id
+                        && !closestNeighbours.contains(neighbourColumn)
+                    ) {
+                        closestNeighbours.add(neighbourValue)
+
+                        if (closestNeighbours.size == 3) {
+                            return@forEachIndexed
+                        }
+
+                        updatableLineSegmentMatrix[neighbourRow, neighbourColumn] = segment.id
+                        pointsToExamine.add(Pair(neighbourRow, neighbourColumn))
+                    }
+
+                }
+            }
+
+            if (closestNeighbours.size == 3) {
+                break
+            }
+
+        }
+
+        return closestNeighbours
     }
 
 

@@ -224,6 +224,43 @@ private fun extractStrokes2() {
 }
 
 
+private fun extractStrokes3() {
+    val ballRoller = BallRoller()
+
+//    val kanjiImage = extractEtlImagesForUnicodeToKanjiData(32769, 5).take(1)
+    val kanjiImage = extractEtlImagesForUnicodeToKanjiData(34152, 5).take(1)
+        .map {
+            transposeMatrix(
+                makeSquare(
+                    scaleMatrix(
+                        transformToBooleanMatrix(
+                            it.kanjiData,
+                            ::simpleThreshold
+                        ), 128, 128
+                    )
+                )
+            )
+        }.first()
+
+    val paths = ballRoller.createPathFromCircle(kanjiImage)
+    val extractPathsFromAreas = ExtractPathsFromAreas(paths, kanjiImage)
+//    val pathImage = extractPathsFromAreas.createPathImage()
+
+    val testMatrix = extractPathsFromAreas.joinSegments()
+
+    val colors = generateEvenlyDistributedColors2(getNumberOfDistinctValues(testMatrix) + 1)
+    ExperimentApplication.showMatrixVisualization(MatrixVisualization(testMatrix, { value ->
+        if (value == 0) {
+            PointColor(0.0, 0.0, 0.0)
+        } else {
+            colors[value]
+        }
+    }
+    ))
+
+}
+
+
 private fun runAnimationApplication() {
     AnimationApplication.startAnimation()
 
@@ -235,7 +272,7 @@ fun main() {
     // showMatrixVisualizations()
 //     findMidpoints()
 //    extractStrokes()
-    extractStrokes2()
+    extractStrokes3()
 
 //    runAnimationApplication()
 }
