@@ -14,6 +14,9 @@ class ExtractPathsFromAreas(
     private val regionMatrix: Matrix<Int>
 ) {
 
+    private val startSegmentId = 10
+
+
     constructor(circlePaths: Iterable<CirclePath>, imageMatrix: Matrix<Boolean>) : this(
         createAreaExtracts(circlePaths),
         imageMatrix,
@@ -137,7 +140,7 @@ class ExtractPathsFromAreas(
                 areaExtracts[minDistanceIndex].center.row, areaExtracts[minDistanceIndex].center.column
             )
 
-            lineSegments.add(LineSegment(counter, straightLineLength))
+            lineSegments.add(LineSegment(startSegmentId + counter, straightLineLength))
             ++counter
         }
 
@@ -224,13 +227,15 @@ class ExtractPathsFromAreas(
         imageMatrix: Matrix<Boolean>,
         lineSegmentMatrix: Matrix<Int>
     ): MutableSet<Int> {
-        val updatableLineSegmentMatrix = Matrix.copy(lineSegmentMatrix)
+//        val updatableLineSegmentMatrix = Matrix.copy(lineSegmentMatrix)
+        val processedPoints = Matrix(imageMatrix.numberOfRows, imageMatrix.numberOfColumns, { _, _ -> false })
         val closestNeighbours = mutableSetOf<Int>()
         val pointsToExamine = mutableListOf<Pair<Int, Int>>()
             .also { it.addAll(segment.straightLineLength) }
 
         while (pointsToExamine.isNotEmpty()) {
             val point = pointsToExamine.removeFirst()
+            processedPoints[point.first, point.second] = true
             val neighbourhood = getNeighbourhood(imageMatrix, point)
 
             neighbourhood.forEachIndexed { innerRow, innerColumn, value ->
@@ -240,26 +245,26 @@ class ExtractPathsFromAreas(
 
                     val neighbourRow = point.first + rowOffset
                     val neighbourColumn = point.second + columnOffset
-                    val neighbourValue = lineSegmentMatrix[neighbourRow, neighbourColumn]
 
-                    if (updatableLineSegmentMatrix[neighbourRow, neighbourColumn] != segment.id
-                        && !closestNeighbours.contains(neighbourColumn)
-                    ) {
-                        closestNeighbours.add(neighbourValue)
+                    if(!processedPoints[neighbourRow, neighbourColumn]) {
+                        val neighbourValue = lineSegmentMatrix[neighbourRow, neighbourColumn]
 
-                        if (closestNeighbours.size == 3) {
-                            return@forEachIndexed
+                        if (lineSegmentMatrix[neighbourRow, neighbourColumn] != segment.id
+                            && !closestNeighbours.contains(neighbourValue)
+                        ) {
+                            closestNeighbours.add(neighbourValue)
+
+                            if (closestNeighbours.size == 3) {
+                                return closestNeighbours
+                            }
                         }
 
-                        updatableLineSegmentMatrix[neighbourRow, neighbourColumn] = segment.id
-                        pointsToExamine.add(Pair(neighbourRow, neighbourColumn))
+                        val currentPoint = Pair(neighbourRow, neighbourColumn)
+                        if(!pointsToExamine.contains(currentPoint)) {
+                            pointsToExamine.add(Pair(neighbourRow, neighbourColumn))
+                        }
                     }
-
                 }
-            }
-
-            if (closestNeighbours.size == 3) {
-                break
             }
 
         }
