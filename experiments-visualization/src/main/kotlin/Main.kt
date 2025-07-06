@@ -2,6 +2,8 @@ package com.kjipo
 
 import com.kjipo.experiments.*
 import com.kjipo.readetl.EtlDataReader.extractEtlImagesForUnicodeToKanjiData
+import com.kjipo.readetl.EtlDataSet
+import com.kjipo.readetl.KanjiFromEtlData
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.raster.makeSquare
 import com.kjipo.representation.raster.makeThin
@@ -224,23 +226,43 @@ private fun extractStrokes2() {
 }
 
 
+private fun getTestSet(): TestSet {
+    return TestSet(
+        KanjiSetIdentifier(EtlDataSet.ETL9G, 34152, "130543.png"),
+        listOf(
+            KanjiSetIdentifier(EtlDataSet.ETL9G, 34152, "546475.png"),
+            KanjiSetIdentifier(EtlDataSet.ETL9G, 26503, "384940.png"),
+            KanjiSetIdentifier(EtlDataSet.ETL9G, 33334, "284650.png")
+        )
+    )
+}
+
+private fun getKanjiImage(kanjiFromEtlData: KanjiFromEtlData): Matrix<Boolean> {
+    return transposeMatrix(
+        makeSquare(
+            scaleMatrix(
+                transformToBooleanMatrix(
+                    kanjiFromEtlData.kanjiData,
+                    ::simpleThreshold
+                ), 128, 128
+            )
+        )
+    )
+}
+
 private fun extractStrokes3() {
     val ballRoller = BallRoller()
 
 //    val kanjiImage = extractEtlImagesForUnicodeToKanjiData(32769, 5).take(1)
-    val kanjiImage = extractEtlImagesForUnicodeToKanjiData(34152, 5).take(1)
-        .map {
-            transposeMatrix(
-                makeSquare(
-                    scaleMatrix(
-                        transformToBooleanMatrix(
-                            it.kanjiData,
-                            ::simpleThreshold
-                        ), 128, 128
-                    )
-                )
-            )
-        }.first()
+
+    val datasetRoot = "/home/student/Downloads/etlcbd_datasets"
+//    val kanjiImageData = extractEtlImagesForUnicodeToKanjiData(34152, 5).take(1)
+
+    val testSet = getTestSet()
+//    val kanjiImageData = testSet.getImageDataForTarget(datasetRoot)
+    val kanjiImageData = testSet.getImageDataForTestImage(1, datasetRoot)
+
+    val kanjiImage = getKanjiImage(kanjiImageData)
 
     val paths = ballRoller.createPathFromCircle(kanjiImage)
     val extractPathsFromAreas = ExtractPathsFromAreas(paths, kanjiImage)

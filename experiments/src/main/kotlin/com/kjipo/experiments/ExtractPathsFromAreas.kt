@@ -215,9 +215,14 @@ class ExtractPathsFromAreas(
 
     private fun examineSegments(lineSegment: LineSegment, closestNeighbours: List<LineSegment>) {
 
+        println("Line segment: ${lineSegment.lineSummary()}. Incline: ${lineSegment.incline()}")
+
+        for (segment in closestNeighbours) {
+            println("Line segment: ${segment.lineSummary()}. Incline: ${segment.incline()}")
+        }
+
         // TODO
         println(lineSegment)
-
 
     }
 
