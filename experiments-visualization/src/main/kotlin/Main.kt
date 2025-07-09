@@ -9,6 +9,7 @@ import com.kjipo.representation.raster.makeSquare
 import com.kjipo.representation.raster.makeThin
 import com.kjipo.representation.raster.scaleMatrix
 import java.nio.file.Path
+import kotlin.text.get
 
 
 private fun showEndpointResults() {
@@ -251,7 +252,6 @@ private fun getKanjiImage(kanjiFromEtlData: KanjiFromEtlData): Matrix<Boolean> {
 }
 
 private fun extractStrokes3() {
-    val ballRoller = BallRoller()
 
 //    val kanjiImage = extractEtlImagesForUnicodeToKanjiData(32769, 5).take(1)
 
@@ -259,27 +259,42 @@ private fun extractStrokes3() {
 //    val kanjiImageData = extractEtlImagesForUnicodeToKanjiData(34152, 5).take(1)
 
     val testSet = getTestSet()
-//    val kanjiImageData = testSet.getImageDataForTarget(datasetRoot)
-    val kanjiImageData = testSet.getImageDataForTestImage(1, datasetRoot)
+    val kanjiImageDataTarget = testSet.getImageDataForTarget(datasetRoot)
+    val segmentLineMatrixPair = getSegments(kanjiImageDataTarget)
+    val matrixVisualizations = mutableListOf<MatrixVisualization<Int>>()
 
-    val kanjiImage = getKanjiImage(kanjiImageData)
+    matrixVisualizations.add(getMatrixVisualization(segmentLineMatrixPair.second))
 
-    val paths = ballRoller.createPathFromCircle(kanjiImage)
-    val extractPathsFromAreas = ExtractPathsFromAreas(paths, kanjiImage)
-//    val pathImage = extractPathsFromAreas.createPathImage()
+    for (i in 0 until testSet.getTestSetSize()) {
+        val kanjiImageData = testSet.getImageDataForTestImage(i, datasetRoot)
+        matrixVisualizations.add(getMatrixVisualization(getSegments(kanjiImageData).second))
+    }
 
-    val testMatrix = extractPathsFromAreas.joinSegments()
+    ExperimentApplication.showMatrixVisualization(matrixVisualizations)
+}
 
-    val colors = generateEvenlyDistributedColors2(getNumberOfDistinctValues(testMatrix) + 1)
-    ExperimentApplication.showMatrixVisualization(MatrixVisualization(testMatrix, { value ->
+private fun getMatrixVisualization(kanjimatrix: Matrix<Int>): MatrixVisualization<Int> {
+    val colors = generateEvenlyDistributedColors2(getNumberOfDistinctValues(kanjimatrix) + 1)
+
+    return MatrixVisualization(kanjimatrix, { value ->
         if (value == 0) {
             PointColor(0.0, 0.0, 0.0)
         } else {
             colors[value]
         }
     }
-    ))
+    )
+}
 
+private fun getSegments(kanjiImageData: KanjiFromEtlData): Pair<List<LineSegment>, Matrix<Int>> {
+    val kanjiImage = getKanjiImage(kanjiImageData)
+    val ballRoller = BallRoller()
+
+    val paths = ballRoller.createPathFromCircle(kanjiImage)
+    val extractPathsFromAreas = ExtractPathsFromAreas(paths, kanjiImage)
+//    val pathImage = extractPathsFromAreas.createPathImage()
+
+    return extractPathsFromAreas.joinSegments()
 }
 
 

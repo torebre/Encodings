@@ -10,6 +10,10 @@ class LineSegment(val id: Int, val straightLineLength: List<Pair<Int, Int>>) {
         return (lastPoint.second - firstPoint.second).toDouble() / (lastPoint.first - firstPoint.first)
     }
 
+    fun length(): Int {
+        return straightLineLength.size
+    }
+
     fun lineSummary(): String {
         val firstPoint = straightLineLength.first()
         val lastPoint = straightLineLength.last()

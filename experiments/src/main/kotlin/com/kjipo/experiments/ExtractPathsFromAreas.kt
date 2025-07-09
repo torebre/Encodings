@@ -147,7 +147,7 @@ class ExtractPathsFromAreas(
         return lineSegments
     }
 
-    fun joinSegments(): Matrix<Int> {
+    fun joinSegments(): Pair<List<LineSegment>, Matrix<Int>> {
         val pathSegments = getPathSegments()
 
         val pathMatrix = Matrix(imageMatrix.numberOfRows, imageMatrix.numberOfColumns, { row, column ->
@@ -173,29 +173,35 @@ class ExtractPathsFromAreas(
         imageMatrix: Matrix<Boolean>,
         regionMatrix: Matrix<Int>,
         lineSegmentMatrix: Matrix<Int>
-    ): Matrix<Int> {
-        for (segment in lineSegments) {
-            // TODO Only look at lines longer than 6 pixels to cut down on number of lines to examine while developing
-            if (segment.straightLineLength.size < 6) {
-                continue
+    ): Pair<List<LineSegment>, Matrix<Int>> {
+        val segmentsByDescendingLength = lineSegments.sortedByDescending { it.length() }
+
+        // TODO Only look at one segment while developing
+        val testMatrix = Matrix(imageMatrix.numberOfRows, imageMatrix.numberOfColumns, { row, column ->
+            if (imageMatrix[row, column]) {
+                1
+            } else {
+                0
             }
+        })
+        for (segment in lineSegments) {
+            for (point in segment.straightLineLength) {
+                testMatrix[point.first, point.second] = 2
+            }
+        }
+
+        var counter = 0
+        val resultingSegments = mutableListOf<LineSegment>()
+
+        for (segment in segmentsByDescendingLength) {
+            // TODO Only look at lines longer than 6 pixels to cut down on number of lines to examine while developing
+//            if (segment.straightLineLength.size < 6) {
+//                continue
+//            }
 
             val closestNeighbours = findClosestNeighboursForSegment(segment, imageMatrix, lineSegmentMatrix)
-            examineSegments(segment, lineSegments.filter { closestNeighbours.contains(it.id) })
+            val segments = examineSegments(segment, lineSegments.filter { closestNeighbours.contains(it.id) })
 
-            // TODO Only look at one segment while developing
-            val testMatrix = Matrix(imageMatrix.numberOfRows, imageMatrix.numberOfColumns, { row, column ->
-                if (imageMatrix[row, column]) {
-                    1
-                } else {
-                    0
-                }
-            })
-            for (segment in lineSegments) {
-                for (point in segment.straightLineLength) {
-                    testMatrix[point.first, point.second] = 2
-                }
-            }
             lineSegments.filter { closestNeighbours.contains(it.id) }
                 .forEach { segment ->
                     for (point in segment.straightLineLength) {
@@ -205,15 +211,22 @@ class ExtractPathsFromAreas(
             for (point in segment.straightLineLength) {
                 testMatrix[point.first, point.second] = 3
             }
-            return testMatrix
+
+            ++counter
+            resultingSegments.addAll(segments)
+
+            // TODO Only look at two segments while testing
+            if(counter > 1) {
+                break
+            }
 
         }
 
-        return Matrix(0, 0, { row, column -> 0 })
+        return Pair(lineSegments, testMatrix)
     }
 
 
-    private fun examineSegments(lineSegment: LineSegment, closestNeighbours: List<LineSegment>) {
+    private fun examineSegments(lineSegment: LineSegment, closestNeighbours: List<LineSegment>): List<LineSegment> {
 
         println("Line segment: ${lineSegment.lineSummary()}. Incline: ${lineSegment.incline()}")
 
@@ -224,6 +237,8 @@ class ExtractPathsFromAreas(
         // TODO
         println(lineSegment)
 
+        // TODO Only like this for testing. Combine segments and return a new set of segments
+        return listOf(lineSegment)
     }
 
 

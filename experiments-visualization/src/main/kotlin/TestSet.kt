@@ -16,6 +16,10 @@ class TestSet(val target: KanjiSetIdentifier, val testSet: List<KanjiSetIdentifi
         return getKanjiImageData(testSet[testDataItemNumber], datasetRoot)
     }
 
+    fun getTestSetSize(): Int {
+        return testSet.size
+    }
+
     companion object {
 
         private fun getKanjiImageData(kanjiSetIdentifier: KanjiSetIdentifier, datasetRoot: String): KanjiFromEtlData {
