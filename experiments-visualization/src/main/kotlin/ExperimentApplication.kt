@@ -76,7 +76,7 @@ class ExperimentApplication : Application() {
         val numberOfRasters = inputRasterData.inputRasters.size
         val imageSize = inputRasterData.inputRasters.first().size
 
-        val squareSize = totalLengthAvailable / imageSize * numberOfRasters
+        val squareSize = totalLengthAvailable / (imageSize * numberOfRasters)
 
         var currentRow = 0
         var currentColumn = 0
