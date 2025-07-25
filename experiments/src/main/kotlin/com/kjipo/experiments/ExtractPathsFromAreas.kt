@@ -164,7 +164,7 @@ class ExtractPathsFromAreas(
             }
         }
 
-        return joinSegments(pathSegments, imageMatrix, regionMatrix, pathMatrix)
+        return joinSegments2(pathSegments, imageMatrix, regionMatrix, pathMatrix)
     }
 
 
@@ -216,13 +216,134 @@ class ExtractPathsFromAreas(
             resultingSegments.addAll(segments)
 
             // TODO Only look at two segments while testing
-            if(counter > 1) {
+            if (counter > 1) {
                 break
             }
 
         }
 
         return Pair(lineSegments, testMatrix)
+    }
+
+
+    fun joinSegments2(
+        lineSegments: List<LineSegment>,
+        imageMatrix: Matrix<Boolean>,
+        regionMatrix: Matrix<Int>,
+        lineSegmentMatrix: Matrix<Int>
+    ): Pair<List<LineSegment>, Matrix<Int>> {
+        val segmentsByDescendingLength = lineSegments.sortedByDescending { it.length() }
+
+        // TODO Only look at one segment while developing
+        val testMatrix = Matrix(imageMatrix.numberOfRows, imageMatrix.numberOfColumns, { row, column ->
+            if (imageMatrix[row, column]) {
+                1
+            } else {
+                0
+            }
+        })
+        for (segment in lineSegments) {
+            for (point in segment.straightLineLength) {
+                testMatrix[point.first, point.second] = 2
+            }
+        }
+
+        var counter = 0
+        val resultingSegments = mutableListOf<LineSegment>()
+
+        val distanceMatrixStart = Matrix(lineSegments.size, lineSegments.size, { row, column ->
+            -1
+        })
+        val distanceMatrixStop = Matrix(lineSegments.size, lineSegments.size, { row, column ->
+            -1
+        })
+
+        val segmentIdIndexMap = mutableMapOf<Int, Int>()
+
+        lineSegments.forEachIndexed { index, lineSegment ->
+            val start = lineSegment.straightLineLength.first()
+            val stop = lineSegment.straightLineLength.last()
+
+            segmentIdIndexMap[lineSegment.id] = index
+
+            lineSegments.forEachIndexed { index2, lineSegment2 ->
+                if (index != index2 && distanceMatrixStart[index, index2] == -1 && distanceMatrixStop[index, index2] == -1) {
+                    distanceMatrixStart[index, index2] =
+                        getManhattanDistance(start, lineSegment2.straightLineLength.first())
+                    distanceMatrixStart[index2, index] = distanceMatrixStart[index2, index]
+                    distanceMatrixStop[index, index2] =
+                        getManhattanDistance(stop, lineSegment2.straightLineLength.last())
+                    distanceMatrixStop[index2, index] = distanceMatrixStop[index, index2]
+                }
+            }
+        }
+
+
+        for (segment in segmentsByDescendingLength) {
+            // TODO Only look at lines longer than 6 pixels to cut down on number of lines to examine while developing
+//            if (segment.straightLineLength.size < 6) {
+//                continue
+//            }
+
+
+//            val closestNeighbours = findClosestNeighboursForSegment(segment, imageMatrix, lineSegmentMatrix)
+
+            val closestNeighbours = segmentIdIndexMap.keys.map { segmentId ->
+                if (segment.id == segmentId) {
+                    emptyList()
+                } else {
+                    listOf(
+                        Pair(
+                            segmentId,
+                            distanceMatrixStart[segmentIdIndexMap[segment.id]!!, segmentIdIndexMap[segmentId]!!]
+                        ),
+                        Pair(
+                            segmentId,
+                            distanceMatrixStop[segmentIdIndexMap[segment.id]!!, segmentIdIndexMap[segmentId]!!]
+                        )
+                    )
+                }
+            }.flatten()
+                .sortedByDescending { it.second }
+                .take(3)
+                .map { it.first }
+
+
+            for (segmentId in segmentIdIndexMap.keys) {
+                val distance = distanceMatrixStart[segmentIdIndexMap[segment.id]!!, segmentIdIndexMap[segmentId]!!]
+
+
+            }
+
+
+            val segments = examineSegments(segment, lineSegments.filter { closestNeighbours.contains(it.id) })
+
+            lineSegments.filter { closestNeighbours.contains(it.id) }
+                .forEach { segment ->
+                    for (point in segment.straightLineLength) {
+                        testMatrix[point.first, point.second] = 4
+                    }
+                }
+            for (point in segment.straightLineLength) {
+                testMatrix[point.first, point.second] = 3
+            }
+
+            ++counter
+            resultingSegments.addAll(segments)
+
+            // TODO Only look at two segments while testing
+            if (counter > 1) {
+                break
+            }
+
+        }
+
+        return Pair(lineSegments, testMatrix)
+    }
+
+
+    private fun getManhattanDistance(point1: Pair<Int, Int>, point2: Pair<Int, Int>): Int {
+        return Math.abs(point1.first - point2.first) + Math.abs(point1.second - point2.second)
     }
 
 
@@ -266,7 +387,7 @@ class ExtractPathsFromAreas(
                     val neighbourRow = point.first + rowOffset
                     val neighbourColumn = point.second + columnOffset
 
-                    if(!processedPoints[neighbourRow, neighbourColumn]) {
+                    if (!processedPoints[neighbourRow, neighbourColumn]) {
                         val neighbourValue = lineSegmentMatrix[neighbourRow, neighbourColumn]
 
                         if (lineSegmentMatrix[neighbourRow, neighbourColumn] != segment.id
@@ -280,7 +401,7 @@ class ExtractPathsFromAreas(
                         }
 
                         val currentPoint = Pair(neighbourRow, neighbourColumn)
-                        if(!pointsToExamine.contains(currentPoint)) {
+                        if (!pointsToExamine.contains(currentPoint)) {
                             pointsToExamine.add(Pair(neighbourRow, neighbourColumn))
                         }
                     }
