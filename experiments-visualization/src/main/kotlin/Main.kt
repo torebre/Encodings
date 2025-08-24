@@ -9,7 +9,6 @@ import com.kjipo.representation.raster.makeSquare
 import com.kjipo.representation.raster.makeThin
 import com.kjipo.representation.raster.scaleMatrix
 import java.nio.file.Path
-import kotlin.text.get
 
 
 private fun showEndpointResults() {
@@ -252,7 +251,11 @@ private fun getKanjiImage(kanjiFromEtlData: KanjiFromEtlData): Matrix<Boolean> {
 }
 
 private fun extractStrokes3() {
+    val matrixVisualizations = getMatrixVisualizationForExtractStrokes3()
+    ExperimentApplication.showMatrixVisualization(matrixVisualizations)
+}
 
+fun getMatrixVisualizationForExtractStrokes3(): MutableList<MatrixVisualization<Int>> {
 //    val kanjiImage = extractEtlImagesForUnicodeToKanjiData(32769, 5).take(1)
 
     val datasetRoot = "/home/student/Downloads/etlcbd_datasets"
@@ -260,17 +263,17 @@ private fun extractStrokes3() {
 
     val testSet = getTestSet()
     val kanjiImageDataTarget = testSet.getImageDataForTarget(datasetRoot)
-    val segmentLineMatrixPair = getSegments(kanjiImageDataTarget)
+    val joinedSegmentData = getSegments(kanjiImageDataTarget)
     val matrixVisualizations = mutableListOf<MatrixVisualization<Int>>()
 
-    matrixVisualizations.add(getMatrixVisualization(segmentLineMatrixPair.second))
+    matrixVisualizations.add(getMatrixVisualization(joinedSegmentData.segmentMatrix))
 
     for (i in 0 until testSet.getTestSetSize()) {
         val kanjiImageData = testSet.getImageDataForTestImage(i, datasetRoot)
-        matrixVisualizations.add(getMatrixVisualization(getSegments(kanjiImageData).second))
+        matrixVisualizations.add(getMatrixVisualization(kanjiImageData.kanjiData))
     }
 
-    ExperimentApplication.showMatrixVisualization(matrixVisualizations)
+    return matrixVisualizations
 }
 
 private fun getMatrixVisualization(kanjimatrix: Matrix<Int>): MatrixVisualization<Int> {
@@ -286,7 +289,7 @@ private fun getMatrixVisualization(kanjimatrix: Matrix<Int>): MatrixVisualizatio
     )
 }
 
-private fun getSegments(kanjiImageData: KanjiFromEtlData): Pair<List<LineSegment>, Matrix<Int>> {
+private fun getSegments(kanjiImageData: KanjiFromEtlData): JoinedSegmentData {
     val kanjiImage = getKanjiImage(kanjiImageData)
     val ballRoller = BallRoller()
 
@@ -305,7 +308,7 @@ private fun runAnimationApplication() {
 
 
 fun main() {
-    // showEndpointResults()
+//     showEndpointResults()
     // showMatrixVisualizations()
 //     findMidpoints()
 //    extractStrokes()

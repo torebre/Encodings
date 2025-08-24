@@ -147,7 +147,7 @@ class ExtractPathsFromAreas(
         return lineSegments
     }
 
-    fun joinSegments(): Pair<List<LineSegment>, Matrix<Int>> {
+    fun joinSegments(): JoinedSegmentData {
         val pathSegments = getPathSegments()
 
         val pathMatrix = Matrix(imageMatrix.numberOfRows, imageMatrix.numberOfColumns, { row, column ->
@@ -231,7 +231,7 @@ class ExtractPathsFromAreas(
         imageMatrix: Matrix<Boolean>,
         regionMatrix: Matrix<Int>,
         lineSegmentMatrix: Matrix<Int>
-    ): Pair<List<LineSegment>, Matrix<Int>> {
+    ): JoinedSegmentData {
         val segmentsByDescendingLength = lineSegments.sortedByDescending { it.length() }
 
         // TODO Only look at one segment while developing
@@ -338,7 +338,7 @@ class ExtractPathsFromAreas(
 
         }
 
-        return Pair(lineSegments, testMatrix)
+        return JoinedSegmentData(lineSegments, testMatrix)
     }
 
 
@@ -411,6 +411,18 @@ class ExtractPathsFromAreas(
         }
 
         return closestNeighbours
+    }
+
+
+    fun compareSegmentData(joinedSegmentData: JoinedSegmentData, joinedSegmentData2: JoinedSegmentData) {
+        val twoLongestSegments = joinedSegmentData.lineSegments.sortedBy { it.length() }.take(2)
+        val twoLongestSegments2 = joinedSegmentData.lineSegments.sortedBy { it.length() }.take(2)
+
+        // TODO
+
+
+
+
     }
 
 

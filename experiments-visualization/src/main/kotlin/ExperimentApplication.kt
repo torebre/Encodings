@@ -10,13 +10,11 @@ import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
-import javafx.scene.paint.Paint
 import javafx.scene.text.Font
 import javafx.scene.text.Text
 import javafx.stage.Stage
 import java.lang.System.Logger.Level
 import java.util.*
-import java.util.logging.Logger
 import kotlin.math.min
 
 
@@ -26,7 +24,6 @@ class ExperimentApplication : Application() {
     private var root: StackPane? = null
     private var inputRasterData: InputRasterData? = null
     private var inputRasterDataWithDrawFunction: InputRasterDataWithDrawFunction? = null
-
 
 
     override fun start(primaryStage: Stage?) {
@@ -414,7 +411,7 @@ class ExperimentApplication : Application() {
 
         }
 
-        private fun getColor(pointColor: PointColor): Color {
+        fun getColor(pointColor: PointColor): Color {
             return Color.color(pointColor.red, pointColor.green, pointColor.blue)
         }
 
