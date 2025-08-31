@@ -6,6 +6,7 @@ import com.kjipo.representation.raster.getNeighbourhood
 import com.kjipo.segmentation.getOffset
 import representation.identifyRegions
 import kotlin.Boolean
+import kotlin.math.abs
 
 
 class ExtractPathsFromAreas(
@@ -267,10 +268,13 @@ class ExtractPathsFromAreas(
             segmentIdIndexMap[lineSegment.id] = index
 
             lineSegments.forEachIndexed { index2, lineSegment2 ->
-                if (index != index2 && distanceMatrixStart[index, index2] == -1 && distanceMatrixStop[index, index2] == -1) {
+                if (index != index2
+                    && distanceMatrixStart[index, index2] == -1
+                    && distanceMatrixStop[index, index2] == -1
+                ) {
                     distanceMatrixStart[index, index2] =
                         getManhattanDistance(start, lineSegment2.straightLineLength.first())
-                    distanceMatrixStart[index2, index] = distanceMatrixStart[index2, index]
+                    distanceMatrixStart[index2, index] = distanceMatrixStart[index, index2]
                     distanceMatrixStop[index, index2] =
                         getManhattanDistance(stop, lineSegment2.straightLineLength.last())
                     distanceMatrixStop[index2, index] = distanceMatrixStop[index, index2]
@@ -278,13 +282,11 @@ class ExtractPathsFromAreas(
             }
         }
 
-
         for (segment in segmentsByDescendingLength) {
             // TODO Only look at lines longer than 6 pixels to cut down on number of lines to examine while developing
 //            if (segment.straightLineLength.size < 6) {
 //                continue
 //            }
-
 
 //            val closestNeighbours = findClosestNeighboursForSegment(segment, imageMatrix, lineSegmentMatrix)
 
@@ -304,26 +306,25 @@ class ExtractPathsFromAreas(
                     )
                 }
             }.flatten()
-                .sortedByDescending { it.second }
+                .sortedBy { it.second }
                 .take(3)
                 .map { it.first }
 
 
-            for (segmentId in segmentIdIndexMap.keys) {
-                val distance = distanceMatrixStart[segmentIdIndexMap[segment.id]!!, segmentIdIndexMap[segmentId]!!]
-
-
-            }
-
+//            for (segmentId in segmentIdIndexMap.keys) {
+//                val distance = distanceMatrixStart[segmentIdIndexMap[segment.id]!!, segmentIdIndexMap[segmentId]!!]
+//            }
 
             val segments = examineSegments(segment, lineSegments.filter { closestNeighbours.contains(it.id) })
 
+            // Add colour to the closest neighbours
             lineSegments.filter { closestNeighbours.contains(it.id) }
                 .forEach { segment ->
                     for (point in segment.straightLineLength) {
                         testMatrix[point.first, point.second] = 4
                     }
                 }
+            // Give a different colour to the segment that is being examined
             for (point in segment.straightLineLength) {
                 testMatrix[point.first, point.second] = 3
             }
@@ -331,10 +332,8 @@ class ExtractPathsFromAreas(
             ++counter
             resultingSegments.addAll(segments)
 
-            // TODO Only look at two segments while testing
-            if (counter > 1) {
-                break
-            }
+            // TODO Only look at one segments while testing
+            break
 
         }
 
@@ -343,7 +342,7 @@ class ExtractPathsFromAreas(
 
 
     private fun getManhattanDistance(point1: Pair<Int, Int>, point2: Pair<Int, Int>): Int {
-        return Math.abs(point1.first - point2.first) + Math.abs(point1.second - point2.second)
+        return abs(point1.first - point2.first) + abs(point1.second - point2.second)
     }
 
 
@@ -419,8 +418,6 @@ class ExtractPathsFromAreas(
         val twoLongestSegments2 = joinedSegmentData.lineSegments.sortedBy { it.length() }.take(2)
 
         // TODO
-
-
 
 
     }
