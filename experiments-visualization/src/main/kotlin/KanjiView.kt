@@ -56,50 +56,16 @@ class KanjiView : Application() {
             val canvas = Canvas(300.0, 200.0)
             root.children.add(canvas)
 
-            // Function to update canvas size and redraw
-            fun updateCanvasAndRedraw() {
-                // Reserve space for the button (approximate height)
-                val buttonHeight = 30.0
-                val newCanvasWidth = stage.width
-                val newCanvasHeight = stage.height - buttonHeight
-            
-                // Update canvas size
-                canvas.width = newCanvasWidth
-                canvas.height = newCanvasHeight
-            
-                // Redraw the current matrix
-                val currentVisualization = matrixVisualizations[currentIndex]
-                val rows = currentVisualization.matrix.numberOfRows
-                val columns = currentVisualization.matrix.numberOfColumns
-
-                val pointHeight = newCanvasHeight / rows
-                val pointWidth = newCanvasWidth / columns
-
-                // Clear the canvas first
-                canvas.graphicsContext2D.clearRect(0.0, 0.0, canvas.width, canvas.height)
-            
-                drawFunction(
-                    canvas,
-                    pointHeight,
-                    pointWidth,
-                    currentVisualization.matrix,
-                    { value ->
-                        getColor(currentVisualization.colorFunction(value))
-                    }
-                )
-            }
-
-            val currentVisualization = matrixVisualizations[currentIndex]
-
             // Set button action to go to next index
             button.setOnAction {
                 currentIndex = (currentIndex + 1) % matrixVisualizations.size
+                val currentVisualization = matrixVisualizations[currentIndex]
                 drawCurrentMatrix(currentVisualization, canvas)
             }
 
             // Add listeners for window size changes
-            stage.widthProperty().addListener { _, _, _ -> updateCanvasAndRedraw() }
-            stage.heightProperty().addListener { _, _, _ -> updateCanvasAndRedraw() }
+            stage.widthProperty().addListener { _, _, _ -> updateCanvasAndRedraw(matrixVisualizations[currentIndex], canvas, stage) }
+            stage.heightProperty().addListener { _, _, _ -> updateCanvasAndRedraw(matrixVisualizations[currentIndex], canvas, stage) }
 
             // Create and set the scene
             val scene = Scene(root, 300.0, 250.0)
@@ -109,8 +75,39 @@ class KanjiView : Application() {
             stage.show()
         
             // Draw initial matrix after showing to get correct window dimensions
-            updateCanvasAndRedraw()
+            updateCanvasAndRedraw(matrixVisualizations[currentIndex], canvas, stage)
         }
+    }
+
+    private fun updateCanvasAndRedraw(matrixVisualization: MatrixVisualization<Int>, canvas: Canvas, stage: Stage) {
+        // Reserve space for the button (approximate height)
+        val buttonHeight = 30.0
+        val newCanvasWidth = stage.width
+        val newCanvasHeight = stage.height - buttonHeight
+
+        // Update canvas size
+        canvas.width = newCanvasWidth
+        canvas.height = newCanvasHeight
+
+        // Redraw the current matrix
+        val rows = matrixVisualization.matrix.numberOfRows
+        val columns = matrixVisualization.matrix.numberOfColumns
+
+        val pointHeight = newCanvasHeight / rows
+        val pointWidth = newCanvasWidth / columns
+
+        // Clear the canvas first
+        canvas.graphicsContext2D.clearRect(0.0, 0.0, canvas.width, canvas.height)
+
+        drawFunction(
+            canvas,
+            pointHeight,
+            pointWidth,
+            matrixVisualization.matrix,
+            { value ->
+                getColor(matrixVisualization.colorFunction(value))
+            }
+        )
     }
 
     private fun drawCurrentMatrix(matrixVisualization: MatrixVisualization<Int>, canvas: Canvas) {

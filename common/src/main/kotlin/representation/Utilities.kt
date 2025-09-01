@@ -1,14 +1,9 @@
 package representation
 
 import com.kjipo.representation.Matrix
+import com.kjipo.representation.pointsmatching.Border
 import com.kjipo.representation.raster.EncodingUtilities
 import com.kjipo.representation.raster.FlowDirection
-
-
-const val backgroundRegion = 0
-const val interiorPointRegion = 1
-const val borderRegion = 2
-const val startRegionCount = 10
 
 
 fun identifyRegions(imageMatrix: Matrix<Boolean>, startRegionCounter: Int = startRegionCount): Matrix<Int> {
@@ -73,4 +68,97 @@ private fun spreadAcrossRegion(
             }
         }
     }
+}
+
+
+fun getConnectedPoints(row: Int, column: Int, borderMatrix: Matrix<Int>): MutableList<Pair<Int, Int>> {
+    val firstPoint = Pair(row, column)
+    val pointsToExamine = ArrayDeque(listOf(firstPoint))
+    val borderMatrixCopy = Matrix.copy(borderMatrix)
+    borderMatrixCopy[firstPoint.first, firstPoint.second] = backgroundRegion
+    val borderPoints = mutableListOf<Pair<Int, Int>>()
+
+    while (pointsToExamine.isNotEmpty()) {
+        val point = pointsToExamine.removeFirst()
+        borderPoints.add(point)
+
+        FlowDirection.values().forEach { flowDirection ->
+            if (EncodingUtilities.validCell(
+                    point.first, point.second, flowDirection, borderMatrixCopy.numberOfRows,
+                    borderMatrixCopy.numberOfColumns
+                )
+                && borderMatrixCopy[point.first + flowDirection.rowShift, point.second + flowDirection.columnShift] != backgroundRegion
+            ) {
+                Pair(point.first + flowDirection.rowShift, point.second + flowDirection.columnShift).let {
+                    pointsToExamine.add(it)
+                    borderMatrixCopy[it.first, it.second] = backgroundRegion
+                }
+            }
+        }
+    }
+
+    return borderPoints
+}
+
+fun findBorderPoint(borderMatrix: Matrix<Int>, borderValue: Int): Pair<Int, Int>? {
+    borderMatrix.forEachIndexed { row, column, _ ->
+        if (borderMatrix[row, column] == borderValue) {
+            return Pair(row, column)
+        }
+    }
+    return null
+}
+
+fun extractBordersInMatrix(valueMatrix: Matrix<Int>): List<Border> {
+    return extractBordersInMatrix(valueMatrix, valueExtractFunction = { row, column ->
+        if (valueMatrix[row, column] == backgroundRegion) {
+            backgroundRegion
+        } else {
+            interiorPointRegion
+        }
+    })
+}
+
+fun extractBordersInBooleanMatrix(valueMatrix: Matrix<Boolean>): List<Border> {
+    return extractBordersInMatrix(valueMatrix, valueExtractFunction = { row, column ->
+        if (valueMatrix[row, column]) {
+            interiorPointRegion
+        } else {
+            backgroundRegion
+        }
+    })
+}
+
+inline fun <reified T> extractBordersInMatrix(valueMatrix: Matrix<T>, valueExtractFunction: (Int, Int) -> Int): List<Border> {
+    val borderMatrix = Matrix(valueMatrix.numberOfRows, valueMatrix.numberOfColumns)
+    { row, column ->
+        valueExtractFunction(row, column)
+    }
+
+    val borders = mutableListOf<Border>()
+    valueMatrix.forEachIndexed { row, column, value ->
+        val neighbourhood = valueMatrix.getNeighbourhood<T>(row, column)
+        var surroundedByEqualValues = true
+        neighbourhood.forEach {
+            if (it != null && it != value) {
+                surroundedByEqualValues = false
+                return@forEach
+            }
+        }
+
+        if (surroundedByEqualValues) {
+            borderMatrix[row, column] = backgroundRegion
+        }
+    }
+
+    val borderMatrixCopy = Matrix.copy(borderMatrix)
+    while (true) {
+        val borderPoint = findBorderPoint(borderMatrixCopy, interiorPointRegion) ?: break
+        val border = getConnectedPoints(borderPoint.first, borderPoint.second, borderMatrixCopy)
+        borders.add(Border(border))
+
+        border.forEach { borderMatrixCopy[it.first, it.second] = backgroundRegion }
+    }
+
+    return borders
 }

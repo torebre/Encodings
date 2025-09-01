@@ -3,6 +3,7 @@ package com.kjipo.representation.pointsmatching
 import com.kjipo.representation.Matrix
 import com.kjipo.representation.raster.*
 import representation.backgroundRegion
+import representation.extractBordersInMatrix
 import representation.identifyRegions
 import representation.interiorPointRegion
 import representation.startRegionCount
@@ -293,44 +294,8 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
         return Pair(maxDirection, maxRatio)
     }
 
-
     fun extractBorders(valueMatrix: Matrix<Int> = regionMatrix): List<Border> {
-        val borderMatrix = Matrix(valueMatrix.numberOfRows, valueMatrix.numberOfColumns)
-        { row, column ->
-            if (valueMatrix[row, column] == backgroundRegion) {
-                backgroundRegion
-            } else {
-                interiorPointRegion
-            }
-        }
-
-        val borders = mutableListOf<Border>()
-
-        valueMatrix.forEachIndexed { row, column, value ->
-            val neighbourhood = valueMatrix.getNeighbourhood<Int?>(row, column)
-            var surroundedByEqualValues = true
-            neighbourhood.forEach {
-                if (it != null && it != value) {
-                    surroundedByEqualValues = false
-                    return@forEach
-                }
-            }
-
-            if (surroundedByEqualValues) {
-                borderMatrix[row, column] = backgroundRegion
-            }
-        }
-
-        val borderMatrixCopy = Matrix.copy(borderMatrix)
-        while (true) {
-            val borderPoint = findBorderPoint(borderMatrixCopy, interiorPointRegion) ?: break
-            val border = getConnectedPoints(borderPoint.first, borderPoint.second, borderMatrixCopy)
-            borders.add(Border(border))
-
-            border.forEach { borderMatrixCopy[it.first, it.second] = backgroundRegion }
-        }
-
-        return borders
+        return extractBordersInMatrix(valueMatrix)
     }
 
     fun extractBorderStructure(valueMatrix: Matrix<Int> = regionMatrix): ImageStructure {
@@ -338,7 +303,6 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
 
         return imageStructure
     }
-
 
     fun encodeBorderIntoDirectionList(singleBorderMatrix: Matrix<Int>): List<PointDirection> {
         singleBorderMatrix.forEachIndexed { row, column, value ->
@@ -453,43 +417,35 @@ class PointsPlacer(private val imageMatrix: Matrix<Boolean>) {
         return Direction.NONE
     }
 
-    private fun findBorderPoint(borderMatrix: Matrix<Int>, borderValue: Int): Pair<Int, Int>? {
-        borderMatrix.forEachIndexed { row, column, _ ->
-            if (borderMatrix[row, column] == borderValue) {
-                return Pair(row, column)
-            }
-        }
-        return null
-    }
 
-    private fun getConnectedPoints(row: Int, column: Int, borderMatrix: Matrix<Int>): MutableList<Pair<Int, Int>> {
-        val firstPoint = Pair(row, column)
-        val pointsToExamine = ArrayDeque(listOf(firstPoint))
-        val borderMatrixCopy = Matrix.copy(borderMatrix)
-        borderMatrixCopy[firstPoint.first, firstPoint.second] = backgroundRegion
-        val borderPoints = mutableListOf<Pair<Int, Int>>()
-
-        while (pointsToExamine.isNotEmpty()) {
-            val point = pointsToExamine.removeFirst()
-            borderPoints.add(point)
-
-            FlowDirection.values().forEach { flowDirection ->
-                if (EncodingUtilities.validCell(
-                        point.first, point.second, flowDirection, borderMatrixCopy.numberOfRows,
-                        borderMatrixCopy.numberOfColumns
-                    )
-                    && borderMatrixCopy[point.first + flowDirection.rowShift, point.second + flowDirection.columnShift] != backgroundRegion
-                ) {
-                    Pair(point.first + flowDirection.rowShift, point.second + flowDirection.columnShift).let {
-                        pointsToExamine.add(it)
-                        borderMatrixCopy[it.first, it.second] = backgroundRegion
-                    }
-                }
-            }
-        }
-
-        return borderPoints
-    }
+//    private fun getConnectedPoints(row: Int, column: Int, borderMatrix: Matrix<Int>): MutableList<Pair<Int, Int>> {
+//        val firstPoint = Pair(row, column)
+//        val pointsToExamine = ArrayDeque(listOf(firstPoint))
+//        val borderMatrixCopy = Matrix.copy(borderMatrix)
+//        borderMatrixCopy[firstPoint.first, firstPoint.second] = backgroundRegion
+//        val borderPoints = mutableListOf<Pair<Int, Int>>()
+//
+//        while (pointsToExamine.isNotEmpty()) {
+//            val point = pointsToExamine.removeFirst()
+//            borderPoints.add(point)
+//
+//            FlowDirection.values().forEach { flowDirection ->
+//                if (EncodingUtilities.validCell(
+//                        point.first, point.second, flowDirection, borderMatrixCopy.numberOfRows,
+//                        borderMatrixCopy.numberOfColumns
+//                    )
+//                    && borderMatrixCopy[point.first + flowDirection.rowShift, point.second + flowDirection.columnShift] != backgroundRegion
+//                ) {
+//                    Pair(point.first + flowDirection.rowShift, point.second + flowDirection.columnShift).let {
+//                        pointsToExamine.add(it)
+//                        borderMatrixCopy[it.first, it.second] = backgroundRegion
+//                    }
+//                }
+//            }
+//        }
+//
+//        return borderPoints
+//    }
 
     private fun findMassCenter(imageMatrix: Matrix<Int>, regionId: Int): Pair<Int, Int>? {
         var rowSum = 0

@@ -6,9 +6,6 @@ import representation.interiorPointRegion
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
-import kotlin.math.cos
-import kotlin.math.roundToInt
-import kotlin.math.sin
 
 
 fun loadKanjiMatrix(path: Path): Matrix<Boolean> {

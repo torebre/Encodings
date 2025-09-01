@@ -270,11 +270,38 @@ fun getMatrixVisualizationForExtractStrokes3(): MutableList<MatrixVisualization<
 
     for (i in 0 until testSet.getTestSetSize()) {
         val kanjiImageData = testSet.getImageDataForTestImage(i, datasetRoot)
-        matrixVisualizations.add(getMatrixVisualization(kanjiImageData.kanjiData))
+        val joinedSegmentData = getSegments(kanjiImageData)
+        matrixVisualizations.add(getMatrixVisualization(joinedSegmentData.segmentMatrix))
     }
 
     return matrixVisualizations
 }
+
+
+fun extractBorderClassification() {
+//    val kanjiImage = extractEtlImagesForUnicodeToKanjiData(32769, 5).take(1)
+
+    val datasetRoot = "/home/student/Downloads/etlcbd_datasets"
+//    val kanjiImageData = extractEtlImagesForUnicodeToKanjiData(34152, 5).take(1)
+
+    val testSet = getTestSet()
+    val kanjiImageDataTarget = testSet.getImageDataForTarget(datasetRoot)
+
+    val matrixVisualizations = mutableListOf<MatrixVisualization<Int>>()
+
+    val borderClassification = BorderClassification()
+
+    for (i in 0 until testSet.getTestSetSize()) {
+        val kanjiImageData = testSet.getImageDataForTestImage(i, datasetRoot)
+        val kanjiImage = getKanjiImage(kanjiImageData)
+        val matrixToVisualize = borderClassification.extractBorderClassification(kanjiImage)
+
+        matrixVisualizations.add(getMatrixVisualization(matrixToVisualize))
+    }
+
+    ExperimentApplication.showMatrixVisualization(matrixVisualizations)
+}
+
 
 private fun getMatrixVisualization(kanjimatrix: Matrix<Int>): MatrixVisualization<Int> {
     val colors = generateEvenlyDistributedColors2(getNumberOfDistinctValues(kanjimatrix) + 1)
@@ -303,7 +330,6 @@ private fun getSegments(kanjiImageData: KanjiFromEtlData): JoinedSegmentData {
 
 private fun runAnimationApplication() {
     AnimationApplication.startAnimation()
-
 }
 
 
@@ -312,7 +338,9 @@ fun main() {
     // showMatrixVisualizations()
 //     findMidpoints()
 //    extractStrokes()
-    extractStrokes3()
+//    extractStrokes3()
+
+    extractBorderClassification()
 
 //    runAnimationApplication()
 }
