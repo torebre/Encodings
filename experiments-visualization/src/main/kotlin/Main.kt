@@ -278,7 +278,8 @@ fun getMatrixVisualizationForExtractStrokes3(): MutableList<MatrixVisualization<
 }
 
 
-fun extractBorderClassification() {
+
+fun extractBorderClassification2(): MutableList<MatrixVisualization<Int>> {
 //    val kanjiImage = extractEtlImagesForUnicodeToKanjiData(32769, 5).take(1)
 
     val datasetRoot = "/home/student/Downloads/etlcbd_datasets"
@@ -296,21 +297,28 @@ fun extractBorderClassification() {
         val kanjiImage = getKanjiImage(kanjiImageData)
         val matrixToVisualize = borderClassification.extractBorderClassification(kanjiImage)
 
-        matrixVisualizations.add(getMatrixVisualization(matrixToVisualize))
+        matrixToVisualize.map { getMatrixVisualization(it) }
+            .forEach { matrixVisualizations.add(it) }
     }
 
-    ExperimentApplication.showMatrixVisualization(matrixVisualizations)
+    return matrixVisualizations
 }
 
 
 private fun getMatrixVisualization(kanjimatrix: Matrix<Int>): MatrixVisualization<Int> {
-    val colors = generateEvenlyDistributedColors2(getNumberOfDistinctValues(kanjimatrix) + 1)
+    val distinctValues = getDistinctValues(kanjimatrix)
+    val colors = generateEvenlyDistributedColors2(distinctValues.size)
+
+    val colorMap = mutableMapOf<Int, PointColor>()
+    distinctValues.mapIndexed { index, value ->
+        colorMap[value] = colors[index]
+    }
 
     return MatrixVisualization(kanjimatrix, { value ->
         if (value == 0) {
             PointColor(0.0, 0.0, 0.0)
         } else {
-            colors[value]
+            colorMap[value] ?: PointColor(0.0, 0.0, 0.0)
         }
     }
     )
@@ -338,9 +346,9 @@ fun main() {
     // showMatrixVisualizations()
 //     findMidpoints()
 //    extractStrokes()
-//    extractStrokes3()
+    extractStrokes3()
 
-    extractBorderClassification()
+//    extractBorderClassification()
 
 //    runAnimationApplication()
 }

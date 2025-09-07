@@ -15,6 +15,9 @@ import javafx.stage.Stage
 
 class KanjiView : Application() {
 
+    //private val matrixVisualizations = getMatrixVisualizationForExtractStrokes3()
+    private val matrixVisualizations = extractBorderClassification2()
+
 
     private fun drawFunction(
         canvas: Canvas,
@@ -42,7 +45,6 @@ class KanjiView : Application() {
     }
 
     override fun start(primaryStage: Stage?) {
-        val matrixVisualizations = getMatrixVisualizationForExtractStrokes3()
 
         primaryStage?.let { stage ->
             var currentIndex = 0
@@ -96,7 +98,6 @@ class KanjiView : Application() {
         val pointHeight = newCanvasHeight / rows
         val pointWidth = newCanvasWidth / columns
 
-        // Clear the canvas first
         canvas.graphicsContext2D.clearRect(0.0, 0.0, canvas.width, canvas.height)
 
         drawFunction(
@@ -117,7 +118,6 @@ class KanjiView : Application() {
         val pointHeight = canvas.height / rows
         val pointWidth = canvas.width / columns
 
-        // Clear the canvas first
         canvas.graphicsContext2D.clearRect(0.0, 0.0, canvas.width, canvas.height)
 
         drawFunction(
