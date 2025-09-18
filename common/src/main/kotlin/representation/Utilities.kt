@@ -4,6 +4,8 @@ import com.kjipo.representation.Matrix
 import com.kjipo.representation.pointsmatching.Border
 import com.kjipo.representation.raster.EncodingUtilities
 import com.kjipo.representation.raster.FlowDirection
+import com.kjipo.representation.raster.getNeighbourhood
+import com.kjipo.representation.raster.getNeighbourhood2
 
 
 fun identifyRegions(imageMatrix: Matrix<Boolean>, startRegionCounter: Int = startRegionCount): Matrix<Int> {
@@ -120,11 +122,17 @@ fun getConnectedPoints2(row: Int, column: Int, borderMatrix: Matrix<Int>): Mutab
     }
         .toList()
 
-    if(firstNeighbours.size > 2) {
+    if (firstNeighbours.size > 2) {
+        val neighbourhood = getNeighbourhood2(borderMatrixCopy, firstPoint.first, firstPoint.second)
+
+        Matrix.printMatrix(neighbourhood, {
+            it?.toString() ?: " "
+        })
+
         throw IllegalStateException("More than two neighbours")
     }
 
-    if(firstNeighbours.isEmpty()) {
+    if (firstNeighbours.isEmpty()) {
         throw IllegalStateException("No neighbours")
     }
 
@@ -145,13 +153,12 @@ fun getConnectedPoints2(row: Int, column: Int, borderMatrix: Matrix<Int>): Mutab
                 && borderMatrixCopy[point.first + flowDirection.rowShift, point.second + flowDirection.columnShift] != backgroundRegion
             ) {
                 Pair(point.first + flowDirection.rowShift, point.second + flowDirection.columnShift)
-            }
-            else {
+            } else {
                 null
             }
         }
 
-        if(neighbours.size > 1) {
+        if (neighbours.size > 1) {
             throw IllegalStateException("More than one neighbour")
         }
         pointsToExamine.addAll(neighbours)
@@ -198,10 +205,13 @@ fun extractBordersInBooleanMatrix2(valueMatrix: Matrix<Boolean>): List<Border> {
         } else {
             backgroundRegion
         }
-    },backgroundRegion)
+    }, backgroundRegion)
 }
 
-inline fun <reified T> extractBordersInMatrix(valueMatrix: Matrix<T>, valueExtractFunction: (Int, Int) -> Int): List<Border> {
+inline fun <reified T> extractBordersInMatrix(
+    valueMatrix: Matrix<T>,
+    valueExtractFunction: (Int, Int) -> Int
+): List<Border> {
     val borderMatrix = Matrix(valueMatrix.numberOfRows, valueMatrix.numberOfColumns)
     { row, column ->
         valueExtractFunction(row, column)
@@ -236,7 +246,11 @@ inline fun <reified T> extractBordersInMatrix(valueMatrix: Matrix<T>, valueExtra
 }
 
 
-inline fun <reified T> extractBordersInMatrix2(valueMatrix: Matrix<T>, valueExtractFunction: (Int, Int) -> Int, backgroundValue: Int): List<Border> {
+inline fun <reified T> extractBordersInMatrix2(
+    valueMatrix: Matrix<T>,
+    valueExtractFunction: (Int, Int) -> Int,
+    backgroundValue: Int
+): List<Border> {
     val borderMatrix = Matrix(valueMatrix.numberOfRows, valueMatrix.numberOfColumns)
     { row, column ->
         valueExtractFunction(row, column)
@@ -244,7 +258,7 @@ inline fun <reified T> extractBordersInMatrix2(valueMatrix: Matrix<T>, valueExtr
 
     val borders = mutableListOf<Border>()
     valueMatrix.forEachIndexed { row, column, value ->
-        if(value == backgroundValue) {
+        if (value == backgroundValue) {
             val neighbourhood = valueMatrix.getNeighbourhood<T>(row, column)
             var surroundedByEqualValues = true
 

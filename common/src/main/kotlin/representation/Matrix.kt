@@ -26,6 +26,13 @@ class Matrix<T>(val numberOfRows: Int, val numberOfColumns: Int, val array: Arra
             }
         }
 
+        fun <T> printMatrix(matrix: Matrix<T>, characterFunction: (T) -> String) {
+            matrix.array.forEach { it ->
+                it.forEach { print(characterFunction.invoke(it)) }
+                println()
+            }
+        }
+
     }
 
 

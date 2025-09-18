@@ -1987,6 +1987,17 @@ fun getNeighbourhood(matrix: Matrix<Boolean>, row: Int, column: Int): Matrix<Boo
     return result
 }
 
+inline fun <reified T> getNeighbourhood2(matrix: Matrix<T>, row: Int, column: Int): Matrix<T?> {
+    val result = Matrix<T?>(3, 3) { _, _ -> null }
+    result[1, 1] = matrix[row, column]
+    FlowDirection.entries.forEach {
+        if (EncodingUtilities.validCell(row, column, it, matrix.numberOfRows, matrix.numberOfColumns)) {
+            result[1 + it.rowShift, 1 + it.columnShift] = matrix[row + it.rowShift, column + it.columnShift]
+        }
+    }
+    return result
+}
+
 fun <T> getNeighbourhood(
     matrix: Matrix<T>,
     row: Int,
