@@ -346,9 +346,9 @@ fun main() {
     // showMatrixVisualizations()
 //     findMidpoints()
 //    extractStrokes()
-    extractStrokes3()
+//    extractStrokes3()
 
-//    extractBorderClassification()
+    extractBorderClassification2()
 
 //    runAnimationApplication()
 }

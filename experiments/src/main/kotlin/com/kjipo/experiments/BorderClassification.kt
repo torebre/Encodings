@@ -7,7 +7,7 @@ import com.kjipo.representation.raster.FlowDirection
 import com.kjipo.representation.raster.getFlowDirectionForOffset
 import representation.backgroundRegion
 import representation.borderClassificationStartCount
-import representation.extractBordersInBooleanMatrix
+import representation.extractBordersInBooleanMatrix2
 import representation.firstLineColor
 import representation.interiorPointRegion
 
@@ -15,7 +15,7 @@ import representation.interiorPointRegion
 class BorderClassification {
 
     fun extractBorderClassification(imageMatrix: Matrix<Boolean>): List<Matrix<Int>> {
-        val borders = extractBordersInBooleanMatrix(imageMatrix)
+        val borders = extractBordersInBooleanMatrix2(imageMatrix)
 
         val matricesToVisualize = mutableListOf<Matrix<Int>>()
 
