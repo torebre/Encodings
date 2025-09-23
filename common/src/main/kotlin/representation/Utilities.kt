@@ -102,6 +102,49 @@ fun getConnectedPoints(row: Int, column: Int, borderMatrix: Matrix<Int>): Mutabl
     return borderPoints
 }
 
+inline fun <reified T> trimLine(matrix: Matrix<T>, checkValue: T, backgroundValue: T): Matrix<T> {
+    val matrixCopy = Matrix.copy(matrix)
+
+    matrixCopy.forEachIndexed { row, column, value ->
+        if (matrixCopy[row, column] == checkValue) {
+            var latch = false
+            var regionCount = 0
+
+            val firstNeighbours = FlowDirection.entries.mapNotNull { flowDirection ->
+                if (EncodingUtilities.validCell(
+                        row, column, flowDirection, matrixCopy.numberOfColumns,
+                        matrixCopy.numberOfColumns
+                    )
+                ) {
+                    if(matrixCopy[row + flowDirection.rowShift, column + flowDirection.columnShift] == checkValue) {
+                        if(latch) {
+                            ++regionCount
+                            latch = false
+                        }
+                        else {
+                            latch = true
+                        }
+                        Pair(row + flowDirection.rowShift, column + flowDirection.columnShift)
+                    }
+                    else {
+                        null
+                    }
+                } else {
+                    null
+                }
+            }
+                .toList()
+
+            if(firstNeighbours.size > 2) {
+                if(regionCount <= 1) {
+                    matrixCopy[row, column] = backgroundValue
+                }
+            }
+        }
+    }
+
+    return matrixCopy
+}
 
 fun getConnectedPoints2(row: Int, column: Int, borderMatrix: Matrix<Int>): MutableList<Pair<Int, Int>> {
     val firstPoint = Pair(row, column)
@@ -275,7 +318,8 @@ inline fun <reified T> extractBordersInMatrix2(
         }
     }
 
-    val borderMatrixCopy = Matrix.copy(borderMatrix)
+    //val borderMatrixCopy = Matrix.copy(borderMatrix)
+    val borderMatrixCopy = trimLine(borderMatrix, interiorPointRegion, backgroundRegion)
     while (true) {
         val borderPoint = findBorderPoint(borderMatrixCopy, interiorPointRegion) ?: break
         val border = getConnectedPoints2(borderPoint.first, borderPoint.second, borderMatrixCopy)

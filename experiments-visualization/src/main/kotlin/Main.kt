@@ -258,8 +258,9 @@ private fun extractStrokes3() {
 fun getMatrixVisualizationForExtractStrokes3(): MutableList<MatrixVisualization<Int>> {
 //    val kanjiImage = extractEtlImagesForUnicodeToKanjiData(32769, 5).take(1)
 
-    val datasetRoot = "/home/student/Downloads/etlcbd_datasets"
+    //val datasetRoot = "/home/student/Downloads/etlcbd_datasets"
 //    val kanjiImageData = extractEtlImagesForUnicodeToKanjiData(34152, 5).take(1)
+    val datasetRoot = "/home/student/data/etlcdb-image-extractor/etl_data/images/"
 
     val testSet = getTestSet()
     val kanjiImageDataTarget = testSet.getImageDataForTarget(datasetRoot)
@@ -282,8 +283,9 @@ fun getMatrixVisualizationForExtractStrokes3(): MutableList<MatrixVisualization<
 fun extractBorderClassification2(): MutableList<MatrixVisualization<Int>> {
 //    val kanjiImage = extractEtlImagesForUnicodeToKanjiData(32769, 5).take(1)
 
-    val datasetRoot = "/home/student/Downloads/etlcbd_datasets"
+    //val datasetRoot = "/home/student/Downloads/etlcbd_datasets"
 //    val kanjiImageData = extractEtlImagesForUnicodeToKanjiData(34152, 5).take(1)
+    val datasetRoot = "/home/student/data/etlcdb-image-extractor/etl_data/images/"
 
     val testSet = getTestSet()
     val kanjiImageDataTarget = testSet.getImageDataForTarget(datasetRoot)
