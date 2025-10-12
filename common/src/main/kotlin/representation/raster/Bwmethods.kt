@@ -1987,14 +1987,31 @@ fun getNeighbourhood(matrix: Matrix<Boolean>, row: Int, column: Int): Matrix<Boo
     return result
 }
 
-inline fun <reified T> getNeighbourhood2(matrix: Matrix<T>, row: Int, column: Int): Matrix<T?> {
-    val result = Matrix<T?>(3, 3) { _, _ -> null }
-    result[1, 1] = matrix[row, column]
-    FlowDirection.entries.forEach {
-        if (EncodingUtilities.validCell(row, column, it, matrix.numberOfRows, matrix.numberOfColumns)) {
-            result[1 + it.rowShift, 1 + it.columnShift] = matrix[row + it.rowShift, column + it.columnShift]
+inline fun <reified T> getNeighbourhood2(matrix: Matrix<T>, row: Int, column: Int, neigbourhoodSize: Int = 1): Matrix<T?> {
+    val matrixDimension = 2 * neigbourhoodSize + 1
+    val result = Matrix<T?>(matrixDimension, matrixDimension) { _, _ -> null }
+
+    result[neigbourhoodSize, neigbourhoodSize] = matrix[row, column]
+
+    for (rowOffset in -neigbourhoodSize..neigbourhoodSize) {
+        val rowIndex = row + rowOffset
+        for(columnOffset in -neigbourhoodSize..neigbourhoodSize) {
+            val columnIndex = column + columnOffset
+            if (rowIndex >= 0
+                && rowIndex < matrix.numberOfRows
+                && columnIndex >= 0
+                && columnIndex < matrix.numberOfColumns) {
+                result[rowOffset + neigbourhoodSize, columnOffset + neigbourhoodSize] = matrix[rowIndex, columnIndex]
+            }
         }
     }
+
+//    FlowDirection.entries.forEach {
+//        if (EncodingUtilities.validCell(row, column, it, matrix.numberOfRows, matrix.numberOfColumns)) {
+//            result[1 + it.rowShift, 1 + it.columnShift] = matrix[row + it.rowShift, column + it.columnShift]
+//        }
+//    }
+
     return result
 }
 
