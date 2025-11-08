@@ -283,9 +283,9 @@ fun getMatrixVisualizationForExtractStrokes3(): MutableList<MatrixVisualization<
 fun extractBorderClassification2(): MutableList<MatrixVisualization<Int>> {
 //    val kanjiImage = extractEtlImagesForUnicodeToKanjiData(32769, 5).take(1)
 
-    //val datasetRoot = "/home/student/Downloads/etlcbd_datasets"
+    val datasetRoot = "/home/student/Downloads/etlcbd_datasets"
 //    val kanjiImageData = extractEtlImagesForUnicodeToKanjiData(34152, 5).take(1)
-    val datasetRoot = "/home/student/data/etlcdb-image-extractor/etl_data/images/"
+//    val datasetRoot = "/home/student/data/etlcdb-image-extractor/etl_data/images/"
 
     val testSet = getTestSet()
     val kanjiImageDataTarget = testSet.getImageDataForTarget(datasetRoot)
@@ -297,7 +297,7 @@ fun extractBorderClassification2(): MutableList<MatrixVisualization<Int>> {
     for (i in 0 until testSet.getTestSetSize()) {
         val kanjiImageData = testSet.getImageDataForTestImage(i, datasetRoot)
         val kanjiImage = getKanjiImage(kanjiImageData)
-        val matrixToVisualize = borderClassification.extractBorderClassification(kanjiImage)
+        val matrixToVisualize = borderClassification.extractBorderClassification2(kanjiImage)
 
         matrixToVisualize.map { getMatrixVisualization(it) }
             .forEach { matrixVisualizations.add(it) }
@@ -306,6 +306,10 @@ fun extractBorderClassification2(): MutableList<MatrixVisualization<Int>> {
     return matrixVisualizations
 }
 
+private fun showBorderClassification2() {
+    val matrixVisualizations = extractBorderClassification2()
+    ExperimentApplication.showMatrixVisualization(matrixVisualizations)
+}
 
 private fun getMatrixVisualization(kanjimatrix: Matrix<Int>): MatrixVisualization<Int> {
     val distinctValues = getDistinctValues(kanjimatrix)
@@ -350,7 +354,8 @@ fun main() {
 //    extractStrokes()
 //    extractStrokes3()
 
-    extractBorderClassification2()
+//    extractBorderClassification2()
+    showBorderClassification2()
 
 //    runAnimationApplication()
 }

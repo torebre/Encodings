@@ -147,46 +147,51 @@ inline fun <reified T> trimLine(matrix: Matrix<T>, checkValue: T, backgroundValu
 }
 
 fun getConnectedPoints2(row: Int, column: Int, borderMatrix: Matrix<Int>): MutableList<Pair<Int, Int>> {
-    val firstPoint = Pair(row, column)
     val borderMatrixCopy = Matrix.copy(borderMatrix)
     val borderPoints = mutableListOf<Pair<Int, Int>>()
+    val firstPoint = Pair(row, column)
 
-    val firstNeighbours = FlowDirection.entries.mapNotNull { flowDirection ->
-        if (EncodingUtilities.validCell(
-                firstPoint.first, firstPoint.second, flowDirection, borderMatrixCopy.numberOfRows,
-                borderMatrixCopy.numberOfColumns
-            )
-            && borderMatrixCopy[firstPoint.first + flowDirection.rowShift, firstPoint.second + flowDirection.columnShift] != backgroundRegion
-        ) {
-            Pair(firstPoint.first + flowDirection.rowShift, firstPoint.second + flowDirection.columnShift)
-        } else {
-            null
-        }
-    }
-        .toList()
+//    borderPoints.add(firstPoint)
+//    borderMatrixCopy[firstPoint.first, firstPoint.second] = backgroundRegion
 
-    if (firstNeighbours.size > 2) {
-        val neighbourhood = getNeighbourhood2(borderMatrixCopy, firstPoint.first, firstPoint.second)
+//    val firstNeighbours = FlowDirection.entries.mapNotNull { flowDirection ->
+//        if (EncodingUtilities.validCell(
+//                firstPoint.first, firstPoint.second, flowDirection, borderMatrixCopy.numberOfRows,
+//                borderMatrixCopy.numberOfColumns
+//            )
+//            && borderMatrixCopy[firstPoint.first + flowDirection.rowShift, firstPoint.second + flowDirection.columnShift] != backgroundRegion
+//        ) {
+//            Pair(firstPoint.first + flowDirection.rowShift, firstPoint.second + flowDirection.columnShift)
+//        } else {
+//            null
+//        }
+//    }
+//        .toList()
+//
+//    if (firstNeighbours.size > 2) {
+//        val neighbourhood = getNeighbourhood2(borderMatrixCopy, firstPoint.first, firstPoint.second, 2)
+//
+//        Matrix.printMatrix(neighbourhood, {
+//            it?.toString() ?: " "
+//        })
+//
+//        throw IllegalStateException("More than two neighbours")
+//    }
+//
+//    if (firstNeighbours.isEmpty()) {
+//        throw IllegalStateException("No neighbours")
+//    }
 
-        Matrix.printMatrix(neighbourhood, {
-            it?.toString() ?: " "
-        })
 
-        throw IllegalStateException("More than two neighbours")
-    }
-
-    if (firstNeighbours.isEmpty()) {
-        throw IllegalStateException("No neighbours")
-    }
-
-    borderPoints.add(firstPoint)
-    borderMatrixCopy[firstPoint.first, firstPoint.second] = backgroundRegion
-
-    val pointsToExamine = ArrayDeque(listOf(firstNeighbours[0]))
+//    val pointsToExamine = ArrayDeque(listOf(firstNeighbours[0]))
+    val pointsToExamine = ArrayDeque(listOf(firstPoint))
 
     while (pointsToExamine.isNotEmpty()) {
         val point = pointsToExamine.removeFirst()
         borderPoints.add(point)
+        borderMatrixCopy[point.first, point.second] = backgroundRegion
+
+//        println("Checking point: $point")
 
         val neighbours = FlowDirection.entries.mapNotNull { flowDirection ->
             if (EncodingUtilities.validCell(
@@ -201,11 +206,16 @@ fun getConnectedPoints2(row: Int, column: Int, borderMatrix: Matrix<Int>): Mutab
             }
         }
 
-        if (neighbours.size > 1) {
+        if (neighbours.size > 2) {
+            val neighbourhood = getNeighbourhood2(borderMatrixCopy, point.first, point.second, 1)
+
+            Matrix.printMatrix(neighbourhood, {
+                it?.toString() ?: " "
+            })
+
             throw IllegalStateException("More than one neighbour")
         }
         pointsToExamine.addAll(neighbours)
-        borderMatrixCopy[firstPoint.first, firstPoint.second] = backgroundRegion
 
     }
 
@@ -323,6 +333,7 @@ inline fun <reified T> extractBordersInMatrix2(
     while (true) {
         val borderPoint = findBorderPoint(borderMatrixCopy, interiorPointRegion) ?: break
         val border = getConnectedPoints2(borderPoint.first, borderPoint.second, borderMatrixCopy)
+//        val border = getConnectedPoints(borderPoint.first, borderPoint.second, borderMatrixCopy)
         borders.add(Border(border))
 
         border.forEach { borderMatrixCopy[it.first, it.second] = backgroundRegion }
