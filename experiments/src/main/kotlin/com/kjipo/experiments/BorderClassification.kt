@@ -95,21 +95,26 @@ class BorderClassification {
 
 
         // Remove everything from image except border
-        trimmedBorderMatrixCopy.forEachIndexed { row, column, value ->
-            if (value == interiorPointRegion) {
-                trimmedBorderMatrixCopy[row, column] = backgroundRegion
-            }
-        }
+//        trimmedBorderMatrixCopy.forEachIndexed { row, column, value ->
+//            if (value == interiorPointRegion) {
+//                trimmedBorderMatrixCopy[row, column] = backgroundRegion
+//            }
+//        }
 
-        var currentColour = borderClassificationStartCount
+//        var currentColour = borderClassificationStartCount
         extractBordersFromMatrix(imageMatrix).let { borders ->
             borders.forEach { border ->
-                border.points.forEach { trimmedBorderMatrixCopy[it.first, it.second] = currentColour }
-                ++currentColour
+                border.points.forEach { trimmedBorderMatrixCopy[it.first, it.second] = borderRegion }
+//                ++currentColour
             }
         }
 
-        return listOf(trimmedBorderMatrixCopy)
+        // TODO Only here for testing
+        val ballRoller2 = BallRoller2()
+        val resultMatrix = ballRoller2.placeBall(trimmedBorderMatrixCopy)
+
+//        return listOf(trimmedBorderMatrixCopy)
+        return listOf(resultMatrix)
     }
 
 
