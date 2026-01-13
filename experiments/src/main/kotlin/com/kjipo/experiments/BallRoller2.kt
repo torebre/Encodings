@@ -37,8 +37,8 @@ class BallRoller2 {
             for (column in 0 until kanjiImage.numberOfColumns) {
                 if (kanjiImage[row, column] == borderRegion) {
                     getNeighbourhood(kanjiImage, row, column)
-                        .filter { it.second }
-                        .find { kanjiImage[row + it.first.rowShift, column + it.first.columnShift] == interiorPointRegion }
+                        .filter { flowDirectionValidCellPair -> flowDirectionValidCellPair.second }
+                        .find { flowDirectionValidCellPair -> kanjiImage[row + flowDirectionValidCellPair.first.rowShift, column + flowDirectionValidCellPair.first.columnShift] == interiorPointRegion }
                         ?.first
                         ?.let {
                             val rowCenter = row + it.rowShift

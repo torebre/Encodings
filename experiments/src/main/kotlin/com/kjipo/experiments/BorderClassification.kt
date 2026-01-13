@@ -102,19 +102,66 @@ class BorderClassification {
 //        }
 
 //        var currentColour = borderClassificationStartCount
-        extractBordersFromMatrix(imageMatrix).let { borders ->
-            borders.forEach { border ->
-                border.points.forEach { trimmedBorderMatrixCopy[it.first, it.second] = borderRegion }
-//                ++currentColour
+
+        val borders = extractBordersFromMatrix(imageMatrix)
+
+//        borders.let { borders ->
+//            borders.forEach { border ->
+//                border.points.forEach { trimmedBorderMatrixCopy[it.first, it.second] = borderRegion }
+////                ++currentColour
+//            }
+//        }
+
+        val deltaPoints = mutableListOf<Pair<Pair<Int, Int>, Int>>()
+        for(border in borders) {
+            val pointArray: Array<Pair<Int, Int>> = Array(10) { Pair(0, 0) }
+            var seenPoints = 0
+
+            for(point in border.points) {
+                pointArray[9] = point
+
+                ++seenPoints
+                if(seenPoints < 10) {
+                    continue
+                }
+
+                var xDelta = 0
+                var yDelta = 0
+                for(index in 1 until 5) {
+                    xDelta += pointArray[index].first - pointArray[index - 1].first
+                    yDelta += pointArray[index].second - pointArray[index - 1].second
+                }
+
+                var xDelta2 = 0
+                var yDelta2 = 0
+                for(index in 5 until 10) {
+                    xDelta2 += pointArray[index].first - pointArray[index - 1].first
+                    yDelta2 += pointArray[index].second - pointArray[index - 1].second
+                }
+
+                if(xDelta2 - xDelta == 0 || yDelta2 - yDelta == 0) {
+                    deltaPoints.add(Pair(point, 0))
+                }
+                else {
+                    deltaPoints.add(Pair(point, (xDelta2 - xDelta) / (yDelta2 - yDelta)))
+                }
+
+                System.arraycopy(pointArray, 1, pointArray, 0, pointArray.size - 1)
+                pointArray[pointArray.size - 1] = point
             }
         }
 
-        // TODO Only here for testing
-        val ballRoller2 = BallRoller2()
-        val resultMatrix = ballRoller2.placeBall(trimmedBorderMatrixCopy)
+        for (pair in deltaPoints) {
+            trimmedBorderMatrixCopy[pair.first.first, pair.first.second] = pair.second
+        }
 
-//        return listOf(trimmedBorderMatrixCopy)
-        return listOf(resultMatrix)
+
+        // TODO Only here for testing
+//        val ballRoller2 = BallRoller2()
+//        val resultMatrix = ballRoller2.placeBall(trimmedBorderMatrixCopy)
+
+        return listOf(trimmedBorderMatrixCopy)
+//        return listOf(resultMatrix)
     }
 
 
