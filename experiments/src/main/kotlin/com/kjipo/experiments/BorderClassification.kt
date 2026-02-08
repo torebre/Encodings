@@ -113,36 +113,35 @@ class BorderClassification {
 //        }
 
         val deltaPoints = mutableListOf<Pair<Pair<Int, Int>, Int>>()
-        for(border in borders) {
+        for (border in borders) {
             val pointArray: Array<Pair<Int, Int>> = Array(10) { Pair(0, 0) }
             var seenPoints = 0
 
-            for(point in border.points) {
+            for (point in border.points) {
                 pointArray[9] = point
 
                 ++seenPoints
-                if(seenPoints < 10) {
+                if (seenPoints < 10) {
                     continue
                 }
 
                 var xDelta = 0
                 var yDelta = 0
-                for(index in 1 until 5) {
+                for (index in 1 until 5) {
                     xDelta += pointArray[index].first - pointArray[index - 1].first
                     yDelta += pointArray[index].second - pointArray[index - 1].second
                 }
 
                 var xDelta2 = 0
                 var yDelta2 = 0
-                for(index in 5 until 10) {
+                for (index in 5 until 10) {
                     xDelta2 += pointArray[index].first - pointArray[index - 1].first
                     yDelta2 += pointArray[index].second - pointArray[index - 1].second
                 }
 
-                if(xDelta2 - xDelta == 0 || yDelta2 - yDelta == 0) {
+                if (xDelta2 - xDelta == 0 || yDelta2 - yDelta == 0) {
                     deltaPoints.add(Pair(point, 0))
-                }
-                else {
+                } else {
                     deltaPoints.add(Pair(point, (xDelta2 - xDelta) / (yDelta2 - yDelta)))
                 }
 
@@ -151,9 +150,26 @@ class BorderClassification {
             }
         }
 
-        for (pair in deltaPoints) {
-            trimmedBorderMatrixCopy[pair.first.first, pair.first.second] = pair.second
-        }
+//        for (pair in deltaPoints) {
+//            trimmedBorderMatrixCopy[pair.first.first, pair.first.second] = pair.second
+//        }
+
+        val sortedDeltaPoints = deltaPoints.sortedByDescending { it.second }
+
+        val circleMask = determineCircleMask(2)
+        sortedDeltaPoints.take(10)
+            .forEach { deltaPoint ->
+                applyCircleMask(
+                    deltaPoint.first.first, deltaPoint.first.second,
+                    trimmedBorderMatrixCopy,
+                    circleMask,
+                    { row, column ->
+                       100
+                    }
+                )
+
+
+            }
 
 
         // TODO Only here for testing
